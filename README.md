@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/jasongitmail/sk-sitemap/assets/50032291/4e87965f-e16c-42de-b214-2b801066faba" alt="project banner" />
+  <img src="https://github.com/jasongitmail/sk-sitemap/assets/50032291/21f48ff3-aba5-49b9-a857-3c0b6806750a" alt="project banner" />
   <h1 align="center">SK Sitemap</h1>
   
   <a href="https://github.com/jasongitmail/sk-sitemap/actions/workflows/ci.yml">
