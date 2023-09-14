@@ -58,8 +58,22 @@ or
 
 ### Basic example
 
-```ts
+```js
+// /src/routes/sitemap.xml/+server.js
 export const GET = async () => {
+  return await sitemap.response({
+    origin: 'https://example.com'
+  });
+};
+```
+
+TypeScript version:
+
+```ts
+// /src/routes/sitemap.xml/+server.ts
+import type { RequestHandler } from '@sveltejs/kit';
+
+export const GET: RequestHandler = async () => {
   return await sitemap.response({
     origin: 'https://example.com'
   });
@@ -68,7 +82,10 @@ export const GET = async () => {
 
 ### Realistic example
 
-```ts
+```js
+// /src/routes/sitemap.xml/+server.js
+import * as blog from '$lib/data/blog';
+
 export const GET = async () => {
   const excludePatterns = [
     '^/dashboard.*',
@@ -91,7 +108,7 @@ export const GET = async () => {
   };
 
   // Optionally, you can pass an object of custom headers as a 2nd arg,
-  // for example, to set custom cache control headers.
+  // for example, to customize cache control headers.
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns,
