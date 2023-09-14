@@ -41,6 +41,7 @@
     "eslint": "^8.28.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-svelte": "^2.30.0",
+    "eslint-plugin-tsdoc": "^0.2.17",
     "fast-xml-parser": "^4.2.7",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.10.1",
