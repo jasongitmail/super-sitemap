@@ -21,11 +21,12 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Run unit tests
-        run: bun run test:unit
+        run: bun run test
 
   publish-to-npm-public:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: unit-tests
     # Avoid running for non-main branches and non-merge events like new pull requests.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
