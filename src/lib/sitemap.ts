@@ -1,13 +1,17 @@
 /**
- * Generates an HTTP response containing an XML sitemap with the provided paths.
- * Default headers set 1h CDN cache & no browser cache.
+ * Generates an HTTP response containing an XML sitemap.
  *
  * @public
- * @param origin - E.g. `https://example.com`. No trailing slash.
- * @param paths  - Array of string paths to include in the sitemap. Each should
- *                 start with '/'; but if not, it will be added.
- * @param [customHeaders] - An optional object of custom headers to override
- *                          defaults.
+ * @remarks Default headers set 1h CDN cache & no browser cache.
+ *
+ * @param options - Configuration options.
+ * @param options.origin - The origin URL. E.g. `https://example.com`. No trailing slash.
+ * @param options.excludePatterns - Optional. An array of regex patterns to
+ *                                  exclude from paths.
+ * @param options.paramValues - Optional. An object mapping parameters to their
+ *                              values.
+ * @param customHeaders - Optional. Custom headers to override defaults.
+ * @returns An HTTP response containing the generated XML sitemap.
  */
 export async function response(
 	{
@@ -17,7 +21,7 @@ export async function response(
 	}: {
 		origin: string;
 		excludePatterns?: string[] | [];
-		paramValues?: Record<string, string[]> | {};
+		paramValues?: Record<string, string[]> | Record<string, never>;
 	},
 	customHeaders: Record<string, string> = {}
 ): Promise<Response> {
@@ -40,20 +44,23 @@ export async function response(
  * Generates an XML response body based on the provided paths, using sitemap
  * structure from https://kit.svelte.dev/docs/seo#manual-setup-sitemaps.
  *
- * @public
- * @param origin - E.g. `https://mydomain.com`. No trailing slash b/c we want
- *                  `/` to represent the index page entry to be added to the
- *                  sitemap.
+ * @private
+ * @remarks
+ * - Based on structure specified by
+ *   https://kit.svelte.dev/docs/seo#manual-setup-sitemaps
+ * - Google ignores changefreq and priority, so this uses default values for
+ *   those to appease dumb bots.
+ * - We could consider adding `<lastmod>` with an ISO 8601 datetime, but not
+ *   worrying about this for now.
+ *   https://developers.google.com/search/blog/2014/10/best-practices-for-xml-sitemaps-rssatom
+ *
+ * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash
+ *                 because "/" is the index page.
  * @param paths - Array of string paths to include in the sitemap. Each should
  *                start with '/'; but if not, it will be added.
- * @returns The generated XML sitemap as a string.
- *
- * @notes
- * - Google ignores changefreq and priority.
- * - We could consider adding `<lastmod>`, but not worrying about this. Specify
- *   the time in the correct format: W3C Datetime for XML sitemaps
- *   https://developers.google.com/search/blog/2014/10/best-practices-for-xml-sitemaps-rssatom
+ * @returns The generated XML sitemap.
  */
+
 export function generateBody(origin: string, paths: Set<string>): string {
 	const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
 
@@ -79,7 +86,15 @@ export function generateBody(origin: string, paths: Set<string>): string {
 }
 
 /**
+ * Generates an array of route paths to be included in a sitemap.
+ *
  * @public
+ *
+ * @param excludePatterns - Optional. An array of patterns for routes to be
+ *                          excluded.
+ * @param paramValues - Optional. An object mapping each parameterized route to
+ *                      an array of param values for that route.
+ * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths(
 	excludePatterns: string[] = [],
@@ -95,8 +110,24 @@ export function generatePaths(
 }
 
 /**
- * @private
+ * Filters and normalizes an array of route paths.
+ *
+ * @public
+ *
+ * @param routes - An array of route strings from Vite's `import.meta.blog`.
+ *                 E.g. ['src/routes/blog/[slug]/+page.svelte', ...]
+ * @param excludePatterns - An array of regular expression patterns to match
+ *                          routes to exclude.
+ * @returns A sorted array of cleaned-up route strings.
+ *          E.g. ['/blog/[slug]', ...]
+ *
+ * @remarks
+ * - Removes trailing slashes from routes, except for the homepage route. If
+ *   SvelteKit specified this option in a config, rather than layouts, we could
+ *   read the user's preference, but it doesn't, we use SvelteKit's default no
+ *   trailing slash https://kit.svelte.dev/docs/page-options#trailingslash
  */
+
 export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
 	return (
 		routes
@@ -122,6 +153,28 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
  * `[param]` placeholder using data from param values. E.g. `/blog/hello-world` &
  * `/blog/another-post`, instead of `/blog/[slug]`.
  */
+
+/**
+ * Builds parameterized paths using paramValues provided (e.g.
+ * `/blog/hello-world`) and then remove the respective tokenized route
+ * (`/blog/[slug]`) from the routes array.
+ *
+ * @public
+ *
+ * @param routes - An array of route strings, including parameterized routes
+ *                 E.g. ['/', '/about', '/blog/[slug]', /blog/tags/[tag]']
+ * @param paramValues - An object mapping parameterized routes to an array of
+ *                      their parameter values.
+ *
+ * @returns A tuple where the first element is an array of routes and the second
+ *          element is an array of generated parameterized paths.
+ *
+ * @throws Will throw an error if a `paramValues` key doesn't correspond to an
+ *         existing route, for visibility to the developer.
+ * @throws Will throw an error if a parameterized route does not have data
+ *         within paramValues, for visibility to the developer.
+ */
+
 export function buildParameterizedPaths(
 	routes: string[],
 	paramValues: Record<string, string[]>
@@ -135,10 +188,10 @@ export function buildParameterizedPaths(
 			);
 		}
 
-		// Generate paths containing data for param values–e.g. `/blog/hello-world`
+		// Generate paths using data from paramValues–e.g. `/blog/hello-world`
 		parameterizedPaths.push(...paramValues[route].map((value) => route.replace(/\[.*\]/, value)));
 
-		// Remove route containing param placeholder–e.g. `/blog/[slug]`
+		// Remove route containing the token placeholder–e.g. `/blog/[slug]`
 		routes.splice(routes.indexOf(route), 1);
 	}
 
