@@ -1,58 +1,191 @@
-# create-svelte
+# SK (SvelteKit) Sitemap
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A sitemap that just works and makes it impossible to forget to add paths, while
+allowing flexibility to exclude any specific paths or path patterns.
 
-Read more about creating a library [in the docs](https://kit.svelte.dev/docs/packaging).
+## Features
 
-## Creating a project
+- 🤓 Supports any rendering method.
+- 🪄 Routes automatically found from `/src/routes` using Vite + data for route
+  parameters provided by you.
+- 🧠 Easy maintenance–accidental omission of data for parameterized routes throws
+  an error and requires the developer to either explicitly exclude the route
+  pattern or provide an array of data for that param value.
+- 👻 Exclude specific routes or patterns using regex patterns (e.g.
+  `^/dashboard.*`, paginated URLs, etc).
+- 🚀 Defaults to 1h CDN cache, no browser cache.
+- 💆 Set custom headers, by passing an object as the 2nd argument to
+  `sitemap.response({...}, {'cache-control: '...'})`.
+- 🫡 Uses [SvelteKit's recommended sitemap XML structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
+- 🤷 Note: Currently, uses priority `0.7` and `changefreq` daily for each item.
+  Google ignores both, this could arguably be excluded both but I kept them for
+  now in case it improves compatibility by dumber bots.
+- 🧪 Well tested.
+- 🫶 Built with TypeScript.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Limitations of MVP...that _could_ be supported
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+- Supports one param per route (`/blog/tag/[tag]`), but could be refactored to
+  support unlimited params per route (e.g.`/[lang]/blog/tag/[tag]`).
+- Excludes `lastModified` from each item entry, but a future version could
+  include it for parameterized data items. Obviously, `lastModified` would
+  be indeterminate for non-parameterized routes, such as `/about`.
+- A future version could build a [Sitemap Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps) when total URLs exceed >50,000,
+  which is the max quantity Google will read in a single `sitemap.xml` file.
+- [Image](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps) or [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps) sitemap extensions.
 
-# create a new project in my-app
-npm create svelte@latest my-app
+## Installation
+
+`npm i -D sk-sitemap`
+
+or
+
+`bun add -d sk-sitemap`
+
+## Usage
+
+### Basic example
+
+```ts
+export const GET = async () => {
+	return await sitemap.response({
+		origin: 'https://example.com'
+	});
+};
+```
+
+### Realistic example
+
+```ts
+export const GET = async () => {
+	const excludePatterns = [
+		'^/dashboard.*',
+
+		// Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+		`.*\\[page\\=integer\\].*`
+	];
+
+	// Get data for parameterized routes
+	let blogSlugs, blogTags;
+	try {
+		[blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
+	} catch (err) {
+		throw error(500, 'Could not load paths');
+	}
+
+	const paramValues = {
+		'/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
+		'/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
+	};
+
+	// Optionally, you can pass an object of custom headers as a 2nd arg,
+	// for example, to set custom cache control headers.
+	return await sitemap.response({
+		origin: 'https://example.com',
+		excludePatterns,
+		paramValues
+	});
+};
+```
+
+## Result
+
+```xml
+<urlset
+    xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
+    xmlns:xhtml="https://www.w3.org/1999/xhtml"
+    xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
+    xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
+    xmlns:video="https://www.google.com/schemas/sitemap-video/1.1">
+    <url>
+        <loc>http://example/</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/about</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/login</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/pricing</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/privacy</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/signup</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/support</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/terms</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog/15-post</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog/14-post</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    ...
+    <url>
+        <loc>http://example/blog/02-post</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog/01-post</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog/tag/tag1</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>http://example/blog/tag/tag2</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+</urlset>
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+git clone https://github.com/jasongitmail/sk-sitemap.git
+bun install
+# Then edit files in `/src/lib`
 ```
-
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
-
-## Building
-
-To build your library:
-
-```bash
-npm run package
-```
-
-To create a production version of your showcase app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
 
 ## Publishing
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
-```
+A new version of this NPM package is automatically published when the semver
+version within `package.json` is incremented.
