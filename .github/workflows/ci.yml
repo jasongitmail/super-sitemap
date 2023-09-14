@@ -15,12 +15,12 @@ jobs:
   unit-tests:
     uses: jasongitmail/github-actions/.github/workflows/sveltekit-unit-tests.yml@main
 
-  publish-npm:
-    uses: jasongitmail/github-actions/.github/workflows/publish-to-npm-public.yml@main
-    permissions:
-      contents: read
-      packages: write
-    needs:
-      - unit-tests
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  # publish-npm:
+  #   uses: jasongitmail/github-actions/.github/workflows/publish-to-npm-public.yml@main
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   needs:
+  #     - unit-tests
+  #   secrets:
+  #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
