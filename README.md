@@ -60,6 +60,8 @@ or
 
 ```js
 // /src/routes/sitemap.xml/+server.js
+import * as sitemap from 'sk-sitemap';
+
 export const GET = async () => {
   return await sitemap.response({
     origin: 'https://example.com'
@@ -71,6 +73,7 @@ TypeScript version:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
+import * as sitemap from 'sk-sitemap';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
@@ -84,6 +87,7 @@ export const GET: RequestHandler = async () => {
 
 ```js
 // /src/routes/sitemap.xml/+server.js
+import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 
 export const GET = async () => {
@@ -103,6 +107,46 @@ export const GET = async () => {
   }
 
   const paramValues = {
+    '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
+    '/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
+  };
+
+  // Optionally, you can pass an object of custom headers as a 2nd arg,
+  // for example, to customize cache control headers.
+  return await sitemap.response({
+    origin: 'https://example.com',
+    excludePatterns,
+    paramValues
+  });
+};
+```
+
+TypeScript version:
+
+```ts
+// /src/routes/sitemap.xml/+server.ts
+import * as sitemap from 'sk-sitemap';
+import * as blog from '$lib/data/blog';
+import type { RequestHandler } from '@sveltejs/kit';
+import type { ParamValues } from 'sk-sitemap';
+
+export const GET: RequestHandler = async () => {
+  const excludePatterns = [
+    '^/dashboard.*',
+
+    // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+    `.*\\[page\\=integer\\].*`
+  ];
+
+  // Get data for parameterized routes
+  let blogSlugs, blogTags;
+  try {
+    [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
+  } catch (err) {
+    throw error(500, 'Could not load paths');
+  }
+
+  const paramValues: ParamValues = {
     '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
   };

@@ -1,3 +1,5 @@
+export type ParamValues = Record<string, string[]> | Record<string, never>;
+
 /**
  * Generates an HTTP response containing an XML sitemap.
  *
@@ -14,30 +16,30 @@
  * @returns An HTTP response containing the generated XML sitemap.
  */
 export async function response(
-	{
-		origin,
-		excludePatterns,
-		paramValues
-	}: {
-		origin: string;
-		excludePatterns?: string[] | [];
-		paramValues?: Record<string, string[]> | Record<string, never>;
-	},
-	customHeaders: Record<string, string> = {}
+  {
+    origin,
+    excludePatterns,
+    paramValues
+  }: {
+    origin: string;
+    excludePatterns?: string[] | [];
+    paramValues?: ParamValues;
+  },
+  customHeaders: Record<string, string> = {}
 ): Promise<Response> {
-	const paths = generatePaths(excludePatterns, paramValues);
-	const body = generateBody(origin, new Set(paths));
+  const paths = generatePaths(excludePatterns, paramValues);
+  const body = generateBody(origin, new Set(paths));
 
-	// Merge keys case-insensitive
-	const headers = {
-		'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
-		'content-type': 'application/xml',
-		...Object.fromEntries(
-			Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value])
-		)
-	};
+  // Merge keys case-insensitive
+  const headers = {
+    'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
+    'content-type': 'application/xml',
+    ...Object.fromEntries(
+      Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value])
+    )
+  };
 
-	return new Response(body, { headers });
+  return new Response(body, { headers });
 }
 
 /**
@@ -62,9 +64,9 @@ export async function response(
  */
 
 export function generateBody(origin: string, paths: Set<string>): string {
-	const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
+  const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
 
-	return `<?xml version="1.0" encoding="UTF-8" ?>
+  return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
@@ -73,15 +75,15 @@ export function generateBody(origin: string, paths: Set<string>): string {
   xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 >${normalizedPaths
-		.map(
-			(path: string) => `
+    .map(
+      (path: string) => `
   <url>
     <loc>${origin}${path}</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>`
-		)
-		.join('')}
+    )
+    .join('')}
 </urlset>`;
 }
 
@@ -97,16 +99,16 @@ export function generateBody(origin: string, paths: Set<string>): string {
  * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths(
-	excludePatterns: string[] = [],
-	paramValues: Record<string, string[]> = {}
+  excludePatterns: string[] = [],
+  paramValues: ParamValues = {}
 ): string[] {
-	let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
-	routes = filterRoutes(routes, excludePatterns);
+  let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
+  routes = filterRoutes(routes, excludePatterns);
 
-	let parameterizedPaths;
-	[routes, parameterizedPaths] = buildParameterizedPaths(routes, paramValues);
+  let parameterizedPaths;
+  [routes, parameterizedPaths] = buildParameterizedPaths(routes, paramValues);
 
-	return [...routes, ...parameterizedPaths];
+  return [...routes, ...parameterizedPaths];
 }
 
 /**
@@ -129,19 +131,19 @@ export function generatePaths(
  */
 
 export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
-	return (
-		routes
-			// remove `/src/routes` prefix and `+page.svelte suffix`
-			.map((x) => x.substring(11, x.length - 12))
+  return (
+    routes
+      // remove `/src/routes` prefix and `+page.svelte suffix`
+      .map((x) => x.substring(11, x.length - 12))
 
-			// remove any routes that match an exclude pattern--e.g. `(dashboard)`
-			.filter((x) => !excludePatterns.some((pattern) => new RegExp(pattern).test(x)))
+      // remove any routes that match an exclude pattern--e.g. `(dashboard)`
+      .filter((x) => !excludePatterns.some((pattern) => new RegExp(pattern).test(x)))
 
-			// remove `/(groups)` because decorative only
-			.map((x) => x.replaceAll(/\/\(\w+\)/g, ''))
+      // remove `/(groups)` because decorative only
+      .map((x) => x.replaceAll(/\/\(\w+\)/g, ''))
 
-			// remove trailing "/" except from the homepage
-			.map((x) => (x !== '/' && x.endsWith('/') ? x.slice(0, -1) : x))
+      // remove trailing "/" except from the homepage
+      .map((x) => (x !== '/' && x.endsWith('/') ? x.slice(0, -1) : x))
 
       .sort()
   );
@@ -169,35 +171,35 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
  */
 
 export function buildParameterizedPaths(
-	routes: string[],
-	paramValues: Record<string, string[]>
+  routes: string[],
+  paramValues: ParamValues
 ): [string[], string[]] {
-	const parameterizedPaths = [];
+  const parameterizedPaths = [];
 
-	for (const route in paramValues) {
-		if (!routes.includes(route)) {
-			throw new Error(
-				`Sitemap: '${route}' was provided as a property in your sitemap's paramValues, but does not exist as a route within your project's 'src/routes/'. Remove this property from paramValues.`
-			);
-		}
+  for (const route in paramValues) {
+    if (!routes.includes(route)) {
+      throw new Error(
+        `Sitemap: '${route}' was provided as a property in your sitemap's paramValues, but does not exist as a route within your project's 'src/routes/'. Remove this property from paramValues.`
+      );
+    }
 
-		// Generate paths using data from paramValues–e.g. `/blog/hello-world`
-		parameterizedPaths.push(...paramValues[route].map((value) => route.replace(/\[.*\]/, value)));
+    // Generate paths using data from paramValues–e.g. `/blog/hello-world`
+    parameterizedPaths.push(...paramValues[route].map((value) => route.replace(/\[.*\]/, value)));
 
-		// Remove route containing the token placeholder–e.g. `/blog/[slug]`
-		routes.splice(routes.indexOf(route), 1);
-	}
+    // Remove route containing the token placeholder–e.g. `/blog/[slug]`
+    routes.splice(routes.indexOf(route), 1);
+  }
 
-	// Throw error if app contains any parameterized routes NOT handled in the
-	// sitemap, to alert the developer. Prevents accidental omission of any paths.
-	for (const route of routes) {
-		const regex = /.*\[[^\]]+\].*/;
-		if (regex.test(route)) {
-			throw new Error(
-				`Sitemap: Parameterized route was not handled: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param to the paramValues object within your sitemap.`
-			);
-		}
-	}
+  // Throw error if app contains any parameterized routes NOT handled in the
+  // sitemap, to alert the developer. Prevents accidental omission of any paths.
+  for (const route of routes) {
+    const regex = /.*\[[^\]]+\].*/;
+    if (regex.test(route)) {
+      throw new Error(
+        `Sitemap: Parameterized route was not handled: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param to the paramValues object within your sitemap.`
+      );
+    }
+  }
 
-	return [routes, parameterizedPaths];
+  return [routes, parameterizedPaths];
 }
