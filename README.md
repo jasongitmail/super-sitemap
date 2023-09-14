@@ -172,78 +172,78 @@ export const GET: RequestHandler = async () => {
     xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
     xmlns:video="https://www.google.com/schemas/sitemap-video/1.1">
     <url>
-        <loc>http://example/</loc>
+        <loc>https://example/</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/about</loc>
+        <loc>https://example/about</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog</loc>
+        <loc>https://example/blog</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/login</loc>
+        <loc>https://example/login</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/pricing</loc>
+        <loc>https://example/pricing</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/privacy</loc>
+        <loc>https://example/privacy</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/signup</loc>
+        <loc>https://example/signup</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/support</loc>
+        <loc>https://example/support</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/terms</loc>
+        <loc>https://example/terms</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog/15-post</loc>
+        <loc>https://example/blog/15-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog/14-post</loc>
+        <loc>https://example/blog/14-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     ...
     <url>
-        <loc>http://example/blog/02-post</loc>
+        <loc>https://example/blog/02-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog/01-post</loc>
+        <loc>https://example/blog/01-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog/tag/tag1</loc>
+        <loc>https://example/blog/tag/tag1</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>http://example/blog/tag/tag2</loc>
+        <loc>https://example/blog/tag/tag2</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
