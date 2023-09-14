@@ -1,13 +1,28 @@
-# SK (SvelteKit) Sitemap
+<div align="center">
+  <img src="https://github.com/jasongitmail/sk-sitemap/assets/50032291/4e87965f-e16c-42de-b214-2b801066faba" alt="project banner" />
+  <h1 align="center">SK Sitemap</h1>
+  
+  <a href="https://github.com/jasongitmail/sk-sitemap/actions/workflows/ci.yml">
+    <img alt="Unit Tests" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/sk-sitemap/ci.yml?label=tests">
+  </a>
+  <a href="https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE">
+    <img alt="NPM" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">  
+  </a>
+  <a href="[https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE](https://www.npmjs.com/package/sk-sitemap)">
+    <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">  
+  </a>
+<br/>
+  <p>Dead-simple <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
+impossible to forget to add your paths.</p>
+</div>
 
-A [SvelteKit](https://kit.svelte.dev/) sitemap that just works and makes it
-impossible to forget to add paths, while allowing flexibility to exclude any
-specific paths or path patterns.
+
+
 
 ## Features
 
 - 🤓 Supports any rendering method.
-- 🪄 Routes automatically found from `/src/routes` using Vite + data for route
+- 🪄 Automatically collects routes from `/src/routes` using Vite + data for route
   parameters provided by you.
 - 🧠 Easy maintenance–accidental omission of data for parameterized routes
   throws an error and requires the developer to either explicitly exclude the
@@ -108,7 +123,7 @@ export const GET = async () => {
 
   const paramValues = {
     '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-    '/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
+    '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
   // Optionally, you can pass an object of custom headers as a 2nd arg,
@@ -148,7 +163,7 @@ export const GET: RequestHandler = async () => {
 
   const paramValues: ParamValues = {
     '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-    '/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
+    '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
   // Optionally, you can pass an object of custom headers as a 2nd arg,
