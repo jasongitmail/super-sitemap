@@ -13,14 +13,31 @@ permissions:
 
 jobs:
   unit-tests:
-    uses: jasongitmail/github-actions/.github/workflows/sveltekit-unit-tests.yml@main
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - name: Install dependencies
+        run: bun install
+      - name: Run unit tests
+        run: bun run test:unit
 
-  # publish-npm:
-  #   uses: jasongitmail/github-actions/.github/workflows/publish-to-npm-public.yml@main
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   needs:
-  #     - unit-tests
-  #   secrets:
-  #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  publish-to-npm-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Avoid running for non-main branches and non-merge events like new pull requests.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: bun install
+      - name: Publish to Github Package Registry, if version was incremented
+        uses: JS-DevTools/npm-publish@v2
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          ignore-scripts: false # Allows the project's `prepublishOnly` script.
+          strategy: upgrade # Publish only if the version was incremented.
