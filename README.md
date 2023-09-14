@@ -1,25 +1,29 @@
 # SK (SvelteKit) Sitemap
 
-A sitemap that just works and makes it impossible to forget to add paths, while
-allowing flexibility to exclude any specific paths or path patterns.
+A [SvelteKit](https://kit.svelte.dev/) sitemap that just works and makes it
+impossible to forget to add paths, while allowing flexibility to exclude any
+specific paths or path patterns.
 
 ## Features
 
 - 🤓 Supports any rendering method.
 - 🪄 Routes automatically found from `/src/routes` using Vite + data for route
   parameters provided by you.
-- 🧠 Easy maintenance–accidental omission of data for parameterized routes throws
-  an error and requires the developer to either explicitly exclude the route
-  pattern or provide an array of data for that param value.
+- 🧠 Easy maintenance–accidental omission of data for parameterized routes
+  throws an error and requires the developer to either explicitly exclude the
+  route pattern or provide an array of data for that param value.
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers, by passing an object as the 2nd argument to
   `sitemap.response({...}, {'cache-control: '...'})`.
-- 🫡 Uses [SvelteKit's recommended sitemap XML structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
+- 🫡 Uses [SvelteKit's recommended sitemap XML
+  structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
 - 🤷 Note: Currently, uses priority `0.7` and `changefreq` daily for each item.
-  Google ignores both, this could arguably be excluded both but I kept them for
-  now in case it improves compatibility by dumber bots.
+  [Google ignores `priority` and
+  `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
+  and these could be excluded to save KB, but I kept them for now in case it
+  improves compatibility by dumber bots.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
 
@@ -27,12 +31,20 @@ allowing flexibility to exclude any specific paths or path patterns.
 
 - Supports one param per route (`/blog/tag/[tag]`), but could be refactored to
   support unlimited params per route (e.g.`/[lang]/blog/tag/[tag]`).
-- Excludes `lastModified` from each item entry, but a future version could
-  include it for parameterized data items. Obviously, `lastModified` would
-  be indeterminate for non-parameterized routes, such as `/about`.
-- A future version could build a [Sitemap Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps) when total URLs exceed >50,000,
-  which is the max quantity Google will read in a single `sitemap.xml` file.
-- [Image](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps) or [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps) sitemap extensions.
+- A future version could build a [Sitemap
+  Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
+  when total URLs exceed >50,000, which is the max quantity Google will read in
+  a single `sitemap.xml` file.
+- Excludes `lastmod` from each item, but a future version could include it for
+  parameterized data items. Obviously, `lastmod` would be indeterminate for
+  non-parameterized routes, such as `/about`. Due to this, Google would likely
+  ignore `lastmod` anyway since they only respect if it's ["consistently and
+  verifiably
+  accurate"](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#additional-notes-about-xml-sitemaps).
+- [Image](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps)
+  or
+  [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps)
+  sitemap extensions.
 
 ## Installation
 
