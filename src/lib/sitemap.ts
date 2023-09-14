@@ -143,16 +143,9 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
 			// remove trailing "/" except from the homepage
 			.map((x) => (x !== '/' && x.endsWith('/') ? x.slice(0, -1) : x))
 
-			.sort()
-	);
+      .sort()
+  );
 }
-
-/**
- * @private
- * Generate an array of string paths containing param values instead of the
- * `[param]` placeholder using data from param values. E.g. `/blog/hello-world` &
- * `/blog/another-post`, instead of `/blog/[slug]`.
- */
 
 /**
  * Builds parameterized paths using paramValues provided (e.g.
