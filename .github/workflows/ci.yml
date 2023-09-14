@@ -1,0 +1,26 @@
+name: ci.yml
+env:
+  CI: true
+  NODE_VERSION: 18
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # for dependabot updates
+
+jobs:
+  unit-tests:
+    uses: jasongitmail/github-actions/.github/workflows/sveltekit-unit-tests.yml@main
+
+  publish-npm:
+    uses: jasongitmail/github-actions/.github/workflows/publish-to-npm-public.yml@main
+    permissions:
+      contents: read
+      packages: write
+    needs:
+      - unit-tests
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
