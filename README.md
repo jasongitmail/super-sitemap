@@ -60,9 +60,9 @@ or
 
 ```ts
 export const GET = async () => {
-	return await sitemap.response({
-		origin: 'https://example.com'
-	});
+  return await sitemap.response({
+    origin: 'https://example.com'
+  });
 };
 ```
 
@@ -70,33 +70,33 @@ export const GET = async () => {
 
 ```ts
 export const GET = async () => {
-	const excludePatterns = [
-		'^/dashboard.*',
+  const excludePatterns = [
+    '^/dashboard.*',
 
-		// Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-		`.*\\[page\\=integer\\].*`
-	];
+    // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+    `.*\\[page\\=integer\\].*`
+  ];
 
-	// Get data for parameterized routes
-	let blogSlugs, blogTags;
-	try {
-		[blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
-	} catch (err) {
-		throw error(500, 'Could not load paths');
-	}
+  // Get data for parameterized routes
+  let blogSlugs, blogTags;
+  try {
+    [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
+  } catch (err) {
+    throw error(500, 'Could not load paths');
+  }
 
-	const paramValues = {
-		'/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-		'/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
-	};
+  const paramValues = {
+    '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
+    '/blog/tag/[tag]': blogTags // e.g. ['red', 'blue', 'green']
+  };
 
-	// Optionally, you can pass an object of custom headers as a 2nd arg,
-	// for example, to set custom cache control headers.
-	return await sitemap.response({
-		origin: 'https://example.com',
-		excludePatterns,
-		paramValues
-	});
+  // Optionally, you can pass an object of custom headers as a 2nd arg,
+  // for example, to set custom cache control headers.
+  return await sitemap.response({
+    origin: 'https://example.com',
+    excludePatterns,
+    paramValues
+  });
 };
 ```
 
