@@ -12,7 +12,7 @@
     <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">  
   </a>
 <br/>
-  <p>Dead-simple <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
+  <p>Automatic <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
 impossible to forget to add your paths.</p>
 </div>
 
