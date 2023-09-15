@@ -143,7 +143,6 @@ TypeScript version:
 import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
-import type { ParamValues } from 'sk-sitemap';
 
 export const GET: RequestHandler = async () => {
   const excludePatterns = [
@@ -161,7 +160,7 @@ export const GET: RequestHandler = async () => {
     throw error(500, 'Could not load paths');
   }
 
-  const paramValues: ParamValues = {
+  const paramValues = {
     '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
