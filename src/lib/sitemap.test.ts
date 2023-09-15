@@ -20,7 +20,7 @@ describe('sitemap.ts', () => {
         '^/dashboard.*',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-        `.*\\[page\\=integer\\].*`
+        `.*\\[page=integer\\].*`
       ];
 
       // Provide data for parameterized routes
@@ -89,7 +89,7 @@ describe('sitemap.ts', () => {
         '^/dashboard.*',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-        `.*\\[page\\=integer\\].*`
+        `.*\\[page=integer\\].*`
       ];
 
       // Provide data for parameterized routes

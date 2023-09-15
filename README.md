@@ -1,23 +1,20 @@
 <div align="center">
   <img src="https://github.com/jasongitmail/sk-sitemap/assets/50032291/21f48ff3-aba5-49b9-a857-3c0b6806750a" alt="project banner" />
   <h1 align="center">SK Sitemap</h1>
-  
+
   <a href="https://github.com/jasongitmail/sk-sitemap/actions/workflows/ci.yml">
     <img alt="Unit Tests" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/sk-sitemap/ci.yml?label=tests">
   </a>
   <a href="https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE">
-    <img alt="NPM" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">  
+    <img alt="NPM" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">
   </a>
   <a href="[https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE](https://www.npmjs.com/package/sk-sitemap)">
-    <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">  
+    <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">
   </a>
 <br/>
   <p>Automatic <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
 impossible to forget to add your paths.</p>
 </div>
-
-
-
 
 ## Features
 
@@ -73,6 +70,8 @@ or
 
 ### Basic example
 
+JavaScript:
+
 ```js
 // /src/routes/sitemap.xml/+server.js
 import * as sitemap from 'sk-sitemap';
@@ -84,7 +83,7 @@ export const GET = async () => {
 };
 ```
 
-TypeScript version:
+TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -100,6 +99,8 @@ export const GET: RequestHandler = async () => {
 
 ### Realistic example
 
+JavaScript:
+
 ```js
 // /src/routes/sitemap.xml/+server.js
 import * as sitemap from 'sk-sitemap';
@@ -108,9 +109,7 @@ import * as blog from '$lib/data/blog';
 export const GET = async () => {
   const excludePatterns = [
     '^/dashboard.*',
-
-    // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-    `.*\\[page\\=integer\\].*`
+    `.*\\[page=integer\\].*` // Routes containing `[page=integer]`–e.g. `/blog/2`
   ];
 
   // Get data for parameterized routes
@@ -118,7 +117,7 @@ export const GET = async () => {
   try {
     [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
   } catch (err) {
-    throw error(500, 'Could not load paths');
+    throw error(500, 'Could not load data for param values.');
   }
 
   const paramValues = {
@@ -126,8 +125,7 @@ export const GET = async () => {
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
-  // Optionally, you can pass an object of custom headers as a 2nd arg,
-  // for example, to customize cache control headers.
+  // Optionally, pass an object of custom headers as the 2nd argument (not shown).
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns,
@@ -136,7 +134,7 @@ export const GET = async () => {
 };
 ```
 
-TypeScript version:
+TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -147,9 +145,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async () => {
   const excludePatterns = [
     '^/dashboard.*',
-
-    // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-    `.*\\[page\\=integer\\].*`
+    `.*\\[page=integer\\].*` // Routes containing `[page=integer]`–e.g. `/blog/2`
   ];
 
   // Get data for parameterized routes
@@ -157,7 +153,7 @@ export const GET: RequestHandler = async () => {
   try {
     [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
   } catch (err) {
-    throw error(500, 'Could not load paths');
+    throw error(500, 'Could not load data for param values.');
   }
 
   const paramValues = {
@@ -165,8 +161,7 @@ export const GET: RequestHandler = async () => {
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
-  // Optionally, you can pass an object of custom headers as a 2nd arg,
-  // for example, to customize cache control headers.
+  // Optionally, pass an object of custom headers as the 2nd argument (not shown).
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns,
@@ -231,33 +226,27 @@ export const GET: RequestHandler = async () => {
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/15-post</loc>
+        <loc>https://example/blog/hello-world</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/14-post</loc>
-        <changefreq>daily</changefreq>
-        <priority>0.7</priority>
-    </url>
-    ...
-    <url>
-        <loc>https://example/blog/02-post</loc>
+        <loc>https://example/blog/another-world</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/01-post</loc>
+        <loc>https://example/blog/tag/red</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/tag/tag1</loc>
+        <loc>https://example/blog/tag/green</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/tag/tag2</loc>
+        <loc>https://example/blog/tag/blue</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
