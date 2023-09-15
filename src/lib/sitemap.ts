@@ -105,7 +105,7 @@ export function generatePaths(
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
   routes = filterRoutes(routes, excludePatterns);
 
-  let parameterizedPaths;
+  let parameterizedPaths = [];
   [routes, parameterizedPaths] = buildParameterizedPaths(routes, paramValues);
 
   return [...routes, ...parameterizedPaths];
