@@ -1,3 +1,12 @@
 {
-  "cSpell.words": ["prerender", "prerendering", "publint"]
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/.svelte-kit": true
+  },
+  "cSpell.words": ["changefreq", "loc", "lastmod", "prerender", "prerendering", "publint"],
+  "cSpell.ignoreWords": []
 }
