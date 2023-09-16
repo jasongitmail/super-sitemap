@@ -231,7 +231,7 @@ export const GET: RequestHandler = async () => {
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/another-world</loc>
+        <loc>https://example/blog/another-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
