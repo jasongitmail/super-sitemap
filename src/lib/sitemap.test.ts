@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import * as sitemap from './sitemap';
 import { XMLValidator } from 'fast-xml-parser';
+import { describe, expect, it } from 'vitest';
 import fs from 'fs';
+
+import * as sitemap from './sitemap';
 
 describe('sitemap.ts', () => {
   describe('response()', async () => {
