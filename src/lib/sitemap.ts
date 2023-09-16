@@ -12,34 +12,31 @@ export type ParamValues = Record<string, string[]> | Record<string, never>;
  *                                  exclude from paths.
  * @param options.paramValues - Optional. An object mapping parameters to their
  *                              values.
- * @param customHeaders - Optional. Custom headers to override defaults.
+ * @param options.customHeaders - Optional. Custom headers to override defaults.
  * @returns An HTTP response containing the generated XML sitemap.
  */
-export async function response(
-  {
-    origin,
-    excludePatterns,
-    paramValues
-  }: {
-    origin: string;
-    excludePatterns?: string[] | [];
-    paramValues?: ParamValues;
-  },
-  customHeaders: Record<string, string> = {}
-): Promise<Response> {
+export async function response({
+  excludePatterns,
+  headers = {},
+  paramValues,
+  origin
+}: {
+  excludePatterns?: string[] | [];
+  headers?: Record<string, string>;
+  paramValues?: ParamValues;
+  origin: string;
+}): Promise<Response> {
   const paths = generatePaths(excludePatterns, paramValues);
   const body = generateBody(origin, new Set(paths));
 
   // Merge keys case-insensitive
-  const headers = {
+  const _headers = {
     'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
     'content-type': 'application/xml',
-    ...Object.fromEntries(
-      Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value])
-    )
+    ...Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]))
   };
 
-  return new Response(body, { headers });
+  return new Response(body, { headers: _headers });
 }
 
 /**

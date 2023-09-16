@@ -32,7 +32,10 @@ describe('sitemap.ts', () => {
       const res = await sitemap.response({
         origin: 'https://example.com',
         excludePatterns,
-        paramValues
+        paramValues,
+        headers: {
+          'custom-header': 'mars'
+        }
       });
       const resultXml = await res.text();
 
@@ -42,6 +45,7 @@ describe('sitemap.ts', () => {
       );
 
       expect(resultXml).toEqual(expectedSitemapXml.trim());
+      expect(res.headers.get('custom-header')).toEqual('mars');
     });
   });
 

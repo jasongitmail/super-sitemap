@@ -27,8 +27,8 @@ impossible to forget to add your paths.</p>
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
-- 💆 Set custom headers, by passing an object as the 2nd argument to
-  `sitemap.response({...}, {'cache-control: '...'})`.
+- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/sk-sitemap/blob/main/src/lib/sitemap.ts#L34):
+  `sitemap.response({ headers: {'cache-control: '...'}})`.
 - 🫡 Uses [SvelteKit's recommended sitemap XML
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
 - 🤷 Note: Currently, uses priority `0.7` and `changefreq` daily for each item.
@@ -125,11 +125,13 @@ export const GET = async () => {
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
-  // Optionally, pass an object of custom headers as the 2nd argument (not shown).
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns,
-    paramValues
+    paramValues,
+    headers: {
+      'custom-header': 'foo' // case insensitive
+    }
   });
 };
 ```
@@ -161,11 +163,13 @@ export const GET: RequestHandler = async () => {
     '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
   };
 
-  // Optionally, pass an object of custom headers as the 2nd argument (not shown).
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns,
-    paramValues
+    paramValues,
+    headers: {
+      'custom-header': 'foo' // case insensitive
+    }
   });
 };
 ```
