@@ -40,7 +40,7 @@ describe('sitemap.ts', () => {
           'custom-header': 'mars'
         },
         additionalPaths: ['/additional-path'],
-        changefreq: 'daily', // TODO: Add test excluding changefreq & priority, and also setting them to false. or values different from these here.
+        changefreq: 'daily',
         priority: 0.7
       });
       const resultXml = await res.text();

@@ -1,24 +1,13 @@
-// export type ParamValues = Record<string, string[]> | Record<string, never>;
-export type ParamValues = Record<string, MultiParamValues> | Record<string, never>;
-export type MultiParamValues = string[] | string[][];
-export type Changefreq =
-  | false
-  | 'always'
-  | 'hourly'
-  | 'daily'
-  | 'weekly'
-  | 'monthly'
-  | 'yearly'
-  | 'never';
-export type Priority = false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+export type ParamValues = Record<string, string[] | string[][] | never>;
+
 export type SitemapConfig = {
-  excludePatterns?: [] | string[];
+  excludePatterns?: string[] | [];
   headers?: Record<string, string>;
-  paramValues?: ParamValues;
+  paramValues?: Record<string, string[] | string[][] | never>; // more useful to see in IDE than "ParamValues"
   origin: string;
-  additionalPaths?: string[];
-  changefreq?: Changefreq;
-  priority?: Priority;
+  additionalPaths?: string[] | [];
+  changefreq?: false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  priority?: false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 };
 
 /**
@@ -27,18 +16,38 @@ export type SitemapConfig = {
  * @public
  * @remarks Default headers set 1h CDN cache & no browser cache.
  *
- * @param options - Configuration options.
- * @param options.origin - The origin URL. E.g. `https://example.com`. No
- * trailing slash.
- * @param options.excludePatterns - Optional. An array of regex patterns to
- *                                  exclude from paths.
- * @param options.paramValues - Optional. An object mapping parameters to their
- *                              values.
- * @param options.customHeaders - Optional. Custom headers to override defaults.
- * @param options.additionalPaths - Optional. Array of additional paths to
- *                                  include, such as individual files in the
- *                                  project's static dir.
+ * @param config - Config object.
+ * @param config.origin - Required. Origin URL. E.g. `https://example.com`. No trailing slash
+ * @param config.excludePatterns - Optional. Array of regex patterns for paths to exclude.
+ * @param config.paramValues - Optional. Object of parameter values. See format in example below.
+ * @param config.additionalPaths - Optional. Array of paths to include manually. E.g. `/foo.pdf` in your `static` directory.
+ * @param config.headers - Optional. Custom headers. Case insensitive.
  * @returns An HTTP response containing the generated XML sitemap.
+ *
+ * @example
+ *
+ * ```js
+ * return await sitemap.response({
+ *   origin: 'https://example.com',
+ *   excludePatterns: [
+ *     '^/dashboard.*',
+ *     `.*\\[page=integer\\].*`
+ *   ],
+ *   paramValues: {
+ *     '/blog/[slug]': ['hello-world', 'another-post']   // preferred
+ *     '/blog/tag/[tag]': [['red'], ['blue'], ['green']] // valid
+ *     '/campsites/[country]/[state]': [ // preferred; unlimited params supported
+ *       ['usa', 'new-york'],
+ *       ['usa', 'california'],
+ *       ['canada', 'toronto']
+ *     ]
+ *   },
+ *   additionalPaths: ['/foo.pdf'],
+ *   headers: {
+ *    'Custom-Header': 'mars'
+ *   }
+ * });
+ * ```
  */
 export async function response({
   excludePatterns,
