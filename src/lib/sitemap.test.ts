@@ -36,7 +36,9 @@ describe('sitemap.ts', () => {
         headers: {
           'custom-header': 'mars'
         },
-        additionalPaths: ['/additional-path']
+        additionalPaths: ['/additional-path'],
+        changefreq: 'daily', // TODO: Add test excluding changefreq & priority, and also setting them to false. or values different from these here.
+        priority: 0.7
       });
       const resultXml = await res.text();
 
@@ -66,13 +68,9 @@ describe('sitemap.ts', () => {
 >
   <url>
     <loc>https://example.com/path1</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://example.com/path2</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
   </url>
 </urlset>`;
 

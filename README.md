@@ -28,14 +28,16 @@ impossible to forget to add your paths.</p>
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/sk-sitemap/blob/main/src/lib/sitemap.ts#L34):
-  `sitemap.response({ headers: {'cache-control: '...'}})`.
+  `sitemap.response({ headers: {'cache-control: '...'}, ...})`.
 - 🫡 Uses [SvelteKit's recommended sitemap XML
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
-- 🤷 Note: Currently, uses priority `0.7` and `changefreq` daily for each item.
-  [Google ignores `priority` and
+- 💡 Google, and other modern search engines, [ignore `priority` and
   `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
-  and these could be excluded to save KB, but I kept them for now in case it
-  improves compatibility by dumber bots.
+  and use their own heuristics to decide when to crawl your routes. As such,
+  these properties are not included by default to minimize KB size and enable
+  faster crawling. Optionally, you can enable them by specifying your preferred
+  values like this: `sitemap.response({changefreq:'daily', priority: 0.7,
+  ...})`.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
 
@@ -60,7 +62,9 @@ impossible to forget to add your paths.</p>
 
 ## Changelog
 
-- `0.8.0` - adds ability to specify `additionalPaths` that live outside
+- `0.9.0` - BREAKING CHANGE. Adds configurable `changefreq` and `priority` and
+  _excludes these by default_. See the README's features list for why.
+- `0.8.0` - Adds ability to specify `additionalPaths` that live outside
   `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
 ## Installation
 
@@ -138,7 +142,9 @@ export const GET = async () => {
     },
     additionalPaths: [ // e.g. to a file in your static dir
       '/foo.pdf'
-    ]
+    ],
+    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
+    priority: 0.7        // excluded by default b/c ignored by modern search engines
   });
 };
 ```
@@ -179,7 +185,9 @@ export const GET: RequestHandler = async () => {
     },
     additionalPaths: [ // e.g. to a file in your static dir
       '/foo.pdf'
-    ]
+    ],
+    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
+    priority: 0.7        // excluded by default b/c ignored by modern search engines
   });
 };
 ```

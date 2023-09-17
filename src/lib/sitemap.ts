@@ -1,4 +1,15 @@
 export type ParamValues = Record<string, string[]> | Record<string, never>;
+export type Changefreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+export type Config = {
+  excludePatterns?: [] | string[];
+  headers?: Record<string, string>;
+  paramValues?: ParamValues;
+  origin: string;
+  additionalPaths?: string[];
+  changefreq?: false | Changefreq;
+  priority?: false | Priority
+}
 
 /**
  * Generates an HTTP response containing an XML sitemap.
@@ -24,16 +35,12 @@ export async function response({
   headers = {},
   paramValues,
   origin,
-  additionalPaths = []
-}: {
-  excludePatterns?: string[] | [];
-  headers?: Record<string, string>;
-  paramValues?: ParamValues;
-  origin: string;
-  additionalPaths?: string[];
-}): Promise<Response> {
+  additionalPaths = [],
+  changefreq = false,
+  priority = false,
+}: Config): Promise<Response> {
   const paths = generatePaths(excludePatterns, paramValues);
-  const body = generateBody(origin, new Set([...paths, ...additionalPaths]));
+  const body = generateBody(origin, new Set([...paths, ...additionalPaths]), changefreq, priority);
 
   // Merge keys case-insensitive
   const _headers = {
@@ -66,7 +73,7 @@ export async function response({
  * @returns The generated XML sitemap.
  */
 
-export function generateBody(origin: string, paths: Set<string>): string {
+export function generateBody(origin: string, paths: Set<string>, changefreq: Changefreq, priority: Priority): string {
   const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
@@ -81,10 +88,10 @@ export function generateBody(origin: string, paths: Set<string>): string {
     .map(
       (path: string) => `
   <url>
-    <loc>${origin}${path}</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>`
+    <loc>${origin}${path}</loc>\n` +
+(changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '') +
+(priority   ? `    <priority>${priority}</priority>\n` : '') +
+`  </url>`
     )
     .join('')}
 </urlset>`;
