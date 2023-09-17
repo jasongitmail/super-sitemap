@@ -247,7 +247,7 @@ describe('sitemap.ts', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let parameterizedPaths;
       const result = () => {
-        [routes, parameterizedPaths] = sitemap.buildParameterizedPaths(routes, paramValues);
+        [routes, parameterizedPaths] = sitemap.buildMultiParamPaths(routes, paramValues);
       };
       expect(result).toThrow(Error);
     });
@@ -259,7 +259,7 @@ describe('sitemap.ts', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let parameterizedPaths;
       const result = () => {
-        [routes, parameterizedPaths] = sitemap.buildParameterizedPaths(routes, paramValues);
+        [routes, parameterizedPaths] = sitemap.buildMultiParamPaths(routes, paramValues);
       };
       expect(result).toThrow(Error);
     });

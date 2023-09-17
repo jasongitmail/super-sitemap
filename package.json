@@ -1,6 +1,6 @@
 {
   "name": "sk-sitemap",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "SvelteKit sitemap that just works and makes it impossible to forget to add paths.",
   "repository": {
     "type": "git",

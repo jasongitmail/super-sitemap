@@ -1,9 +1,11 @@
 export type ParamValues = Record<string, string[] | string[][] | never>;
 
+// Don't use named types on properties, like ParamValues, because it's more
+// helpful for the dev to see these allowed values in their IDE.
 export type SitemapConfig = {
   excludePatterns?: string[] | [];
   headers?: Record<string, string>;
-  paramValues?: Record<string, string[] | string[][] | never>; // more useful to see in IDE than "ParamValues"
+  paramValues?: Record<string, string[] | string[][] | never>;
   origin: string;
   additionalPaths?: string[] | [];
   changefreq?: false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
@@ -95,8 +97,8 @@ export async function response({
 export function generateBody(
   origin: string,
   paths: Set<string>,
-  changefreq: Changefreq,
-  priority: Priority
+  changefreq: SitemapConfig['changefreq'] = false,
+  priority: SitemapConfig['priority'] = false
 ): string {
   const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
 
@@ -227,26 +229,24 @@ export function buildMultiParamPaths(
 
     // First, determine if this is a 1D array, which we allow as a user convenience.
     // If the first item is an array, then it's a 2D array.
-    // e.g. 1D: ['hello-world', 'another-post', 'post3']
-    // e.g. 2D: [['USA','Miami'], ['France','Paris'], ['Venice, Italy'] ]
-    // e.g. 2D with one el each (also valid): [['hello-world'], ['another-post'], ['post3'] ]
     if (Array.isArray(paramValues[route][0])) {
-      // 2D array of one or more elements each
-      //
-      // Given all data for this route...loop over and generate a path for each
-      // `paramValues[route]` is all data for all paths for this route.
+      // 2D array of one or more elements each.
+      // - e.g. [['usa','miami'], ['usa','new-york'], ['canada, toronto']]
+      // - e.g. [['hello-world'], ['another-post'], ['post3']] (also valid to offer flexibility)
       parameterizedPaths.push(
+        // Given all data for this route, loop over and generate a path for each.
+        // `paramValues[route]` is all data for all paths for this route.
         ...paramValues[route].map((data) => {
           let i = 0;
           return route.replace(/\[[^\]]+\]/g, () => data[i++] || '');
         })
       );
     } else {
-      // 1D array
-      //
+      // 1D array of one or more elements.
+      // - e.g. ['hello-world', 'another-post', 'post3']
       // Generate paths using data from paramValues–e.g. `/blog/hello-world`
-      // @ts-expect-error fro map, we know this is a 1D array
       parameterizedPaths.push(
+        // @ts-expect-error for map, we know this is a 1D array
         ...paramValues[route].map((value: string) => route.replace(/\[.*\]/, value))
       );
     }
