@@ -1,7 +1,7 @@
 export type ParamValues = Record<string, string[]> | Record<string, never>;
 export type Changefreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
 export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
-export type Config = {
+export type SitemapConfig = {
   excludePatterns?: [] | string[];
   headers?: Record<string, string>;
   paramValues?: ParamValues;
@@ -38,7 +38,7 @@ export async function response({
   additionalPaths = [],
   changefreq = false,
   priority = false,
-}: Config): Promise<Response> {
+}: SitemapConfig): Promise<Response> {
   const paths = generatePaths(excludePatterns, paramValues);
   const body = generateBody(origin, new Set([...paths, ...additionalPaths]), changefreq, priority);
 
