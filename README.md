@@ -134,13 +134,13 @@ export const GET = async () => {
       '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
     },
     headers: {
-      'custom-header': 'foo' // case insensitive
+      'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
     },
-    additionalPaths: [ // e.g. to a file in your static dir
+    additionalPaths: [   // e.g. to a file in your static dir
       '/foo.pdf'
     ],
-    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7        // excluded by default b/c ignored by modern search engines
+    changefreq: 'daily', // defaults to false b/c ignored by modern search engines
+    priority: 0.7        // defaults to false b/c ignored by modern search engines
   });
 };
 ```
@@ -162,11 +162,6 @@ export const GET: RequestHandler = async () => {
     throw error(500, 'Could not load data for param values.');
   }
 
-  const paramValues = {
-    '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-    '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
-  };
-
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
@@ -178,13 +173,13 @@ export const GET: RequestHandler = async () => {
       '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
     },
     headers: {
-      'custom-header': 'foo' // case insensitive
+      'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
     },
-    additionalPaths: [ // e.g. to a file in your static dir
+    additionalPaths: [   // e.g. to a file in your static dir
       '/foo.pdf'
     ],
-    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7        // excluded by default b/c ignored by modern search engines
+    changefreq: 'daily', // defaults to false b/c ignored by modern search engines
+    priority: 0.7        // defaults to false b/c ignored by modern search engines
   });
 };
 ```
@@ -266,6 +261,11 @@ export const GET: RequestHandler = async () => {
     </url>
     <url>
         <loc>https://example/blog/tag/blue</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://example/foo.pdf</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
