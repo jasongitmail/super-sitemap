@@ -37,14 +37,12 @@ impossible to forget to add your paths.</p>
   these properties are not included by default to minimize KB size and enable
   faster crawling. Optionally, you can enable them by specifying your preferred
   values like this: `sitemap.response({changefreq:'daily', priority: 0.7,
-  ...})`.
+...})`.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
 
 ## Limitations of MVP...that _could_ be supported
 
-- Supports one param per route (`/blog/tag/[tag]`), but could be refactored to
-  support unlimited params per route (e.g.`/[lang]/blog/tag/[tag]`).
 - A future version could build a [Sitemap
   Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
   when total URLs exceed >50,000, which is the max quantity Google will read in
@@ -62,10 +60,12 @@ impossible to forget to add your paths.</p>
 
 ## Changelog
 
+- `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
 - `0.9.0` - BREAKING CHANGE. Adds configurable `changefreq` and `priority` and
   _excludes these by default_. See the README's features list for why.
 - `0.8.0` - Adds ability to specify `additionalPaths` that live outside
   `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
+
 ## Installation
 
 `npm i -D sk-sitemap`
@@ -167,21 +167,22 @@ export const GET: RequestHandler = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*',         // e.g. routes starting with `/dashboard`
+      '^/dashboard.*', // e.g. routes starting with `/dashboard`
       `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
     ],
     paramValues: {
-      '/blog/[slug]': blogSlugs,  // e.g. ['hello-world', 'another-post']
+      '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
       '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
     },
     headers: {
       'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
     },
-    additionalPaths: [   // e.g. to a file in your static dir
+    additionalPaths: [
+      // e.g. to a file in your static dir
       '/foo.pdf'
     ],
     changefreq: 'daily', // defaults to false b/c ignored by modern search engines
-    priority: 0.7        // defaults to false b/c ignored by modern search engines
+    priority: 0.7 // defaults to false b/c ignored by modern search engines
   });
 };
 ```
