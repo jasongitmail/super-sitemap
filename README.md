@@ -115,11 +115,6 @@ import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 
 export const GET = async () => {
-  const excludePatterns = [
-    '^/dashboard.*',
-    `.*\\[page=integer\\].*` // Routes containing `[page=integer]`–e.g. `/blog/2`
-  ];
-
   // Get data for parameterized routes
   let blogSlugs, blogTags;
   try {
@@ -128,15 +123,16 @@ export const GET = async () => {
     throw error(500, 'Could not load data for param values.');
   }
 
-  const paramValues = {
-    '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-    '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
-  };
-
   return await sitemap.response({
     origin: 'https://example.com',
-    excludePatterns,
-    paramValues,
+    excludePatterns: [
+      '^/dashboard.*',         // e.g. routes starting with `/dashboard`
+      `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
+    ],
+    paramValues: {
+      '/blog/[slug]': blogSlugs,  // e.g. ['hello-world', 'another-post']
+      '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
+    },
     headers: {
       'custom-header': 'foo' // case insensitive
     },
@@ -158,11 +154,6 @@ import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
-  const excludePatterns = [
-    '^/dashboard.*',
-    `.*\\[page=integer\\].*` // Routes containing `[page=integer]`–e.g. `/blog/2`
-  ];
-
   // Get data for parameterized routes
   let blogSlugs, blogTags;
   try {
@@ -178,8 +169,14 @@ export const GET: RequestHandler = async () => {
 
   return await sitemap.response({
     origin: 'https://example.com',
-    excludePatterns,
-    paramValues,
+    excludePatterns: [
+      '^/dashboard.*',         // e.g. routes starting with `/dashboard`
+      `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
+    ],
+    paramValues: {
+      '/blog/[slug]': blogSlugs,  // e.g. ['hello-world', 'another-post']
+      '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
+    },
     headers: {
       'custom-header': 'foo' // case insensitive
     },

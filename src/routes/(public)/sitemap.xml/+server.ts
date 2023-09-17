@@ -15,13 +15,6 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const prerender = true;
 
 export const GET: RequestHandler = async () => {
-  const excludePatterns = [
-    '^/dashboard.*',
-
-    // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-    `.*\\[page\\=integer\\].*`
-  ];
-
   // Get data for parameterized routes
   let slugs, tags;
   try {
@@ -30,15 +23,18 @@ export const GET: RequestHandler = async () => {
     throw error(500, 'Could not load paths');
   }
 
-  // Provide data for parameterized routes
-  const paramValues = {
-    '/blog/[slug]': slugs,
-    '/blog/tag/[tag]': tags
-  };
-
   return await sitemap.response({
     origin: 'https://example.com',
-    excludePatterns,
-    paramValues
+    excludePatterns: [
+      '^/dashboard.*',
+
+      // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+      `.*\\[page\\=integer\\].*`
+    ],
+    paramValues: {
+      '/blog/[slug]': slugs,
+      '/blog/tag/[tag]': tags
+    },
+    additionalPaths: ['/additional-path'],
   });
 };
