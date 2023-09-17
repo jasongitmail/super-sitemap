@@ -29,7 +29,7 @@ export const GET: RequestHandler = async () => {
       '^/dashboard.*',
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-      `.*\\[page\\=integer\\].*`
+      `.*\\[page=integer\\].*`
     ],
     paramValues: {
       '/blog/[slug]': slugs,
@@ -40,6 +40,6 @@ export const GET: RequestHandler = async () => {
         ['canada', 'toronto']
       ]
     },
-    additionalPaths: ['/additional-path']
+    additionalPaths: ['/foo.pdf'] // e.g. file in `static` dir
   });
 };
