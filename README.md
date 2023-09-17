@@ -132,14 +132,19 @@ export const GET = async () => {
       `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
     ],
     paramValues: {
-      '/blog/[slug]': blogSlugs,  // e.g. ['hello-world', 'another-post']
-      '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
+      '/blog/[slug]': blogSlugs,   // e.g. ['hello-world', 'another-post']
+      '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
+      '/campsites/[country]/[state]': [
+        ['usa', 'new-york'],
+        ['usa', 'california'],
+        ['canada', 'toronto']
+      ]
     },
     headers: {
       'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
     },
-    additionalPaths: [   // e.g. to a file in your static dir
-      '/foo.pdf'
+    additionalPaths: [
+      '/foo.pdf'         // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // defaults to false b/c ignored by modern search engines
     priority: 0.7        // defaults to false b/c ignored by modern search engines
@@ -149,7 +154,7 @@ export const GET = async () => {
 
 TypeScript:
 
-```ts
+```js
 // /src/routes/sitemap.xml/+server.ts
 import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
@@ -172,14 +177,18 @@ export const GET: RequestHandler = async () => {
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-      '/blog/tag/[tag]': blogTags // e.g. ['red', 'green', 'blue']
+      '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
+      '/campsites/[country]/[state]': [
+        ['usa', 'new-york'],
+        ['usa', 'california'],
+        ['canada', 'toronto']
+      ]
     },
     headers: {
       'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
     },
     additionalPaths: [
-      // e.g. to a file in your static dir
-      '/foo.pdf'
+      '/foo.pdf' // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // defaults to false b/c ignored by modern search engines
     priority: 0.7 // defaults to false b/c ignored by modern search engines
