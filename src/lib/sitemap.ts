@@ -1,5 +1,15 @@
-export type ParamValues = Record<string, string[]> | Record<string, never>;
-export type Changefreq = false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+// export type ParamValues = Record<string, string[]> | Record<string, never>;
+export type ParamValues = Record<string, MultiParamValues> | Record<string, never>;
+export type MultiParamValues = string[] | string[][];
+export type Changefreq =
+  | false
+  | 'always'
+  | 'hourly'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'yearly'
+  | 'never';
 export type Priority = false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 export type SitemapConfig = {
   excludePatterns?: [] | string[];
@@ -8,8 +18,8 @@ export type SitemapConfig = {
   origin: string;
   additionalPaths?: string[];
   changefreq?: Changefreq;
-  priority?: Priority
-}
+  priority?: Priority;
+};
 
 /**
  * Generates an HTTP response containing an XML sitemap.
@@ -37,7 +47,7 @@ export async function response({
   origin,
   additionalPaths = [],
   changefreq = false,
-  priority = false,
+  priority = false
 }: SitemapConfig): Promise<Response> {
   const paths = generatePaths(excludePatterns, paramValues);
   const body = generateBody(origin, new Set([...paths, ...additionalPaths]), changefreq, priority);
@@ -73,7 +83,12 @@ export async function response({
  * @returns The generated XML sitemap.
  */
 
-export function generateBody(origin: string, paths: Set<string>, changefreq: Changefreq, priority: Priority): string {
+export function generateBody(
+  origin: string,
+  paths: Set<string>,
+  changefreq: Changefreq,
+  priority: Priority
+): string {
   const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
@@ -86,12 +101,13 @@ export function generateBody(origin: string, paths: Set<string>, changefreq: Cha
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 >${normalizedPaths
     .map(
-      (path: string) => `
+      (path: string) =>
+        `
   <url>
     <loc>${origin}${path}</loc>\n` +
-(changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '') +
-(priority   ? `    <priority>${priority}</priority>\n` : '') +
-`  </url>`
+        (changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '') +
+        (priority ? `    <priority>${priority}</priority>\n` : '') +
+        `  </url>`
     )
     .join('')}
 </urlset>`;
@@ -116,7 +132,7 @@ export function generatePaths(
   routes = filterRoutes(routes, excludePatterns);
 
   let parameterizedPaths = [];
-  [routes, parameterizedPaths] = buildParameterizedPaths(routes, paramValues);
+  [routes, parameterizedPaths] = buildMultiParamPaths(routes, paramValues);
 
   return [...routes, ...parameterizedPaths];
 }
@@ -161,15 +177,23 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
 
 /**
  * Builds parameterized paths using paramValues provided (e.g.
- * `/blog/hello-world`) and then remove the respective tokenized route
- * (`/blog/[slug]`) from the routes array.
+ * `/blog/hello-world`) and then removes the respective tokenized route (e.g.
+ * `/blog/[slug]`) from the routes array.
  *
  * @public
  *
  * @param routes - An array of route strings, including parameterized routes
  *                 E.g. ['/', '/about', '/blog/[slug]', /blog/tags/[tag]']
- * @param paramValues - An object mapping parameterized routes to an array of
- *                      their parameter values.
+ * @param paramValues - An object mapping parameterized routes to a 1D or 2D
+ *                      array of their parameter's values. E.g.
+ *                      {
+ *                        '/blog/[slug]': ['hello-world', 'another-post']
+ *                        '/campsites/[country]/[state]': [
+ *                          ['usa','miami'],
+ *                          ['usa','new-york'],
+ *                          ['canada','toronto']
+ *                        ]
+ *                      }
  *
  * @returns A tuple where the first element is an array of routes and the second
  *          element is an array of generated parameterized paths.
@@ -179,8 +203,7 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
  * @throws Will throw an error if a parameterized route does not have data
  *         within paramValues, for visibility to the developer.
  */
-
-export function buildParameterizedPaths(
+export function buildMultiParamPaths(
   routes: string[],
   paramValues: ParamValues
 ): [string[], string[]] {
@@ -193,8 +216,31 @@ export function buildParameterizedPaths(
       );
     }
 
-    // Generate paths using data from paramValues–e.g. `/blog/hello-world`
-    parameterizedPaths.push(...paramValues[route].map((value) => route.replace(/\[.*\]/, value)));
+    // First, determine if this is a 1D array, which we allow as a user convenience.
+    // If the first item is an array, then it's a 2D array.
+    // e.g. 1D: ['hello-world', 'another-post', 'post3']
+    // e.g. 2D: [['USA','Miami'], ['France','Paris'], ['Venice, Italy'] ]
+    // e.g. 2D with one el each (also valid): [['hello-world'], ['another-post'], ['post3'] ]
+    if (Array.isArray(paramValues[route][0])) {
+      // 2D array of one or more elements each
+      //
+      // Given all data for this route...loop over and generate a path for each
+      // `paramValues[route]` is all data for all paths for this route.
+      parameterizedPaths.push(
+        ...paramValues[route].map((data) => {
+          let i = 0;
+          return route.replace(/\[[^\]]+\]/g, () => data[i++] || '');
+        })
+      );
+    } else {
+      // 1D array
+      //
+      // Generate paths using data from paramValues–e.g. `/blog/hello-world`
+      // @ts-expect-error fro map, we know this is a 1D array
+      parameterizedPaths.push(
+        ...paramValues[route].map((value: string) => route.replace(/\[.*\]/, value))
+      );
+    }
 
     // Remove route containing the token placeholder–e.g. `/blog/[slug]`
     routes.splice(routes.indexOf(route), 1);

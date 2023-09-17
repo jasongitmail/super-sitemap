@@ -33,8 +33,13 @@ export const GET: RequestHandler = async () => {
     ],
     paramValues: {
       '/blog/[slug]': slugs,
-      '/blog/tag/[tag]': tags
+      '/blog/tag/[tag]': tags,
+      '/campsites/[country]/[state]': [
+        ['usa', 'new-york'],
+        ['usa', 'california'],
+        ['canada', 'toronto']
+      ]
     },
-    additionalPaths: ['/additional-path'],
+    additionalPaths: ['/additional-path']
   });
 };

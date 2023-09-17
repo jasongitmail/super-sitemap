@@ -16,23 +16,26 @@ describe('sitemap.ts', () => {
       // 5. ignoring of server-side routes (e.g. `/og/blog/[title].png` and
       //    `sitemap.xml` itself)
 
-      const excludePatterns = [
-        '^/dashboard.*',
-
-        // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-        `.*\\[page=integer\\].*`
-      ];
-
-      // Provide data for parameterized routes
-      const paramValues = {
-        '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
-        '/blog/tag/[tag]': ['red', 'blue', 'green', 'cyan']
-      };
-
       const res = await sitemap.response({
         origin: 'https://example.com',
-        excludePatterns,
-        paramValues,
+        excludePatterns: [
+          '^/dashboard.*',
+
+          // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+          `.*\\[page=integer\\].*`
+        ],
+        paramValues: {
+          // 1D array
+          '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
+          // 2D with only 1 element each
+          '/blog/tag/[tag]': [['red'], ['blue'], ['green'], ['cyan']],
+          // 2D array
+          '/campsites/[country]/[state]': [
+            ['usa', 'new-york'],
+            ['usa', 'california'],
+            ['canada', 'toronto']
+          ]
+        },
         headers: {
           'custom-header': 'mars'
         },
@@ -57,7 +60,8 @@ describe('sitemap.ts', () => {
     const resultXml = sitemap.generateBody('https://example.com', paths);
 
     it('should generate the expected XML sitemap string', () => {
-      const expected = `<?xml version="1.0" encoding="UTF-8" ?>
+      const expected = `
+<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
@@ -72,7 +76,7 @@ describe('sitemap.ts', () => {
   <url>
     <loc>https://example.com/path2</loc>
   </url>
-</urlset>`;
+</urlset>`.trim();
 
       expect(resultXml).toEqual(expected);
     });
@@ -86,7 +90,8 @@ describe('sitemap.ts', () => {
   describe('generatePaths()', () => {
     it('should return expected result', async () => {
       // This test creates a sitemap based off the actual routes found within
-      // this projects `/src/routes`
+      // this projects `/src/routes`, given generatePaths() uses
+      // `import.meta.glob()`.
 
       const excludePatterns = [
         '^/dashboard.*',
@@ -97,8 +102,16 @@ describe('sitemap.ts', () => {
 
       // Provide data for parameterized routes
       const paramValues = {
-        '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
-        '/blog/tag/[tag]': ['red', 'blue', 'green', 'cyan']
+        // 1D array
+        '/blog/[slug]': ['hello-world', 'another-post'],
+        // 2D with only 1 element each
+        '/blog/tag/[tag]': [['red'], ['blue'], ['green'], ['cyan']],
+        // 2D array
+        '/campsites/[country]/[state]': [
+          ['usa', 'new-york'],
+          ['usa', 'california'],
+          ['canada', 'toronto']
+        ]
       };
 
       const resultPaths = sitemap.generatePaths(excludePatterns, paramValues);
@@ -114,11 +127,13 @@ describe('sitemap.ts', () => {
         '/terms',
         '/blog/hello-world',
         '/blog/another-post',
-        '/blog/awesome-post',
         '/blog/tag/red',
         '/blog/tag/blue',
         '/blog/tag/green',
-        '/blog/tag/cyan'
+        '/blog/tag/cyan',
+        '/campsites/usa/new-york',
+        '/campsites/usa/california',
+        '/campsites/canada/toronto'
       ];
 
       expect(resultPaths).toEqual(expectedPaths);
@@ -173,11 +188,27 @@ describe('sitemap.ts', () => {
     });
   });
 
-  describe('buildParameterizedPaths()', () => {
-    let routes = ['/', '/about', '/pricing', '/blog', '/blog/[slug]', '/blog/tag/[tag]'];
+  describe('buildMultiParamPaths()', () => {
+    let routes = [
+      '/',
+      '/about',
+      '/pricing',
+      '/blog',
+      '/blog/[slug]',
+      '/blog/tag/[tag]',
+      '/campsites/[country]/[state]'
+    ];
     const paramValues = {
+      // 1D array
       '/blog/[slug]': ['hello-world', 'another-post'],
-      '/blog/tag/[tag]': ['red', 'blue', 'green']
+      // 2D with only 1 element each
+      '/blog/tag/[tag]': [['red'], ['blue'], ['green']],
+      // 2D array
+      '/campsites/[country]/[state]': [
+        ['usa', 'new-york'],
+        ['usa', 'california'],
+        ['canada', 'toronto']
+      ]
     };
 
     it('should build parameterized paths and remove the original tokenized route(s)', () => {
@@ -187,11 +218,14 @@ describe('sitemap.ts', () => {
         '/blog/another-post',
         '/blog/tag/red',
         '/blog/tag/blue',
-        '/blog/tag/green'
+        '/blog/tag/green',
+        '/campsites/usa/new-york',
+        '/campsites/usa/california',
+        '/campsites/canada/toronto'
       ];
 
       let parameterizedPaths;
-      [routes, parameterizedPaths] = sitemap.buildParameterizedPaths(routes, paramValues);
+      [routes, parameterizedPaths] = sitemap.buildMultiParamPaths(routes, paramValues);
       expect(parameterizedPaths).toEqual(expectedPaths);
       expect(routes).toEqual(expectedRoutes);
     });
@@ -202,7 +236,7 @@ describe('sitemap.ts', () => {
 
       let parameterizedPaths;
       // eslint-disable-next-line prefer-const
-      [routes, parameterizedPaths] = sitemap.buildParameterizedPaths(routes, paramValues);
+      [routes, parameterizedPaths] = sitemap.buildMultiParamPaths(routes, paramValues);
       expect(parameterizedPaths).toEqual([]);
       expect(routes).toEqual(routes);
     });
