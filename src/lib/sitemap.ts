@@ -1,14 +1,14 @@
 export type ParamValues = Record<string, string[]> | Record<string, never>;
-export type Changefreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
-export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+export type Changefreq = false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+export type Priority = false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 export type SitemapConfig = {
   excludePatterns?: [] | string[];
   headers?: Record<string, string>;
   paramValues?: ParamValues;
   origin: string;
   additionalPaths?: string[];
-  changefreq?: false | Changefreq;
-  priority?: false | Priority
+  changefreq?: Changefreq;
+  priority?: Priority
 }
 
 /**
