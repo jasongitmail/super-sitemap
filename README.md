@@ -114,6 +114,8 @@ JavaScript:
 import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 
+export const prerender = true; // works either way
+
 export const GET = async () => {
   // Get data for parameterized routes
   let blogSlugs, blogTags;
@@ -123,16 +125,14 @@ export const GET = async () => {
     throw error(500, 'Could not load data for param values.');
   }
 
-  export prerendered = true;
-
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*',         // e.g. routes starting with `/dashboard`
+      '^/dashboard.*', // e.g. routes starting with `/dashboard`
       `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
     ],
     paramValues: {
-      '/blog/[slug]': blogSlugs,   // e.g. ['hello-world', 'another-post']
+      '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
       '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
@@ -141,24 +141,26 @@ export const GET = async () => {
       ]
     },
     headers: {
-      'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
+      'custom-header': 'foo' // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
-      '/foo.pdf'         // e.g. to a file in your static dir
+      '/foo.pdf' // e.g. to a file in your static dir
     ],
-    changefreq: 'daily', // defaults to false b/c ignored by modern search engines
-    priority: 0.7        // defaults to false b/c ignored by modern search engines
+    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
+    priority: 0.7 // excluded by default b/c ignored by modern search engines
   });
 };
 ```
 
 TypeScript:
 
-```js
+```ts
 // /src/routes/sitemap.xml/+server.ts
 import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
+
+export const prerender = true; // works either way
 
 export const GET: RequestHandler = async () => {
   // Get data for parameterized routes
@@ -185,13 +187,13 @@ export const GET: RequestHandler = async () => {
       ]
     },
     headers: {
-      'custom-header': 'foo' // case insensitive; defaults to XML content type & 1h CDN cache
+      'custom-header': 'foo' // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
       '/foo.pdf' // e.g. to a file in your static dir
     ],
-    changefreq: 'daily', // defaults to false b/c ignored by modern search engines
-    priority: 0.7 // defaults to false b/c ignored by modern search engines
+    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
+    priority: 0.7 // excluded by default b/c ignored by modern search engines
   });
 };
 ```
@@ -290,6 +292,21 @@ export const GET: RequestHandler = async () => {
     </url>
     <url>
         <loc>https://example/blog/tag/blue</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://example/campsites/usa/new-york</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://example/campsites/usa/california</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://example/campsites/canada/toronto</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
