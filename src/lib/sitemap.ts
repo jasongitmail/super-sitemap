@@ -7,27 +7,33 @@ export type ParamValues = Record<string, string[]> | Record<string, never>;
  * @remarks Default headers set 1h CDN cache & no browser cache.
  *
  * @param options - Configuration options.
- * @param options.origin - The origin URL. E.g. `https://example.com`. No trailing slash.
+ * @param options.origin - The origin URL. E.g. `https://example.com`. No
+ * trailing slash.
  * @param options.excludePatterns - Optional. An array of regex patterns to
  *                                  exclude from paths.
  * @param options.paramValues - Optional. An object mapping parameters to their
  *                              values.
  * @param options.customHeaders - Optional. Custom headers to override defaults.
+ * @param options.additionalPaths - Optional. Array of additional paths to
+ *                                  include, such as individual files in the
+ *                                  project's static dir.
  * @returns An HTTP response containing the generated XML sitemap.
  */
 export async function response({
   excludePatterns,
   headers = {},
   paramValues,
-  origin
+  origin,
+  additionalPaths = []
 }: {
   excludePatterns?: string[] | [];
   headers?: Record<string, string>;
   paramValues?: ParamValues;
   origin: string;
+  additionalPaths?: string[];
 }): Promise<Response> {
   const paths = generatePaths(excludePatterns, paramValues);
-  const body = generateBody(origin, new Set(paths));
+  const body = generateBody(origin, new Set([...paths, ...additionalPaths]));
 
   // Merge keys case-insensitive
   const _headers = {

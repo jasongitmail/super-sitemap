@@ -58,6 +58,10 @@ impossible to forget to add your paths.</p>
   [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps)
   sitemap extensions.
 
+## Changelog
+
+- `0.8.0` - adds ability to specify `additionalPaths` that live outside
+  `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
 ## Installation
 
 `npm i -D sk-sitemap`
@@ -97,7 +101,7 @@ export const GET: RequestHandler = async () => {
 };
 ```
 
-### Realistic example
+### The "everything" example
 
 JavaScript:
 
@@ -131,7 +135,10 @@ export const GET = async () => {
     paramValues,
     headers: {
       'custom-header': 'foo' // case insensitive
-    }
+    },
+    additionalPaths: [ // e.g. to a file in your static dir
+      '/foo.pdf'
+    ]
   });
 };
 ```
@@ -169,7 +176,10 @@ export const GET: RequestHandler = async () => {
     paramValues,
     headers: {
       'custom-header': 'foo' // case insensitive
-    }
+    },
+    additionalPaths: [ // e.g. to a file in your static dir
+      '/foo.pdf'
+    ]
   });
 };
 ```

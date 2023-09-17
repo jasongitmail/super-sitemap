@@ -35,7 +35,8 @@ describe('sitemap.ts', () => {
         paramValues,
         headers: {
           'custom-header': 'mars'
-        }
+        },
+        additionalPaths: ['/additional-path']
       });
       const resultXml = await res.text();
 
