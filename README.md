@@ -123,6 +123,8 @@ export const GET = async () => {
     throw error(500, 'Could not load data for param values.');
   }
 
+  export prerendered = true;
+
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
@@ -183,6 +185,23 @@ export const GET: RequestHandler = async () => {
   });
 };
 ```
+
+## Note on prerendering
+
+- 💡 If you set `export const prerender = true;` within your
+  `/src/routes/sitemap.xml/+server.ts` file, you can find `sitemap.xml` is
+  generated in your `.svelte-kit` build dir ✅. But you run `npm run preview`,
+  you will notice the SvelteKit preview server sets an _HTML_ content type on
+  the response 😱. This is due to the [_preview server's_
+  limitations](https://github.com/sveltejs/kit/issues/9408), because it's the
+  web server's responsibility to set the content type response header when
+  serving static files.
+
+  However, production hosts like Cloudflare, Vercel, Netlify, & others are
+  smarter and set `'content-type': 'application/xml'` when serving your
+  prerendered `sitemap.xml` file 😅. And, when not using prerendering your
+  sitemap, `'content-type': 'application/xml'` is set by SK Sitemap's default
+  response headers 👌.
 
 ## Result
 
