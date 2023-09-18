@@ -3,13 +3,13 @@
   <h1 align="center">SK Sitemap</h1>
 
   <a href="https://github.com/jasongitmail/sk-sitemap/actions/workflows/ci.yml">
-    <img alt="Unit Tests" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/sk-sitemap/ci.yml?label=tests">
+    <img alt="unit tests badge" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/sk-sitemap/ci.yml?label=tests">
   </a>
   <a href="https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE">
-    <img alt="NPM" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">
+    <img alt="license badge" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">
   </a>
   <a href="https://www.npmjs.com/package/sk-sitemap">
-    <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">
+    <img alt="npm badge" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">
   </a>
 <br/>
   <p>Automatic <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
@@ -209,9 +209,7 @@ export const GET: RequestHandler = async () => {
 
 Create a `robots.txt` so search engines know where to find your sitemap.
 
-You can either create a file at `/static/robots.txt` or a route at
-`/src/routes/robots.txt/+server.ts` if you want to get the origin from your env,
-which is common.
+You can create it at `/static/robots.txt`:
 
 ```text
 # /static/robots.txt
@@ -221,11 +219,13 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 ```
 
-or
+Or, at `/src/routes/robots.txt/+server.ts`, if you define `ORIGIN` within your
+env and want to access it:
 
 ```ts
 // /src/routes/robots.txt/+server.ts
 // A static file is not used because this allows access to env.ORIGIN
+import * as env from '$env/static/public';
 
 export const prerender = true;
 
@@ -235,7 +235,7 @@ export async function GET(): Promise<Response> {
 		'User-agent: *',
 		'Allow: /',
 		'',
-		`Sitemap: ${process.env.ORIGIN}/sitemap.xml`
+		`Sitemap: ${env.ORIGIN}/sitemap.xml`
 	].join('\n').trim();
 
   const headers = {
@@ -248,22 +248,23 @@ export async function GET(): Promise<Response> {
 
 ## Note on prerendering
 
-- 💡 If you set `export const prerender = true;` within your
-  `/src/routes/sitemap.xml/+server.ts` file, you can find `sitemap.xml` is
-  generated in your `.svelte-kit` build dir ✅. But when you run `npm run
-preview`, you will notice the SvelteKit preview server sets an _HTML_ content
-  type on the response 😱. This is [due to the _preview server's_
-  limitations](https://github.com/sveltejs/kit/issues/9408), because it's the
-  web server's responsibility to set the content type response header when
-  serving static files.
+💡 If you set `export const prerender = true;` within your
+`/src/routes/sitemap.xml/+server.ts` file, you can find `sitemap.xml` is
+generated in your `.svelte-kit` build dir ✅.
 
-  However, production hosts like Cloudflare, Vercel, Netlify, & others are
-  smarter and set `'content-type': 'application/xml'` when serving your
-  prerendered `sitemap.xml` file 😅. Or if not prerendering your sitemap,
-  `'content-type': 'application/xml'` is set by SK Sitemap's default response
-  headers 👌.
+But when you run `npm run preview`, you will notice the SvelteKit preview server
+sets a `text/html` content type on the response 😱. This is [due to the preview
+server's limitations](https://github.com/sveltejs/kit/issues/9408), because it's
+the web server's responsibility to set the content type response header when
+serving static files.
 
-  The above is also true for `robots.txt`, which uses a `text/plain` mime type.
+However, production hosts like Cloudflare, Vercel, Netlify, & others are
+smarter and set `'content-type': 'application/xml'` when serving your
+prerendered `sitemap.xml` file 😅. Or if not prerendering your sitemap,
+`'content-type': 'application/xml'` is set by SK Sitemap's default response
+headers 👌.
+
+The above is also true for `robots.txt`, which uses a `text/plain` mime type.
 
 ## Example output
 
@@ -386,5 +387,5 @@ bun install
 
 ## Publishing
 
-A new version of this NPM package is automatically published when the semver
+A new version of this npm package is automatically published when the semver
 version within `package.json` is incremented.
