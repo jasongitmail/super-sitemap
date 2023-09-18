@@ -16,6 +16,19 @@
 impossible to forget to add your paths.</p>
 </div>
 
+## Table of Contents
+
+- [Features](#features)
+- [Limitations](#limitations)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Basic example](#basic-example)
+  - [The "everything" example](#the-everything-example)
+- [Recommended robots.txt](#recommended-robotstxt)
+- [Note on prerendering](#note-on-prerendering)
+- [Example output](#example-output)
+- [Changelog](#changelog)
+
 ## Features
 
 - 🤓 Supports any rendering method.
@@ -33,15 +46,14 @@ impossible to forget to add your paths.</p>
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
 - 💡 Google, and other modern search engines, [ignore `priority` and
   `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
-  and use their own heuristics to decide when to crawl your routes. As such,
-  these properties are not included by default to minimize KB size and enable
-  faster crawling. Optionally, you can enable them by specifying your preferred
-  values like this: `sitemap.response({changefreq:'daily', priority: 0.7,
-...})`.
+  and use their own heuristics to determine when to crawl pages on your site. As
+  such, these properties are not included by default to minimize KB size and
+  enable faster crawling. Optionally, you can enable them like so:
+  `sitemap.response({changefreq:'daily', priority: 0.7, ...})`.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
 
-## Limitations of MVP...that _could_ be supported
+## Limitations
 
 - A future version could build a [Sitemap
   Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
@@ -57,14 +69,6 @@ impossible to forget to add your paths.</p>
   or
   [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps)
   sitemap extensions.
-
-## Changelog
-
-- `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
-- `0.9.0` - BREAKING CHANGE. Adds configurable `changefreq` and `priority` and
-  _excludes these by default_. See the README's features list for why.
-- `0.8.0` - Adds ability to specify `additionalPaths` that live outside
-  `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
 
 ## Installation
 
@@ -107,8 +111,8 @@ export const GET: RequestHandler = async () => {
 
 ### The "everything" example
 
-All aspects of this example are optional, except for `origin` and `paramValues`
-that provides data for parameterized routes.
+All aspects of the below example are optional, except for `origin` and
+`paramValues` to provide data for parameterized routes.
 
 JavaScript:
 
@@ -201,24 +205,67 @@ export const GET: RequestHandler = async () => {
 };
 ```
 
+## Recommended robots.txt
+
+Create a `robots.txt` so search engines know where to find your sitemap.
+
+You can either create a file at `/static/robots.txt` or a route at
+`/src/routes/robots.txt/+server.ts` if you want to get the origin from your env,
+which is common.
+
+```text
+# /static/robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+or
+
+```ts
+// /src/routes/robots.txt/+server.ts
+// A static file is not used because this allows access to env.ORIGIN
+
+export const prerender = true;
+
+export async function GET(): Promise<Response> {
+  // prettier-ignore
+  const body = [
+		'User-agent: *',
+		'Allow: /',
+		'',
+		`Sitemap: ${process.env.ORIGIN}/sitemap.xml`
+	].join('\n').trim();
+
+  const headers = {
+    'Content-Type': 'text/plain'
+  };
+
+  return new Response(body, { headers });
+}
+```
+
 ## Note on prerendering
 
 - 💡 If you set `export const prerender = true;` within your
   `/src/routes/sitemap.xml/+server.ts` file, you can find `sitemap.xml` is
-  generated in your `.svelte-kit` build dir ✅. But you run `npm run preview`,
-  you will notice the SvelteKit preview server sets an _HTML_ content type on
-  the response 😱. This is due to the [_preview server's_
+  generated in your `.svelte-kit` build dir ✅. But when you run `npm run
+preview`, you will notice the SvelteKit preview server sets an _HTML_ content
+  type on the response 😱. This is [due to the _preview server's_
   limitations](https://github.com/sveltejs/kit/issues/9408), because it's the
   web server's responsibility to set the content type response header when
   serving static files.
 
   However, production hosts like Cloudflare, Vercel, Netlify, & others are
   smarter and set `'content-type': 'application/xml'` when serving your
-  prerendered `sitemap.xml` file 😅. And, when not using prerendering your
-  sitemap, `'content-type': 'application/xml'` is set by SK Sitemap's default
-  response headers 👌.
+  prerendered `sitemap.xml` file 😅. Or if not prerendering your sitemap,
+  `'content-type': 'application/xml'` is set by SK Sitemap's default response
+  headers 👌.
 
-## Result
+  The above is also true for `robots.txt`, which uses a `text/plain` mime type.
+
+## Example output
 
 ```xml
 <urlset
@@ -320,6 +367,14 @@ export const GET: RequestHandler = async () => {
     </url>
 </urlset>
 ```
+
+## Changelog
+
+- `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
+- `0.9.0` - BREAKING CHANGE. Adds configurable `changefreq` and `priority` and
+  _excludes these by default_. See the README's features list for why.
+- `0.8.0` - Adds ability to specify `additionalPaths` that live outside
+  `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
 
 ## Developing
 
