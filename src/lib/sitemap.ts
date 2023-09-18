@@ -60,6 +60,11 @@ export async function response({
   changefreq = false,
   priority = false
 }: SitemapConfig): Promise<Response> {
+  // 500. Value will often be from env.origin, which is easily misconfigured.
+  if (!origin) {
+    throw new Error('Sitemap: `origin` property is required in sitemap config.');
+  }
+
   const paths = generatePaths(excludePatterns, paramValues);
   const body = generateBody(origin, new Set([...paths, ...additionalPaths]), changefreq, priority);
 
