@@ -8,7 +8,7 @@
   <a href="https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE">
     <img alt="NPM" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">
   </a>
-  <a href="[https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE](https://www.npmjs.com/package/sk-sitemap)">
+  <a href="https://www.npmjs.com/package/sk-sitemap">
     <img alt="NPM" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">
   </a>
 <br/>
