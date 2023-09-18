@@ -1,4 +1,4 @@
-import * as sitemap from '$lib/sitemap'; // Import from 'sk-sitemap' in your app
+import * as sitemap from '$lib/sitemap'; // Import from 'super-sitemap' in your app
 import { error } from '@sveltejs/kit';
 import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';

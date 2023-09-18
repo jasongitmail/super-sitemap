@@ -1,10 +1,10 @@
 {
-  "name": "sk-sitemap",
-  "version": "0.10.5",
-  "description": "SvelteKit sitemap that just works and makes it impossible to forget to add paths.",
+  "name": "super-sitemap",
+  "version": "0.11.0",
+  "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jasongitmail/sk-sitemap.git"
+    "url": "https://github.com/jasongitmail/super-sitemap.git"
   },
   "license": "MIT",
   "scripts": {

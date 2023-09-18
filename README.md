@@ -1,19 +1,18 @@
 <div align="center">
-  <img src="https://github.com/jasongitmail/sk-sitemap/assets/50032291/21f48ff3-aba5-49b9-a857-3c0b6806750a" alt="project banner" />
-  <h1 align="center">SK Sitemap</h1>
+  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/21f48ff3-aba5-49b9-a857-3c0b6806750a" alt="project banner" />
+  <h1 align="center">Super Sitemap</h1>
 
-  <a href="https://github.com/jasongitmail/sk-sitemap/actions/workflows/ci.yml">
-    <img alt="unit tests badge" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/sk-sitemap/ci.yml?label=tests">
+  <a href="https://github.com/jasongitmail/super-sitemap/actions/workflows/ci.yml">
+    <img alt="unit tests badge" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/super-sitemap/ci.yml?label=tests">
   </a>
-  <a href="https://github.com/jasongitmail/sk-sitemap/blob/main/LICENSE">
-    <img alt="license badge" src="https://img.shields.io/npm/l/sk-sitemap?color=limegreen">
+  <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
+    <img alt="license badge" src="https://img.shields.io/npm/l/super-sitemap?color=limegreen">
   </a>
-  <a href="https://www.npmjs.com/package/sk-sitemap">
-    <img alt="npm badge" src="https://img.shields.io/npm/v/sk-sitemap?color=limegreen">
+  <a href="https://www.npmjs.com/package/super-sitemap">
+    <img alt="npm badge" src="https://img.shields.io/npm/v/super-sitemap?color=limegreen">
   </a>
-<br/>
-  <p>Automatic <a href="https://kit.svelte.dev/">SvelteKit</a> sitemap that makes it
-impossible to forget to add your paths.</p>
+  <br/>
+  <p>SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths</p>
 </div>
 
 ## Table of Contents
@@ -40,7 +39,7 @@ impossible to forget to add your paths.</p>
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
-- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/sk-sitemap/blob/main/src/lib/sitemap.ts#L34):
+- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L34):
   `sitemap.response({ headers: {'cache-control: '...'}, ...})`.
 - 🫡 Uses [SvelteKit's recommended sitemap XML
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
@@ -72,11 +71,11 @@ impossible to forget to add your paths.</p>
 
 ## Installation
 
-`npm i -D sk-sitemap`
+`npm i -D super-sitemap`
 
 or
 
-`bun add -d sk-sitemap`
+`bun add -d super-sitemap`
 
 ## Usage
 
@@ -86,7 +85,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'sk-sitemap';
+import * as sitemap from 'super-sitemap';
 
 export const GET = async () => {
   return await sitemap.response({
@@ -99,7 +98,7 @@ TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
-import * as sitemap from 'sk-sitemap';
+import * as sitemap from 'super-sitemap';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
@@ -118,7 +117,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'sk-sitemap';
+import * as sitemap from 'super-sitemap';
 import * as blog from '$lib/data/blog';
 
 export const prerender = true; // optional
@@ -163,7 +162,7 @@ TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
-import * as sitemap from 'sk-sitemap';
+import * as sitemap from 'super-sitemap';
 import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
 
@@ -261,7 +260,7 @@ serving static files.
 However, production hosts like Cloudflare, Vercel, Netlify, & others are
 smarter and set `'content-type': 'application/xml'` when serving your
 prerendered `sitemap.xml` file 😅. Or if not prerendering your sitemap,
-`'content-type': 'application/xml'` is set by SK Sitemap's default response
+`'content-type': 'application/xml'` is set by Super Sitemap's default response
 headers 👌.
 
 The above is also true for `robots.txt`, which uses a `text/plain` mime type.
@@ -371,8 +370,9 @@ The above is also true for `robots.txt`, which uses a `text/plain` mime type.
 
 ## Changelog
 
+- `0.11.0` - BREAKING: Rename to `super-sitemap` on npm! 🚀
 - `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
-- `0.9.0` - BREAKING CHANGE. Adds configurable `changefreq` and `priority` and
+- `0.9.0` - BREAKING: Adds configurable `changefreq` and `priority` and
   _excludes these by default_. See the README's features list for why.
 - `0.8.0` - Adds ability to specify `additionalPaths` that live outside
   `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
@@ -380,7 +380,7 @@ The above is also true for `robots.txt`, which uses a `text/plain` mime type.
 ## Developing
 
 ```bash
-git clone https://github.com/jasongitmail/sk-sitemap.git
+git clone https://github.com/jasongitmail/super-sitemap.git
 bun install
 # Then edit files in `/src/lib`
 ```
@@ -389,3 +389,8 @@ bun install
 
 A new version of this npm package is automatically published when the semver
 version within `package.json` is incremented.
+
+## Credits
+
+- Built by [x.com/@zkjason\_](https://twitter.com/zkjason_)
+- Made possible by [SvelteKit](https://kit.svelte.dev/) & [Svelte](https://svelte.dev/).
