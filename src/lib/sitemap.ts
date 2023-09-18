@@ -51,7 +51,10 @@ export type SitemapConfig = {
  *   additionalPaths: ['/foo.pdf'],
  *   headers: {
  *    'Custom-Header': 'mars'
- *   }
+ *   },
+ *   changefreq: 'daily',
+ *   priority: 0.7,
+ *   sort: 'alpha'
  * });
  * ```
  */
