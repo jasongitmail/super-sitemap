@@ -10,6 +10,7 @@ export type SitemapConfig = {
   additionalPaths?: string[] | [];
   changefreq?: false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+  sort?: 'alpha' | false;
 };
 
 /**
@@ -24,6 +25,9 @@ export type SitemapConfig = {
  * @param config.paramValues - Optional. Object of parameter values. See format in example below.
  * @param config.additionalPaths - Optional. Array of paths to include manually. E.g. `/foo.pdf` in your `static` directory.
  * @param config.headers - Optional. Custom headers. Case insensitive.
+ * @param config.changefreq - Optional. Default is `false`. `changefreq` value to use for all paths.
+ * @param config.priority - Optional. Default is `false`. `priority` value to use for all paths.
+ * @param config.sort - Optional. Default is `false` and groups paths as static paths (sorted), dynamic paths (unsorted), and then additional paths (unsorted). `alpha` sorts all paths alphabetically.
  * @returns An HTTP response containing the generated XML sitemap.
  *
  * @example
@@ -58,15 +62,19 @@ export async function response({
   origin,
   additionalPaths = [],
   changefreq = false,
-  priority = false
+  priority = false,
+  sort = false
 }: SitemapConfig): Promise<Response> {
   // 500. Value will often be from env.origin, which is easily misconfigured.
   if (!origin) {
     throw new Error('Sitemap: `origin` property is required in sitemap config.');
   }
 
-  const paths = generatePaths(excludePatterns, paramValues);
-  const body = generateBody(origin, new Set([...paths, ...additionalPaths]), changefreq, priority);
+  let paths = generatePaths(excludePatterns, paramValues);
+  paths = [...paths, ...additionalPaths];
+  if (sort === 'alpha') paths.sort();
+
+  const body = generateBody(origin, new Set(paths), changefreq, priority);
 
   // Merge keys case-insensitive
   const _headers = {

@@ -153,7 +153,8 @@ export const GET = async () => {
       '/foo.pdf' // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7 // excluded by default b/c ignored by modern search engines
+    priority: 0.7, // excluded by default b/c ignored by modern search engines
+    sort: 'alpha' // default is false; 'alpha' sorts all paths alphabetically.
   });
 };
 ```
@@ -199,7 +200,8 @@ export const GET: RequestHandler = async () => {
       '/foo.pdf' // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7 // excluded by default b/c ignored by modern search engines
+    priority: 0.7, // excluded by default b/c ignored by modern search engines
+    sort: 'alpha' // default is false; 'alpha' sorts all paths alphabetically.
   });
 };
 ```
@@ -367,6 +369,7 @@ The above is also true for `robots.txt`, which uses a `text/plain` mime type.
 
 ## Changelog
 
+- `0.12.0` - Adds config option to sort `'alpha'` or `false` (default).
 - `0.11.0` - BREAKING: Rename to `super-sitemap` on npm! 🚀
 - `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
 - `0.9.0` - BREAKING: Adds configurable `changefreq` and `priority` and
