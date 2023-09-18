@@ -11,7 +11,7 @@ describe('sample.ts', () => {
         'utf-8'
       );
 
-      const result = await sitemap.sampledUrls(sitemapXml);
+      const result = await sitemap._sampledUrls(sitemapXml);
       expect(result).toEqual([
         'https://example.com/',
         'https://example.com/about',
@@ -21,6 +21,7 @@ describe('sample.ts', () => {
         'https://example.com/campsites/usa/new-york',
         'https://example.com/dashboard',
         'https://example.com/dashboard/settings',
+        'https://example.com/foo-path-1',
         'https://example.com/login',
         'https://example.com/pricing',
         'https://example.com/privacy',
@@ -37,7 +38,7 @@ describe('sample.ts', () => {
         'utf-8'
       );
 
-      const result = await sitemap.sampledPaths(sitemapXml);
+      const result = await sitemap._sampledPaths(sitemapXml);
       expect(result).toEqual([
         '/',
         '/about',
@@ -47,6 +48,7 @@ describe('sample.ts', () => {
         '/campsites/usa/new-york',
         '/dashboard',
         '/dashboard/settings',
+        '/foo-path-1',
         '/login',
         '/pricing',
         '/privacy',
