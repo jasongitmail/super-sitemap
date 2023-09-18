@@ -48,9 +48,13 @@ export async function sampledUrls(sitemapXml: string): Promise<string[]> {
     }
   }
 
-  // Remove static route URLs from array of URLs
-  const origin = new URL(urls[0]).origin;
-  const staticUrls = new Set(staticRoutes.map((path) => origin + path));
+  const staticRouteUrls = new Set(staticRoutes.map((path) => new URL(urls[0]).origin + path));
+
+  // Remove static route URLs from array of URLs. This is necessary for
+  // situations where the dev has used SvelteKit's route specificity rules,
+  // using paths like `/about` and `/[foo]`. We need to remove `/about` & other
+  // static routes, to get predictable results when sampling URLs for dynamic routes.
+  const dynamicRouteUrls = urls.filter((url: string) => !staticRouteUrls.has(url));
 
   // Convert dynamic routes into regex patterns
   // - Use set to make unique. Duplicates could occur given we haven't applied
@@ -63,9 +67,9 @@ export async function sampledUrls(sitemapXml: string): Promise<string[]> {
   );
 
   // Get one URL for each dynamic route
-  const sampledDynamicUrls = findFirstMatches(regexPatterns, urls);
+  const sampledDynamicUrls = findFirstMatches(regexPatterns, dynamicRouteUrls);
 
-  return [...staticUrls, ...sampledDynamicUrls].sort();
+  return [...staticRouteUrls, ...sampledDynamicUrls].sort();
 }
 
 /**
@@ -94,8 +98,8 @@ export async function sampledPaths(sitemapXml: string): Promise<string[]> {
 }
 
 /**
- * Finds the first instance of a string within an array that matches each given
- * regex pattern within a set of patterns.
+ * Given a set of strings, return the first matching string for each regex
+ * within a set of regex patterns.
  *
  * @private
  * @param regexPatterns - Set of regex patterns to search for.

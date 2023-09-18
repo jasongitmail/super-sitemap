@@ -38,7 +38,8 @@ export const GET: RequestHandler = async () => {
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto']
-      ]
+      ],
+      '/[foo]': ['foo-path-1']
     },
     additionalPaths: ['/foo.pdf'] // e.g. file in `static` dir
   });

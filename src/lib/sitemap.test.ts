@@ -35,7 +35,8 @@ describe('sitemap.ts', () => {
             ['usa', 'new-york'],
             ['usa', 'california'],
             ['canada', 'toronto']
-          ]
+          ],
+          '/[foo]': ['foo-path-1']
         },
         headers: {
           'custom-header': 'mars'
@@ -112,7 +113,8 @@ describe('sitemap.ts', () => {
           ['usa', 'new-york'],
           ['usa', 'california'],
           ['canada', 'toronto']
-        ]
+        ],
+        '/[foo]': ['foo-path-1']
       };
 
       const resultPaths = sitemap.generatePaths(excludePatterns, paramValues);
@@ -134,7 +136,8 @@ describe('sitemap.ts', () => {
         '/blog/tag/cyan',
         '/campsites/usa/new-york',
         '/campsites/usa/california',
-        '/campsites/canada/toronto'
+        '/campsites/canada/toronto',
+        '/foo-path-1'
       ];
 
       expect(resultPaths).toEqual(expectedPaths);

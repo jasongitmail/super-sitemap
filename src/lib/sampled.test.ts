@@ -60,13 +60,23 @@ describe('sample.ts', () => {
     it('should a max of one match for each regex', () => {
       const patterns = new Set(['/blog/([^/]+)', '/blog/([^/]+)/([^/]+)']);
       const haystack = [
+        // static routes
         'https://example.com/',
         'https://example.com/blog',
+
+        // /blog/[slug]
         'https://example.com/blog/hello-world',
         'https://example.com/blog/another-post',
+
+        // /blog/tag/[tag]
         'https://example.com/blog/tag/red',
         'https://example.com/blog/tag/green',
-        'https://example.com/blog/tag/blue'
+        'https://example.com/blog/tag/blue',
+
+        // /campsites/[country]/[state]
+        'https://example.com/campsites/usa/new-york',
+        'https://example.com/campsites/usa/california',
+        'https://example.com/campsites/canada/ontario'
       ];
       const result = sitemap.findFirstMatches(patterns, haystack);
       expect(result).toEqual(
