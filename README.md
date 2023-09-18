@@ -107,6 +107,9 @@ export const GET: RequestHandler = async () => {
 
 ### The "everything" example
 
+All aspects of this example are optional, except for `origin` and `paramValues`
+that provides data for parameterized routes.
+
 JavaScript:
 
 ```js
@@ -114,7 +117,7 @@ JavaScript:
 import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 
-export const prerender = true; // works either way
+export const prerender = true; // optional
 
 export const GET = async () => {
   // Get data for parameterized routes
@@ -160,7 +163,7 @@ import * as sitemap from 'sk-sitemap';
 import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
 
-export const prerender = true; // works either way
+export const prerender = true; // optional
 
 export const GET: RequestHandler = async () => {
   // Get data for parameterized routes
