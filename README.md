@@ -24,7 +24,7 @@ impossible to forget to add your paths.</p>
 - [Usage](#usage)
   - [Basic example](#basic-example)
   - [The "everything" example](#the-everything-example)
-- [Recommended robots.txt](#recommended-robotstxt)
+- [Robots.txt](#recommended-robotstxt)
 - [Note on prerendering](#note-on-prerendering)
 - [Example output](#example-output)
 - [Changelog](#changelog)
