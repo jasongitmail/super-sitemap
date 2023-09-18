@@ -12,7 +12,7 @@
     <img alt="npm badge" src="https://img.shields.io/npm/v/super-sitemap?color=limegreen">
   </a>
   <br/>
-  <p>SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths</p>
+  <p>SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.</p>
 </div>
 
 ## Table of Contents
@@ -211,19 +211,16 @@ Create a `robots.txt` so search engines know where to find your sitemap.
 You can create it at `/static/robots.txt`:
 
 ```text
-# /static/robots.txt
 User-agent: *
 Allow: /
 
 Sitemap: https://example.com/sitemap.xml
 ```
 
-Or, at `/src/routes/robots.txt/+server.ts`, if you define `ORIGIN` within your
-env and want to access it:
+Or, at `/src/routes/robots.txt/+server.ts`, if you have defined `ORIGIN` within
+your project's `.env` and want to access it:
 
 ```ts
-// /src/routes/robots.txt/+server.ts
-// A static file is not used because this allows access to env.ORIGIN
 import * as env from '$env/static/public';
 
 export const prerender = true;
@@ -231,11 +228,11 @@ export const prerender = true;
 export async function GET(): Promise<Response> {
   // prettier-ignore
   const body = [
-		'User-agent: *',
-		'Allow: /',
-		'',
-		`Sitemap: ${env.ORIGIN}/sitemap.xml`
-	].join('\n').trim();
+    'User-agent: *',
+    'Allow: /',
+    '',
+    `Sitemap: ${env.ORIGIN}/sitemap.xml`
+  ].join('\n').trim();
 
   const headers = {
     'Content-Type': 'text/plain'
