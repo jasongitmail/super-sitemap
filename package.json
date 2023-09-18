@@ -7,6 +7,12 @@
     "url": "https://github.com/jasongitmail/super-sitemap.git"
   },
   "license": "MIT",
+  "keywords": [
+    "sitemap",
+    "sveltekit",
+    "svelte",
+    "seo"
+  ],
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && npm run package",
