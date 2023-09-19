@@ -429,6 +429,7 @@ The above is also true for `robots.txt`, which uses a `text/plain` mime type.
 
 ## Changelog
 
+- `0.13.0` - Adds [`sampledUrls()`](#sampled-urls) and [`sampledPaths()`](#sampled-paths).
 - `0.12.0` - Adds config option to sort `'alpha'` or `false` (default).
 - `0.11.0` - BREAKING: Rename to `super-sitemap` on npm! 🚀
 - `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
