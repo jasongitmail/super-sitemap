@@ -7,6 +7,14 @@
     "**/node_modules": true,
     "**/.svelte-kit": true
   },
-  "cSpell.words": ["changefreq", "loc", "lastmod", "prerender", "prerendering", "publint"],
+  "cSpell.words": [
+    "changefreq",
+    "lastmod",
+    "loc",
+    "prerender",
+    "prerendering",
+    "publint",
+    "signup"
+  ],
   "cSpell.ignoreWords": []
 }
