@@ -1,6 +1,6 @@
 {
   "name": "super-sitemap",
-  "version": "0.13.4",
+  "version": "0.13.5",
   "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
   "repository": {
     "type": "git",
