@@ -113,7 +113,6 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   //   must remove `/about` & other static routes, to get predictable results
   //   when we sample URLs for dynamic routes.
   const dynamicRouteUrls = urls.filter((url: string) => !staticRouteUrls.has(url));
-  console.log('dynamicRouteUrls', dynamicRouteUrls);
 
   // Convert dynamic routes into regex patterns.
   // - Use Set to make unique. Duplicates could occur given we haven't applied
