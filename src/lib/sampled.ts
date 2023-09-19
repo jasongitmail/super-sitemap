@@ -15,7 +15,7 @@ import { filterRoutes } from './sitemap';
  *
  * @public
  * @param sitemapUrl - E.g. http://localhost:5173/sitemap.xml
- * @returns Array of URLs, one for each route, sorted alphabetically
+ * @returns Array of paths, one for each route; grouped by static, then dynamic; sub-sorted alphabetically.
  *
  * @remarks
  * - This is intended as a utility to gather unique URLs for SEO analysis,
@@ -50,7 +50,7 @@ export async function sampledUrls(sitemapUrl: string): Promise<string[]> {
  *
  * @public
  * @param sitemapUrl - E.g. http://localhost:5173/sitemap.xml
- * @returns Array of paths, one for each route, sorted alphabetically
+ * @returns Array of paths, one for each route; grouped by static, then dynamic; sub-sorted alphabetically.
  *
  * @remarks
  * - This is intended as a utility to gather unique paths for SEO analysis,
@@ -89,56 +89,69 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   const urls = sitemap.urlset.url.map((x: any) => x.loc);
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
-  // Filter to reformat from file paths into site paths. excludePatterns are
-  // left empty because these were applied when sitemap.xml was generated.
+  // Filter to reformat from file paths into site paths. The excludePatterns
+  // argument is empty b/c we don't want the dev to need to specify it again.
+  // Sitemap URLs had exclusion patterns applied during generation, so we can
+  // make it work without further below.
   routes = filterRoutes(routes, []);
 
-  const staticRoutes = [];
-  const dynamicRoutes = [];
+  // E.g. `/about`, `/blog/[slug]`, or even those that were excluded when
+  // sitemap was generated, like `/dashboard`.
+  const nonExcludedStaticRoutes = [];
+  const nonExcludedDynamicRoutes = [];
   for (const route of routes) {
     if (/\[.*\]/.test(route)) {
-      dynamicRoutes.push(route);
+      nonExcludedDynamicRoutes.push(route);
     } else {
-      staticRoutes.push(route);
+      nonExcludedStaticRoutes.push(route);
     }
   }
 
   const ORIGIN = new URL(urls[0]).origin;
+  const nonExcludedStaticRouteUrls = new Set(nonExcludedStaticRoutes.map((path) => ORIGIN + path));
 
-  const staticRouteUrls = new Set(staticRoutes.map((path) => ORIGIN + path));
+  // Using URLs as the source, separate into static and dynamic routes. This:
+  // 1. Gather URLs that are static routes. We cannot use staticRoutes items
+  //    directly because it is generated from reading `/src/routes` and has not
+  //    had the dev's `excludePatterns` applied so an excluded routes like
+  //    `/dashboard` could exist within in, but _won't_ in the sitemap URLs.
+  // 2. Removing static routes from the sitemap URLs before sampling for
+  //    dynamic paths is necessary due to SvelteKit's route specificity rules.
+  //    E.g. we remove paths like `/about` so they aren't sampled as a match for
+  //    a dynamic route like `/[foo]`.
+  let dynamicRouteUrls = [];
+  let staticRouteUrls = [];
+  for (const url of urls) {
+    if (nonExcludedStaticRouteUrls.has(url)) {
+      staticRouteUrls.push(url);
+    } else {
+      dynamicRouteUrls.push(url);
+    }
+  }
 
-  // Remove static route URLs.
-  // - This is necessary for situations where the dev has used SvelteKit's route
-  //   specificity rules, using paths like `/about` and `/[foo]`. As such, we
-  //   must remove `/about` & other static routes, to get predictable results
-  //   when we sample URLs for dynamic routes.
-  const dynamicRouteUrls = urls.filter((url: string) => !staticRouteUrls.has(url));
-
-  // Convert dynamic routes into regex patterns.
-  // - Use Set to make unique. Duplicates could occur given we haven't applied
+  // Convert dynamic route patterns into regex patterns.
+  // - Use Set to make unique. Duplicates may occur given we haven't applied
   //   excludePatterns to the dynamic **routes** (e.g. `/blog/[page=integer]`
   //   and `/blog/[slug]` both become `/blog/[^/]+`). When we sample URLs for
   //   each of these patterns, however the excluded patterns won't exist in the
   //   URLs from the sitemap, so it's not a problem.
-  // - ORIGIN is required, otherwise a false match could be found when one
-  //   pattern is a subset of a another. Merely terminating with "$" is not
-  //   sufficient an overlapping subset could still be found from the end.
+  // - ORIGIN is required, otherwise a false match can be found when one pattern
+  //   is a subset of a another. Merely terminating with "$" is not sufficient
+  //   an overlapping subset may still be found from the end.
   let regexPatterns = new Set(
-    dynamicRoutes.map((path: string) => {
+    nonExcludedDynamicRoutes.map((path: string) => {
       let regexPattern = path.replace(/\[[^\]]+\]/g, '[^/]+');
       return ORIGIN + regexPattern + '$';
     })
   );
 
-  // Get up to one URL for each dynamic route's regex pattern.
-  // - A regex pattern may exist in these routes that was excluded by the
-  //   exclusionPatterns when the sitemap was generated. This is OK because no
-  //   URLs will exist to be matched with them. We don't want to  require
-  //   exclusionPatterns again to keep the DX simple. Such patterns won't return
-  //   a match, which is what we want.
+  // Get max of one URL for each dynamic route's regex pattern.
+  // - Remember, a regex pattern may exist in these routes that was excluded by
+  //   the exclusionPatterns when the sitemap was generated. This is OK because
+  //   no URLs will exist to be matched with them.
   const sampledDynamicUrls = findFirstMatches(regexPatterns, dynamicRouteUrls);
 
-  return [...staticRouteUrls, ...sampledDynamicUrls].sort();
+  return [...staticRouteUrls.sort(), ...Array.from(sampledDynamicUrls).sort()];
 }
 
 /**

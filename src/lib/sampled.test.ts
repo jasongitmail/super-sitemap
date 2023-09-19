@@ -13,20 +13,24 @@ describe('sample.ts', () => {
 
       const result = await sitemap._sampledUrls(sitemapXml);
       expect(result).toEqual([
+        // static
         'https://example.com/',
         'https://example.com/about',
         'https://example.com/blog',
-        'https://example.com/blog/hello-world',
-        'https://example.com/blog/tag/red',
-        'https://example.com/campsites/usa/new-york',
-        'https://example.com/dashboard',
-        'https://example.com/dashboard/settings',
-        'https://example.com/foo-path-1',
         'https://example.com/login',
         'https://example.com/pricing',
         'https://example.com/privacy',
         'https://example.com/signup',
-        'https://example.com/terms'
+        'https://example.com/terms',
+        // dynamic
+        'https://example.com/blog/hello-world',
+        'https://example.com/blog/tag/red',
+        'https://example.com/campsites/usa/new-york',
+        'https://example.com/foo-path-1'
+      ]);
+      expect(result).not.toEqual([
+        'https://example.com/dashboard',
+        'https://example.com/dashboard/settings'
       ]);
     });
   });
@@ -43,18 +47,17 @@ describe('sample.ts', () => {
         '/',
         '/about',
         '/blog',
-        '/blog/hello-world',
-        '/blog/tag/red',
-        '/campsites/usa/new-york',
-        '/dashboard',
-        '/dashboard/settings',
-        '/foo-path-1',
         '/login',
         '/pricing',
         '/privacy',
         '/signup',
-        '/terms'
+        '/terms',
+        '/blog/hello-world',
+        '/blog/tag/red',
+        '/campsites/usa/new-york',
+        '/foo-path-1'
       ]);
+      expect(result).not.toEqual(['/dashboard', '/dashboard/settings']);
     });
   });
 
