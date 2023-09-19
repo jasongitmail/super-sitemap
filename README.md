@@ -83,6 +83,24 @@ Then see [Usage](#usage) and [Robots.txt](#robotstxt) sections.
 
 ## Usage
 
+Before getting started, create these three env files within your project. These will define the site
+origin used for URLs within for your sitemap:
+
+```sh
+# .env
+PUBLIC_ORIGIN='https://example.com'
+```
+
+```sh
+# .env.development
+PUBLIC_ORIGIN='http://localhost:5173'
+```
+
+```sh
+# .env.testing
+PUBLIC_ORIGIN='http://localhost:4173'
+```
+
 ### Basic example
 
 JavaScript:
@@ -121,6 +139,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap.xml/+server.js
+import * as env from '$env/static/public';
 import * as sitemap from 'super-sitemap';
 import * as blog from '$lib/data/blog';
 
@@ -136,7 +155,7 @@ export const GET = async () => {
   }
 
   return await sitemap.response({
-    origin: 'https://example.com',
+    origin: env.PUBLIC_ORIGIN,
     excludePatterns: [
       '^/dashboard.*', // e.g. routes starting with `/dashboard`
       `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
@@ -167,9 +186,10 @@ TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
+import type { RequestHandler } from '@sveltejs/kit';
+import * as env from '$env/static/public';
 import * as sitemap from 'super-sitemap';
 import * as blog from '$lib/data/blog';
-import type { RequestHandler } from '@sveltejs/kit';
 
 export const prerender = true; // optional
 
@@ -183,7 +203,7 @@ export const GET: RequestHandler = async () => {
   }
 
   return await sitemap.response({
-    origin: 'https://example.com',
+    origin: env.PUBLIC_ORIGIN,
     excludePatterns: [
       '^/dashboard.*', // e.g. routes starting with `/dashboard`
       `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
@@ -281,8 +301,8 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 ```
 
-Or, at `/src/routes/robots.txt/+server.ts`, if you have defined `ORIGIN` within
-your project's `.env` and want to access it:
+Or, at `/src/routes/robots.txt/+server.ts`, to use `PUBLIC_ORIGIN` that you [set in your project's
+`.env` files](#usage) earlier:
 
 ```ts
 import * as env from '$env/static/public';
@@ -295,7 +315,7 @@ export async function GET(): Promise<Response> {
     'User-agent: *',
     'Allow: /',
     '',
-    `Sitemap: ${env.ORIGIN}/sitemap.xml`
+    `Sitemap: ${env.PUBLIC_ORIGIN}/sitemap.xml`
   ].join('\n').trim();
 
   const headers = {
