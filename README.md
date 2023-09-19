@@ -25,7 +25,7 @@
   - [The "everything" example](#the-everything-example)
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
-- [Robots.txt](#recommended-robotstxt)
+- [Robots.txt](#robotstxt)
 - [Note on prerendering](#note-on-prerendering)
 - [Example output](#example-output)
 - [Changelog](#changelog)
@@ -41,7 +41,7 @@
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
-- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L34):
+- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L84-L85):
   `sitemap.response({ headers: {'cache-control: '...'}, ...})`.
 - 🫡 Uses [SvelteKit's recommended sitemap XML
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
@@ -50,14 +50,14 @@
   and use their own heuristics to determine when to crawl pages on your site. As
   such, these properties are not included by default to minimize KB size and
   enable faster crawling. Optionally, you can enable them like so:
-  `sitemap.response({changefreq:'daily', priority: 0.7, ...})`.
+  `sitemap.response({ changefreq:'daily', priority: 0.7, ...})`.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
 
 ## Limitations
 
-- A future version could build a [Sitemap
-  Index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
+- A future version could build a [sitemap
+  index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
   when total URLs exceed >50,000, which is the max quantity Google will read in
   a single `sitemap.xml` file.
 - Excludes `lastmod` from each item, but a future version could include it for
@@ -78,6 +78,8 @@
 or
 
 `bun add -d super-sitemap`
+
+Then see [Usage](#usage) and [Robots.txt](#robotstxt) sections.
 
 ## Usage
 
@@ -248,7 +250,7 @@ const urls = await sampledUrls('http://localhost:5173/sitemap.xml');
 
 ## Sampled Paths
 
-Same as [Sampled URLs](#sampled-urls), except returns paths.
+Same as [Sampled URLs](#sampled-urls), except it returns paths.
 
 ```js
 import { sampledPaths } from 'super-sitemap';
@@ -266,7 +268,7 @@ const urls = await sampledPaths('http://localhost:5173/sitemap.xml');
 // ]
 ```
 
-## Recommended robots.txt
+## Robots.txt
 
 It's important to create a `robots.txt` so search engines know where to find your sitemap.
 
