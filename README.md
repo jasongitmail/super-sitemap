@@ -26,6 +26,7 @@
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
+- [Playwright Test](#playwright-test)
 - [Note on prerendering](#note-on-prerendering)
 - [Example output](#example-output)
 - [Changelog](#changelog)
@@ -79,7 +80,7 @@ or
 
 `bun add -d super-sitemap`
 
-Then see [Usage](#usage) and [Robots.txt](#robotstxt) sections.
+Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#playwright-test) sections.
 
 ## Usage
 
@@ -304,6 +305,47 @@ export async function GET(): Promise<Response> {
 
   return new Response(body, { headers });
 }
+```
+
+## Playwright Test
+
+It's recommended to add a Playwright test that calls your sitemap.
+
+For pre-rendered sitemaps, you'll receive an error _at build time_ if your data param values are
+misconfigured. But for non-prerendered sitemaps, your data is loaded when the sitemap is loaded, and
+consequently a functional test is more important to confirm you have not misconfigured data for your
+param values.
+
+Feel free to use or adapt this example test:
+
+```js
+import { expect, test } from '@playwright/test';
+
+test.only('/sitemap.xml is valid', async ({ page }) => {
+  const response = await page.goto('/sitemap.xml');
+  expect(response.status()).toBe(200);
+
+  // Ensure XML is valid. Playwright parses the XML here and will error if it
+  // cannot be parsed.
+  const urls = await page.$$eval('url', (urls) =>
+    urls.map((url) => ({
+      loc: url.querySelector('loc').textContent
+      // changefreq: url.querySelector('changefreq').textContent, // if you enabled in your sitemap
+      // priority: url.querySelector('priority').textContent,
+    }))
+  );
+
+  // Sanity check
+  expect(urls.length).toBeGreaterThan(5);
+
+  // Ensure entries are in a valid format.
+  for (const url of urls) {
+    expect(url.loc).toBeTruthy();
+    expect(() => new URL(url.loc)).not.toThrow();
+    // expect(url.changefreq).toBe('daily');
+    // expect(url.priority).toBe('0.7');
+  }
+});
 ```
 
 ## Note on prerendering
