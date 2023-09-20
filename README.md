@@ -319,6 +319,8 @@ param values.
 Feel free to use or adapt this example test:
 
 ```js
+// /src/tests/sitemap.test.js
+
 import { expect, test } from '@playwright/test';
 
 test.only('/sitemap.xml is valid', async ({ page }) => {
