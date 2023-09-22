@@ -26,7 +26,8 @@
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
-- [Playwright Test](#playwright-test)
+- [Playwright test](#playwright-test)
+- [Querying your database for param values](#querying-your-database-for-param-values)
 - [Note on prerendering](#note-on-prerendering)
 - [Example output](#example-output)
 - [Changelog](#changelog)
@@ -348,6 +349,45 @@ test.only('/sitemap.xml is valid', async ({ page }) => {
     // expect(url.priority).toBe('0.7');
   }
 });
+```
+
+## Querying your database for param values
+
+As a helpful tip, below are a few examples demonstrating how to query an SQL
+database to obtain data to provide as `paramValues` for your routes:
+
+```SQL
+-- Route: /blog/[slug]
+SELECT slug FROM blog_posts WHERE status = 'published';
+
+-- Route: /blog/category/[category]
+SELECT DISTINCT LOWER(category) FROM blog_posts WHERE status = 'published';
+
+-- Route: /campsites/[country]/[state]
+SELECT DISTINCT LOWER(country), LOWER(state) FROM campsites;
+```
+
+Using `DISTINCT` will prevent duplicates in your result set. Use this when your
+table could contain multiple rows with the same params, like in the 2nd and 3rd
+examples. This will be the case for routes that show a list of items.
+
+Then if your result is an array of objects, convert into an array of arrays of
+string values:
+
+```js
+const arrayOfArrays = resultFromDB.map((row) => Object.values(row));
+// [['usa','new-york'],['usa', 'california']]
+```
+
+That's it.
+
+Going in the other direction, i.e. when loading data for a component for your
+UI, your database query should typically lowercase both the URL param and value
+in the database during comparison–e.g.:
+
+```sql
+-- Obviously, remember to escape your `params.slug` values to prevent SQL injection.
+SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(state) = LOWER(params.state) LIMIT 10;
 ```
 
 ## Note on prerendering
