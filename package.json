@@ -1,6 +1,6 @@
 {
   "name": "super-sitemap",
-  "version": "0.13.7",
+  "version": "0.13.8",
   "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
   "repository": {
     "type": "git",
@@ -51,7 +51,6 @@
     "eslint-plugin-perfectionist": "^2.1.0",
     "eslint-plugin-svelte": "^2.30.0",
     "eslint-plugin-tsdoc": "^0.2.17",
-    "fast-xml-parser": "^4.2.7",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.10.1",
     "publint": "^0.1.9",
@@ -61,6 +60,9 @@
     "typescript": "^5.0.0",
     "vite": "^4.4.2",
     "vitest": "^0.34.0"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.3.1"
   },
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
