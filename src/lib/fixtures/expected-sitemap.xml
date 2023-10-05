@@ -48,6 +48,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://example.com/foo-path-1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/blog/hello-world</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -94,11 +99,6 @@
   </url>
   <url>
     <loc>https://example.com/campsites/canada/toronto</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://example.com/foo-path-1</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>

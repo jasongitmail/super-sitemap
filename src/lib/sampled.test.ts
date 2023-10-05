@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import fs from 'fs';
+import { describe, expect, it } from 'vitest';
 
-import * as sitemap from './sampled';
+import * as sitemap from './sampled.js';
 
 describe('sample.ts', () => {
   describe('sampledUrls()', () => {

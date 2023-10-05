@@ -1,7 +1,7 @@
-import type { SitemapConfig, ParamValues } from './sitemap';
+import type { ParamValues, SitemapConfig } from './sitemap.js';
 
-import { sampledPaths, sampledUrls } from './sampled';
-import { response } from './sitemap';
+import { sampledPaths, sampledUrls } from './sampled.js';
+import { response } from './sitemap.js';
 
-export type { SitemapConfig, ParamValues };
+export type { ParamValues, SitemapConfig };
 export { response, sampledPaths, sampledUrls };

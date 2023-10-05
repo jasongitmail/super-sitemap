@@ -1,7 +1,7 @@
 export async function load() {
   const meta = {
-    title: `Privacy`,
-    description: `Privacy meta description...`
+    description: `Privacy meta description...`,
+    title: `Privacy`
   };
 
   return { meta };

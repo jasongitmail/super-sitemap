@@ -1,7 +1,8 @@
 import * as sitemap from '$lib/sitemap'; // Import from 'super-sitemap' in your app
-import { error } from '@sveltejs/kit';
-import * as blog from '$lib/data/blog';
 import type { RequestHandler } from '@sveltejs/kit';
+
+import * as blog from '$lib/data/blog';
+import { error } from '@sveltejs/kit';
 
 // - Use prerender if you only have static routes or the data for your
 //   parameterized routes does not change between your builds builds. Otherwise,
@@ -24,23 +25,23 @@ export const GET: RequestHandler = async () => {
   }
 
   return await sitemap.response({
-    origin: 'https://example.com',
+    additionalPaths: ['/foo.pdf'], // e.g. file in `static` dir
     excludePatterns: [
       '^/dashboard.*',
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
       `.*\\[page=integer\\].*`
     ],
+    origin: 'https://example.com',
     paramValues: {
+      '/[foo]': ['foo-path-1'],
       '/blog/[slug]': slugs,
       '/blog/tag/[tag]': tags,
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto']
-      ],
-      '/[foo]': ['foo-path-1']
-    },
-    additionalPaths: ['/foo.pdf'] // e.g. file in `static` dir
+      ]
+    }
   });
 };

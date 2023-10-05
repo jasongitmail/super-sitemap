@@ -1,8 +1,8 @@
 import { XMLValidator } from 'fast-xml-parser';
-import { describe, expect, it } from 'vitest';
 import fs from 'fs';
+import { describe, expect, it } from 'vitest';
 
-import * as sitemap from './sitemap';
+import * as sitemap from './sitemap.js';
 
 describe('sitemap.ts', () => {
   describe('response()', async () => {
@@ -18,14 +18,20 @@ describe('sitemap.ts', () => {
       //    `sitemap.xml` itself)
 
       const res = await sitemap.response({
-        origin: 'https://example.com',
+        additionalPaths: ['/additional-path'],
+        changefreq: 'daily',
         excludePatterns: [
           '^/dashboard.*',
 
           // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
           `.*\\[page=integer\\].*`
         ],
+        headers: {
+          'custom-header': 'mars'
+        },
+        origin: 'https://example.com',
         paramValues: {
+          '/[foo]': ['foo-path-1'],
           // 1D array
           '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
           // 2D with only 1 element each
@@ -35,14 +41,8 @@ describe('sitemap.ts', () => {
             ['usa', 'new-york'],
             ['usa', 'california'],
             ['canada', 'toronto']
-          ],
-          '/[foo]': ['foo-path-1']
+          ]
         },
-        headers: {
-          'custom-header': 'mars'
-        },
-        additionalPaths: ['/additional-path'],
-        changefreq: 'daily',
         priority: 0.7
       });
       const resultXml = await res.text();
@@ -104,6 +104,7 @@ describe('sitemap.ts', () => {
 
       // Provide data for parameterized routes
       const paramValues = {
+        '/[foo]': ['foo-path-1'],
         // 1D array
         '/blog/[slug]': ['hello-world', 'another-post'],
         // 2D with only 1 element each
@@ -113,8 +114,7 @@ describe('sitemap.ts', () => {
           ['usa', 'new-york'],
           ['usa', 'california'],
           ['canada', 'toronto']
-        ],
-        '/[foo]': ['foo-path-1']
+        ]
       };
 
       const resultPaths = sitemap.generatePaths(excludePatterns, paramValues);
@@ -128,6 +128,7 @@ describe('sitemap.ts', () => {
         '/privacy',
         '/signup',
         '/terms',
+        '/foo-path-1',
         '/blog/hello-world',
         '/blog/another-post',
         '/blog/tag/red',
@@ -136,8 +137,7 @@ describe('sitemap.ts', () => {
         '/blog/tag/cyan',
         '/campsites/usa/new-york',
         '/campsites/usa/california',
-        '/campsites/canada/toronto',
-        '/foo-path-1'
+        '/campsites/canada/toronto'
       ];
 
       expect(resultPaths).toEqual(expectedPaths);

@@ -1,15 +1,15 @@
-export type ParamValues = Record<string, string[] | string[][] | never>;
+export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
 // helpful for the dev to see these allowed values in their IDE.
 export type SitemapConfig = {
-  excludePatterns?: string[] | [];
+  additionalPaths?: [] | string[];
+  changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
+  excludePatterns?: [] | string[];
   headers?: Record<string, string>;
-  paramValues?: Record<string, string[] | string[][] | never>;
   origin: string;
-  additionalPaths?: string[] | [];
-  changefreq?: false | 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
-  priority?: false | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+  paramValues?: Record<string, never | string[] | string[][]>;
+  priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
   sort?: 'alpha' | false;
 };
 
@@ -59,12 +59,12 @@ export type SitemapConfig = {
  * ```
  */
 export async function response({
-  excludePatterns,
-  headers = {},
-  paramValues,
-  origin,
   additionalPaths = [],
   changefreq = false,
+  excludePatterns,
+  headers = {},
+  origin,
+  paramValues,
   priority = false,
   sort = false
 }: SitemapConfig): Promise<Response> {
