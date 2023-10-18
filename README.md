@@ -390,26 +390,6 @@ in the database during comparison–e.g.:
 SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(state) = LOWER(params.state) LIMIT 10;
 ```
 
-## Note on prerendering
-
-💡 If you set `export const prerender = true;` within your
-`/src/routes/sitemap.xml/+server.ts` file, you can find `sitemap.xml` is
-generated in your `.svelte-kit` build dir ✅.
-
-But when you run `npm run preview`, you will notice the SvelteKit preview server
-sets a `text/html` content type on the response 😱. This is [due to the preview
-server's limitations](https://github.com/sveltejs/kit/issues/9408), because it's
-the web server's responsibility to set the content type response header when
-serving static files.
-
-However, production hosts like Cloudflare, Vercel, Netlify, & others are
-smarter and set `'content-type': 'application/xml'` when serving your
-prerendered `sitemap.xml` file 😅. Or if not prerendering your sitemap,
-`'content-type': 'application/xml'` is set by Super Sitemap's default response
-headers 👌.
-
-The above is also true for `robots.txt`, which uses a `text/plain` mime type.
-
 ## Example output
 
 ```xml
