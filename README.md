@@ -450,7 +450,8 @@ in the database during comparison–e.g.:
 SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(state) = LOWER(params.state) LIMIT 10;
 ```
 
-## Example output
+<details id="example-output">
+  <summary><h2>Example output</h2></summary>
 
 ```xml
 <urlset
@@ -553,6 +554,8 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 </urlset>
 ```
 
+</details>
+
 ## Changelog
 
 - `0.14.0` - Adds [`sitemap index`](#sitemap-index) support.
@@ -565,7 +568,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 - `0.8.0` - Adds ability to specify `additionalPaths` that live outside
   `/src/routes`, such as `/foo.pdf` located at `/static/foo.pdf`.
 
-## Developing
+## Contributing
 
 ```bash
 git clone https://github.com/jasongitmail/super-sitemap.git
