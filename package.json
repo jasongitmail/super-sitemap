@@ -63,7 +63,9 @@
     "vitest": "^0.34.0"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.3.1"
+    "fast-glob": "^3.3.1",
+    "fast-xml-parser": "^4.3.1",
+    "globby": "^13.2.2"
   },
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
