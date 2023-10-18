@@ -15,7 +15,7 @@ import { error } from '@sveltejs/kit';
 //   should as well. https://github.com/sveltejs/kit/issues/9408
 export const prerender = true;
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ params }) => {
   // Get data for parameterized routes
   let slugs, tags;
   try {
@@ -32,7 +32,9 @@ export const GET: RequestHandler = async () => {
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
       `.*\\[page=integer\\].*`
     ],
+    maxPerPage: 6,
     origin: 'https://example.com',
+    page: params.page,
     paramValues: {
       '/[foo]': ['foo-path-1'],
       '/blog/[slug]': slugs,

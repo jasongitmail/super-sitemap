@@ -1,3 +1,5 @@
+// import { page } from '$app/stores';
+
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
@@ -7,7 +9,9 @@ export type SitemapConfig = {
   changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
   excludePatterns?: [] | string[];
   headers?: Record<string, string>;
+  maxPerPage?: number;
   origin: string;
+  page?: string;
   paramValues?: Record<string, never | string[] | string[][]>;
   priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
   sort?: 'alpha' | false;
@@ -28,6 +32,8 @@ export type SitemapConfig = {
  * @param config.changefreq - Optional. Default is `false`. `changefreq` value to use for all paths.
  * @param config.priority - Optional. Default is `false`. `priority` value to use for all paths.
  * @param config.sort - Optional. Default is `false` and groups paths as static paths (sorted), dynamic paths (unsorted), and then additional paths (unsorted). `alpha` sorts all paths alphabetically.
+ * @param config.maxPerPage - Optional. Default is `50_000`, as specified in https://www.sitemaps.org/protocol.html If you have more than this, a sitemap index will be created automatically.
+ * @param config.page - Optional, but when using a route like `sitemap[[page]].xml to support automatic sitemap indexes. The `page` URL param.
  * @returns An HTTP response containing the generated XML sitemap.
  *
  * @example
@@ -63,21 +69,51 @@ export async function response({
   changefreq = false,
   excludePatterns,
   headers = {},
+  maxPerPage = 50_000,
   origin,
+  page,
   paramValues,
   priority = false,
   sort = false
 }: SitemapConfig): Promise<Response> {
-  // 500. Value will often be from env.origin, which is easily misconfigured.
+  // 500 error
   if (!origin) {
     throw new Error('Sitemap: `origin` property is required in sitemap config.');
   }
 
   let paths = generatePaths(excludePatterns, paramValues);
   paths = [...paths, ...additionalPaths];
+
   if (sort === 'alpha') paths.sort();
 
-  const body = generateBody(origin, new Set(paths), changefreq, priority);
+  const totalPages = Math.ceil(paths.length / maxPerPage);
+  console.log('page', page);
+
+  let body;
+  if (!page) {
+    // User is visiting `sitemap.xml` or `sitemap[[page]].xml`.
+    if (paths.length > maxPerPage) {
+      body = generateSitemapIndex(origin, totalPages);
+    } else {
+      body = generateBody(origin, new Set(paths), changefreq, priority);
+    }
+  } else {
+    // User is visiting `sitemap[[page]].xml`.
+
+    // We use this, instead of requiring the dev to create a route matcher, to
+    // keep set up easier for them.
+    if (!/^[1-9]\d*$/.test(page)) {
+      return new Response('Invalid page param', { status: 400 });
+    }
+
+    const pageInt = Number(page);
+    if (pageInt > totalPages) {
+      return new Response('Page does not exist', { status: 404 });
+    }
+
+    paths = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
+    body = generateBody(origin, new Set(paths), changefreq, priority);
+  }
 
   // Merge keys case-insensitive
   const _headers = {

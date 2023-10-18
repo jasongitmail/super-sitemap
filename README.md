@@ -23,12 +23,12 @@
 - [Usage](#usage)
   - [Basic example](#basic-example)
   - [The "everything" example](#the-everything-example)
+  - [Sitemap Index](#sitemap-index)
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
 - [Playwright test](#playwright-test)
 - [Querying your database for param values](#querying-your-database-for-param-values)
-- [Note on prerendering](#note-on-prerendering)
 - [Example output](#example-output)
 - [Changelog](#changelog)
 
@@ -55,13 +55,10 @@
   `sitemap.response({ changefreq:'daily', priority: 0.7, ...})`.
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
+- 🗺️ (Nearly automatic) [sitemap indexes](#sitemap-index)!
 
 ## Limitations
 
-- A future version could build a [sitemap
-  index](https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps)
-  when total URLs exceed >50,000, which is the max quantity Google will read in
-  a single `sitemap.xml` file.
 - Excludes `lastmod` from each item, but a future version could include it for
   parameterized data items. Obviously, `lastmod` would be indeterminate for
   non-parameterized routes, such as `/about`. Due to this, Google would likely
@@ -210,6 +207,69 @@ export const GET: RequestHandler = async () => {
     sort: 'alpha' // default is false; 'alpha' sorts all paths alphabetically.
   });
 };
+```
+
+### Sitemap Index
+
+You can enable sitemap index support with just two changes:
+
+1. Rename your route to `sitemap[[page]].xml`
+2. Pass `params.page` to your sitemap config
+
+JavaScript:
+
+```js
+// /src/routes/sitemap[[page]].xml/+server.js
+import * as sitemap from 'super-sitemap';
+
+export const GET = async ({ params }) => {
+  return await sitemap.response({
+    origin: 'https://example.com',
+    page: params.page
+    // maxPerPage: 45_000 // optional; defaults to 50_000
+  });
+};
+```
+
+TypeScript:
+
+```ts
+// /src/routes/sitemap[[page]].xml/+server.ts
+import * as sitemap from 'super-sitemap';
+import type { RequestHandler } from '@sveltejs/kit';
+
+export const GET: RequestHandler = async ({ params }) => {
+  return await sitemap.response({
+    origin: 'https://example.com',
+    page: params.page
+    // maxPerPage: 45_000 // optional; defaults to 50_000
+  });
+};
+```
+
+_**Feel free to always set up your sitemap in this manner given it will work optimally whether you
+have few or many URLs.**_
+
+Your `sitemap.xml` route will now return a regular sitemap when your sitemap's total URLs is less than or equal
+to `maxPerPage` (defaults to 50,000 per the [sitemap
+protocol](https://www.sitemaps.org/protocol.html)) or it will contain a sitemap index when exceeding
+`maxPerPage`.
+
+The sitemap index will contain links to `sitemap1.xml`, `sitemap2.xml`, etc, which contain your
+paginated URLs automatically.
+
+```xml
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://example.com/sitemap1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap2.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap3.xml</loc>
+  </sitemap>
+</sitemapindex>
 ```
 
 ## Sampled URLs
