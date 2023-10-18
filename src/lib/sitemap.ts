@@ -284,3 +284,19 @@ export function buildMultiParamPaths(
 
   return [routes, parameterizedPaths];
 }
+
+export function generateSitemapIndex(origin: string, pages: number): string {
+  let str = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+  for (let i = 1; i <= pages; i++) {
+    str += `
+  <sitemap>
+    <loc>${origin}/sitemap${i}.xml</loc>
+  </sitemap>`;
+  }
+  str += `
+</sitemapindex>`;
+
+  return str;
+}

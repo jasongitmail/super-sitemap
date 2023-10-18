@@ -268,4 +268,26 @@ describe('sitemap.ts', () => {
       expect(result).toThrow(Error);
     });
   });
+
+  describe('generateSitemapIndex()', () => {
+    it('should generate sitemap index with correct number of pages', () => {
+      const origin = 'https://example.com';
+      const pages = 3;
+      const expectedSitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://example.com/sitemap1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap2.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap3.xml</loc>
+  </sitemap>
+</sitemapindex>`;
+
+      const sitemapIndex = sitemap.generateSitemapIndex(origin, pages);
+      expect(sitemapIndex).toEqual(expectedSitemapIndex);
+    });
+  });
 });
