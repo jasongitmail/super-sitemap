@@ -87,7 +87,6 @@ export async function response({
   if (sort === 'alpha') paths.sort();
 
   const totalPages = Math.ceil(paths.length / maxPerPage);
-  console.log('page', page);
 
   let body;
   if (!page) {
