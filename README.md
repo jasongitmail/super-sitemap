@@ -214,7 +214,7 @@ export const GET: RequestHandler = async () => {
 You can enable sitemap index support with just two changes:
 
 1. Rename your route to `sitemap[[page]].xml`
-2. Pass `params.page` to your sitemap config
+2. Pass the page param via your sitemap config
 
 JavaScript:
 
