@@ -274,7 +274,7 @@ export function buildMultiParamPaths(
   for (const route in paramValues) {
     if (!routes.includes(route)) {
       throw new Error(
-        `Sitemap: '${route}' was provided as a property in your sitemap's paramValues, but does not exist as a route within your project's 'src/routes/'. Remove this property from paramValues.`
+        `Sitemap: paramValues were provided for route that no longer exists: '${route}' within your project's 'src/routes/'. Remove this property from paramValues.`
       );
     }
 
@@ -312,7 +312,7 @@ export function buildMultiParamPaths(
     const regex = /.*\[[^\]]+\].*/;
     if (regex.test(route)) {
       throw new Error(
-        `Sitemap: Parameterized route was not handled: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param to the paramValues object within your sitemap.`
+        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
       );
     }
   }

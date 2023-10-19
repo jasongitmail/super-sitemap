@@ -57,6 +57,31 @@ describe('sitemap.ts', () => {
       expect(res.headers.get('custom-header')).toEqual('mars');
     });
 
+    it('when config.origin is not provided, should throw error', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      delete newConfig.origin;
+      const fn = () => sitemap.response(newConfig);
+      expect(fn()).rejects.toThrow('Sitemap: `origin` property is required in sitemap config.');
+    });
+
+    it('when param values are not provided for a parameterized route, should throw error', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      delete newConfig.paramValues['/campsites/[country]/[state]'];
+      const fn = () => sitemap.response(newConfig);
+      expect(fn()).rejects.toThrow(
+        "Sitemap: paramValues not provided for: '/campsites/[country]/[state]'"
+      );
+    });
+
+    it('when param values are provided for route that does not exist, should throw error', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      newConfig.paramValues['/old-route/[foo]'] = ['a', 'b', 'c'];
+      const fn = () => sitemap.response(newConfig);
+      expect(fn()).rejects.toThrow(
+        "Sitemap: paramValues were provided for route that no longer exists: '/old-route/[foo]' within your project's 'src/routes/'. Remove this property from paramValues."
+      );
+    });
+
     describe('sitemap index', () => {
       it('when URLs > maxPerPage, should return a sitemap index', async () => {
         config.maxPerPage = 4;
