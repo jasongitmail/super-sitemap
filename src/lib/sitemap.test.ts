@@ -2,11 +2,42 @@ import { XMLValidator } from 'fast-xml-parser';
 import fs from 'fs';
 import { describe, expect, it } from 'vitest';
 
+import type { SitemapConfig } from './sitemap.js';
+
 import * as sitemap from './sitemap.js';
 
 describe('sitemap.ts', () => {
   describe('response()', async () => {
-    it('should return expected result', async () => {
+    const config: SitemapConfig = {
+      additionalPaths: ['/additional-path'],
+      changefreq: 'daily',
+      excludePatterns: [
+        '^/dashboard.*',
+
+        // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
+        `.*\\[page=integer\\].*`
+      ],
+      headers: {
+        'custom-header': 'mars'
+      },
+      origin: 'https://example.com',
+      paramValues: {
+        '/[foo]': ['foo-path-1'],
+        // 1D array
+        '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
+        // 2D with only 1 element each
+        '/blog/tag/[tag]': [['red'], ['blue'], ['green'], ['cyan']],
+        // 2D array
+        '/campsites/[country]/[state]': [
+          ['usa', 'new-york'],
+          ['usa', 'california'],
+          ['canada', 'toronto']
+        ]
+      },
+      priority: 0.7
+    };
+
+    it('when URLs <= maxPerPage, should return a sitemap', async () => {
       // This test creates a sitemap based off the actual routes found within
       // this projects `/src/routes`, for a realistic test of:
       // 1. basic static pages (e.g. `/about`)
@@ -16,44 +47,56 @@ describe('sitemap.ts', () => {
       //    `/blog/tag/[tag]`)
       // 5. ignoring of server-side routes (e.g. `/og/blog/[title].png` and
       //    `sitemap.xml` itself)
-
-      const res = await sitemap.response({
-        additionalPaths: ['/additional-path'],
-        changefreq: 'daily',
-        excludePatterns: [
-          '^/dashboard.*',
-
-          // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-          `.*\\[page=integer\\].*`
-        ],
-        headers: {
-          'custom-header': 'mars'
-        },
-        origin: 'https://example.com',
-        paramValues: {
-          '/[foo]': ['foo-path-1'],
-          // 1D array
-          '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
-          // 2D with only 1 element each
-          '/blog/tag/[tag]': [['red'], ['blue'], ['green'], ['cyan']],
-          // 2D array
-          '/campsites/[country]/[state]': [
-            ['usa', 'new-york'],
-            ['usa', 'california'],
-            ['canada', 'toronto']
-          ]
-        },
-        priority: 0.7
-      });
+      const res = await sitemap.response(config);
       const resultXml = await res.text();
-
       const expectedSitemapXml = await fs.promises.readFile(
         './src/lib/fixtures/expected-sitemap.xml',
         'utf-8'
       );
-
       expect(resultXml).toEqual(expectedSitemapXml.trim());
       expect(res.headers.get('custom-header')).toEqual('mars');
+    });
+
+    describe('sitemap index', () => {
+      it('when URLs > maxPerPage, should return a sitemap index', async () => {
+        config.maxPerPage = 4;
+        const res = await sitemap.response(config);
+        const resultXml = await res.text();
+        const expectedSitemapXml = await fs.promises.readFile(
+          './src/lib/fixtures/expected-sitemap-index.xml',
+          'utf-8'
+        );
+        expect(resultXml).toEqual(expectedSitemapXml.trim());
+      });
+
+      it('subpage (e.g. sitemap2.xml) should return a sitemap with expected URL subset', async () => {
+        config.maxPerPage = 4;
+        config.page = '2';
+        const res = await sitemap.response(config);
+        const resultXml = await res.text();
+        const expectedSitemapXml = await fs.promises.readFile(
+          './src/lib/fixtures/expected-sitemap-subpage.xml',
+          'utf-8'
+        );
+        expect(resultXml).toEqual(expectedSitemapXml.trim());
+      });
+
+      it.each([['-3'], ['3.3'], ['invalid']])(
+        `when page param is invalid ('%s'), should respond 400`,
+        async (page) => {
+          config.maxPerPage = 4;
+          config.page = page;
+          const res = await sitemap.response(config);
+          expect(res.status).toEqual(400);
+        }
+      );
+
+      it('when page param is greater than subpages that exist, should respond 404', async () => {
+        config.maxPerPage = 4;
+        config.page = '999999';
+        const res = await sitemap.response(config);
+        expect(res.status).toEqual(404);
+      });
     });
   });
 
