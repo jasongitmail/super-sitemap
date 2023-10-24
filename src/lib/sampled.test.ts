@@ -1,63 +1,95 @@
 import fs from 'fs';
-import { describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { server } from './fixtures/mocks.js';
 import * as sitemap from './sampled.js';
 
-describe('sample.ts', () => {
-  describe('sampledUrls()', () => {
-    it('should return expected urls', async () => {
-      const sitemapXml = await fs.promises.readFile(
-        './src/lib/fixtures/expected-sitemap.xml',
-        'utf-8'
-      );
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-      const result = await sitemap._sampledUrls(sitemapXml);
-      expect(result).toEqual([
-        // static
-        'https://example.com/',
-        'https://example.com/about',
-        'https://example.com/blog',
-        'https://example.com/login',
-        'https://example.com/pricing',
-        'https://example.com/privacy',
-        'https://example.com/signup',
-        'https://example.com/terms',
-        // dynamic
-        'https://example.com/blog/hello-world',
-        'https://example.com/blog/tag/red',
-        'https://example.com/campsites/usa/new-york',
-        'https://example.com/foo-path-1'
-      ]);
-      expect(result).not.toEqual([
-        'https://example.com/dashboard',
-        'https://example.com/dashboard/settings'
-      ]);
+describe('sample.ts', () => {
+  describe('_sampledUrls()', () => {
+    const expectedSampledUrls = [
+      // static
+      'https://example.com/',
+      'https://example.com/about',
+      'https://example.com/blog',
+      'https://example.com/login',
+      'https://example.com/pricing',
+      'https://example.com/privacy',
+      'https://example.com/signup',
+      'https://example.com/terms',
+      // dynamic
+      'https://example.com/blog/hello-world',
+      'https://example.com/blog/tag/red',
+      'https://example.com/campsites/usa/new-york',
+      'https://example.com/foo-path-1'
+    ];
+
+    describe('sitemap', () => {
+      it('should return expected urls', async () => {
+        const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
+        const result = await sitemap._sampledUrls(xml);
+        expect(result).toEqual(expectedSampledUrls);
+        expect(result).not.toEqual([
+          'https://example.com/dashboard',
+          'https://example.com/dashboard/settings'
+        ]);
+      });
+    });
+
+    describe('sitemap index', () => {
+      it('should return expected urls', async () => {
+        const xml = await fs.promises.readFile(
+          './src/lib/fixtures/expected-sitemap-index.xml',
+          'utf-8'
+        );
+        const result = await sitemap._sampledUrls(xml);
+        expect(result).toEqual(expectedSampledUrls);
+        expect(result).not.toEqual([
+          'https://example.com/dashboard',
+          'https://example.com/dashboard/settings'
+        ]);
+      });
     });
   });
 
-  describe('sampledPaths()', () => {
-    it('should return expected paths', async () => {
-      const sitemapXml = await fs.promises.readFile(
-        './src/lib/fixtures/expected-sitemap.xml',
-        'utf-8'
-      );
+  describe('_sampledPaths()', () => {
+    const expectedSampledPaths = [
+      '/',
+      '/about',
+      '/blog',
+      '/login',
+      '/pricing',
+      '/privacy',
+      '/signup',
+      '/terms',
+      '/blog/hello-world',
+      '/blog/tag/red',
+      '/campsites/usa/new-york',
+      '/foo-path-1'
+    ];
 
-      const result = await sitemap._sampledPaths(sitemapXml);
-      expect(result).toEqual([
-        '/',
-        '/about',
-        '/blog',
-        '/login',
-        '/pricing',
-        '/privacy',
-        '/signup',
-        '/terms',
-        '/blog/hello-world',
-        '/blog/tag/red',
-        '/campsites/usa/new-york',
-        '/foo-path-1'
-      ]);
-      expect(result).not.toEqual(['/dashboard', '/dashboard/settings']);
+    describe('sitemap', () => {
+      it('should return expected paths', async () => {
+        const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
+        const result = await sitemap._sampledPaths(xml);
+        expect(result).toEqual(expectedSampledPaths);
+        expect(result).not.toEqual(['/dashboard', '/dashboard/settings']);
+      });
+    });
+
+    describe('sitemap index', () => {
+      it('should return expected paths', async () => {
+        const xml = await fs.promises.readFile(
+          './src/lib/fixtures/expected-sitemap-index.xml',
+          'utf-8'
+        );
+        const result = await sitemap._sampledPaths(xml);
+        expect(result).toEqual(expectedSampledPaths);
+        expect(result).not.toEqual(['/dashboard', '/dashboard/settings']);
+      });
     });
   });
 

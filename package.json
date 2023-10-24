@@ -52,6 +52,7 @@
     "eslint-plugin-perfectionist": "^2.1.0",
     "eslint-plugin-svelte": "^2.30.0",
     "eslint-plugin-tsdoc": "^0.2.17",
+    "msw": "^2.0.0",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.10.1",
     "publint": "^0.1.9",

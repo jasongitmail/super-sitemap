@@ -86,7 +86,28 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   const parser = new XMLParser();
   const sitemap = parser.parse(sitemapXml);
 
-  const urls = sitemap.urlset.url.map((x: any) => x.loc);
+  let urls: string[] = [];
+
+  // If this is a sitemap index, fetch all sub sitemaps and combine their URLs.
+  // Note: _sampledUrls() is intended to be used by devs within Playwright
+  // tests. Because of this, we know what host to expect and can replace
+  // whatever origin the dev set with localhost:4173, which is where Playwright
+  // serves the app during testing. For unit tests, our mock.js mocks also
+  // expect this host.
+  if (sitemap.sitemapindex) {
+    const subSitemapUrls = sitemap.sitemapindex.sitemap.map((obj: any) => obj.loc);
+    for (const url of subSitemapUrls) {
+      const path = new URL(url).pathname;
+      const res = await fetch('http://localhost:4173' + path);
+      const xml = await res.text();
+      const _sitemap = parser.parse(xml);
+      const _urls = _sitemap.urlset.url.map((x: any) => x.loc);
+      urls.push(..._urls);
+    }
+  } else {
+    urls = sitemap.urlset.url.map((x: any) => x.loc);
+  }
+
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
   // Filter to reformat from file paths into site paths. The excludePatterns
