@@ -325,10 +325,7 @@ You can use it in a Playwright test like below, then you'll have `sampledPublicP
 import { expect, test } from '@playwright/test';
 import { sampledPaths } from 'super-sitemap';
 
-let sampledPublicPaths = [];
-test.beforeAll(async () => {
-  sampledPublicPaths = await sampledPaths('http://localhost:4173/sitemap.xml');
-});
+let sampledPublicPaths = await sampledPaths('http://localhost:4173/sitemap.xml');
 
 // ...
 ```
