@@ -310,6 +310,14 @@ const urls = await sampledUrls('http://localhost:5173/sitemap.xml');
    For example, `/foo/[foo]` and `/foo/[foo=integer]` will evaluated as `/foo/[foo]` and one sample
    URL will be returned.
 
+### Designed as a utility
+
+Both `sampledUrls()` and `sampledPaths()` are intended as utilities for use
+within your Playwright tests. Their design aims for developer convenience (i.e.
+no need to set up a 2nd sitemap config), not for performance, and they require a
+runtime with access to the file system like Node, to read your `/src/routes`. In
+other words, use for testing, not as a data source for production.
+
 ## Sampled Paths
 
 Same as [Sampled URLs](#sampled-urls), except it returns paths.
