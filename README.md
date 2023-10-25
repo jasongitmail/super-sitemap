@@ -325,7 +325,12 @@ You can use it in a Playwright test like below, then you'll have `sampledPublicP
 import { expect, test } from '@playwright/test';
 import { sampledPaths } from 'super-sitemap';
 
-let sampledPublicPaths = await sampledPaths('http://localhost:4173/sitemap.xml');
+let sampledPublicPaths = [];
+try {
+  sampledPublicPaths = await sampledPaths('http://localhost:4173/sitemap.xml');
+} catch (err) {
+  console.error('Error:', err);
+}
 
 // ...
 ```
