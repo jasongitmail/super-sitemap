@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
+import { glob } from 'glob';
 
 import { filterRoutes } from './sitemap.js';
 
@@ -108,16 +109,44 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
     urls = sitemap.urlset.url.map((x: any) => x.loc);
   }
 
-  let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
+  // let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
-  // Filter to reformat from file paths into site paths. The excludePatterns
-  // argument is empty b/c we don't want the dev to need to specify it again.
-  // Sitemap URLs had exclusion patterns applied during generation, so we can
-  // make it work without further below.
+  let routes: string[] = [];
+  try {
+    let projDir;
+
+    const filePath = import.meta.url.slice(7); // Strip out "file://" protocol
+    if (filePath.includes('node_modules')) {
+      // Currently running as an npm package.
+      projDir = filePath.split('node_modules')[0];
+    } else {
+      // Currently running unit tests during dev.
+      projDir = filePath.split('/src/')[0];
+      projDir += '/';
+    }
+
+    routes = await glob('/**/+page.svelte', { root: projDir + 'src/routes' });
+
+    // 1. Trim all left of '/src/routes/' so it starts with `src/routes/` as
+    //    filterRoutes() expects.
+    // 2. Remove all grouping segments. i.e. those starting with '(' and ending
+    //    with ')'
+    const i = routes[0].indexOf('/src/routes/');
+    const regex = /\/\([^)]+\)/g;
+    routes = routes.map((route) => route.slice(i).replace(regex, ''));
+  } catch (err) {
+    console.error('An error occurred:', err);
+  }
+
+  // Filter to reformat from file paths into site paths. The 2nd arg for
+  // excludePatterns is empty the exclusion pattern was already applied during
+  // generation of the sitemap.
   routes = filterRoutes(routes, []);
 
-  // E.g. `/about`, `/blog/[slug]`, or even those that were excluded when
-  // sitemap was generated, like `/dashboard`.
+  // Separate static and dynamic routes. Remember these are _routes_ from disk
+  // and consequently have not had any exclusion patterns applied against them,
+  // they could contain `/about`, `/blog/[slug]`, routes that will need to be
+  // excluded like `/dashboard`.
   const nonExcludedStaticRoutes = [];
   const nonExcludedDynamicRoutes = [];
   for (const route of routes) {
@@ -160,13 +189,13 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   //   is a subset of a another. Merely terminating with "$" is not sufficient
   //   an overlapping subset may still be found from the end.
   const regexPatterns = new Set(
-    nonExcludedDynamicRoutes.map((path: string) => {
+    nonExcludedDynamicRoutes.map((path) => {
       const regexPattern = path.replace(/\[[^\]]+\]/g, '[^/]+');
       return ORIGIN + regexPattern + '$';
     })
   );
 
-  // Get max of one URL for each dynamic route's regex pattern.
+  // Gather a max of one URL for each dynamic route's regex pattern.
   // - Remember, a regex pattern may exist in these routes that was excluded by
   //   the exclusionPatterns when the sitemap was generated. This is OK because
   //   no URLs will exist to be matched with them.
