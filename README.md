@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/fce3127a-5cec-4e5f-b76f-a60829afa895" alt="super sitemap logo" />
+  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/55846f36-626e-4ae5-888d-e6ec9a2aa285" />
   
   <h1 align="center">Super Sitemap</h1>
 
