@@ -140,7 +140,7 @@ export const GET = async () => {
     excludePatterns: [
       '^/dashboard.*',          // i.e. routes starting with `/dashboard`
       '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '^/\\(authenticated\\).*' // i.e. routes within a group
+      '.*\\(authenticated\\).*' // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
@@ -188,7 +188,7 @@ export const GET: RequestHandler = async () => {
     excludePatterns: [
       '^/dashboard.*',          // i.e. routes starting with `/dashboard`
       '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '^/\\(authenticated\\).*' // i.e. routes within a group
+      '.*\\(authenticated\\).*' // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
