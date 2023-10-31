@@ -138,8 +138,9 @@ export const GET = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*', // e.g. routes starting with `/dashboard`
-      `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
+      '^/dashboard.*',          // i.e. routes starting with `/dashboard`
+      '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
+      '^/\\(authenticated\\).*' // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
@@ -185,8 +186,9 @@ export const GET: RequestHandler = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*', // e.g. routes starting with `/dashboard`
-      `.*\\[page=integer\\].*` // e.g. routes containing `[page=integer]`–e.g. `/blog/2`
+      '^/dashboard.*',          // i.e. routes starting with `/dashboard`
+      '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
+      '^/\\(authenticated\\).*' // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
