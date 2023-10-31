@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/21f48ff3-aba5-49b9-a857-3c0b6806750a" alt="project banner" />
+  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/fce3127a-5cec-4e5f-b76f-a60829afa895" alt="super sitemap logo" />
+  
   <h1 align="center">Super Sitemap</h1>
 
   <a href="https://github.com/jasongitmail/super-sitemap/actions/workflows/ci.yml">
