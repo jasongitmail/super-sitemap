@@ -1,5 +1,6 @@
+// import { glob } from 'glob';
+import dirTree from 'directory-tree';
 import { XMLParser } from 'fast-xml-parser';
-import { glob } from 'glob';
 
 import { filterRoutes } from './sitemap.js';
 
@@ -109,6 +110,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
     urls = sitemap.urlset.url.map((x: any) => x.loc);
   }
 
+  // Can't use this because Playwright doesn't use Vite.
   // let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
   let routes: string[] = [];
@@ -125,10 +127,12 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
       projDir += '/';
     }
 
-    routes = await glob('/**/+page.svelte', { root: projDir + 'src/routes' });
+    const dirTreeRes = dirTree(projDir + 'src/routes');
+    routes = extractPaths(dirTreeRes);
+    routes = routes.filter((route) => route.endsWith('+page.svelte'));
 
-    // 1. Trim all left of '/src/routes/' so it starts with `src/routes/` as
-    //    filterRoutes() expects.
+    // 1. Trim everything to left of '/src/routes/' so it starts with
+    //    `src/routes/` as `filterRoutes()` expects.
     // 2. Remove all grouping segments. i.e. those starting with '(' and ending
     //    with ')'
     const i = routes[0].indexOf('/src/routes/');
@@ -251,4 +255,31 @@ export function findFirstMatches(regexPatterns: Set<string>, haystack: string[])
   }
 
   return firstMatches;
+}
+
+/**
+ * Extracts the paths from a dirTree response and returns an array of strings
+ * representing full disk paths to each route and directory.
+ * - This needs to be filtered to remove items that do not end in `+page.svelte`
+ *   in order to represent routes; we do that outside of this function given
+ *   this is recursive.
+ *
+ * @param obj - The dirTree response object. https://www.npmjs.com/package/directory-tree
+ * @param paths - Array of existing paths to append to (leave unspecified; used
+ * for recursion)
+ * @returns An array of strings representing disk paths to each route.
+ */
+
+export function extractPaths(obj: dirTree.DirectoryTree, paths: string[] = []): string[] {
+  if (obj.path) {
+    paths.push(obj.path);
+  }
+
+  if (Array.isArray(obj.children)) {
+    for (const child of obj.children) {
+      extractPaths(child, paths);
+    }
+  }
+
+  return paths;
 }
