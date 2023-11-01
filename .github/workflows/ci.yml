@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: bun install
-      - name: Publish to Github Package Registry, if version was incremented
+      - name: Publish to NPM, if version was incremented
         uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_TOKEN }}
