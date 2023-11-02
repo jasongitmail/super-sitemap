@@ -36,6 +36,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: bun install --frozen-lockfile
+      - run: ls -la
+      - run: ls src/lib -la
       - name: Publish to NPM, if version was incremented
         uses: JS-DevTools/npm-publish@v2
         with:
