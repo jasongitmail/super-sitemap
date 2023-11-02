@@ -20,6 +20,7 @@ jobs:
       - uses: oven-sh/setup-bun@v1
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - run: ls -la && ls src/lib -la
       - name: Run unit tests
         run: bun run test
 
@@ -36,8 +37,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: ls -la
-      - run: ls src/lib -la
+      - run: ls -la && ls src/lib -la
       - name: Publish to NPM, if version was incremented
         uses: JS-DevTools/npm-publish@v2
         with:

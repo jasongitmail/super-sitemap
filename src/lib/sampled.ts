@@ -1,4 +1,3 @@
-// import { glob } from 'glob';
 import dirTree from 'directory-tree';
 import { XMLParser } from 'fast-xml-parser';
 
