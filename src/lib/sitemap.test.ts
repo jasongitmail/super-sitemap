@@ -13,6 +13,7 @@ describe('sitemap.ts', () => {
       changefreq: 'daily',
       excludePatterns: [
         '^/dashboard.*',
+        '(secret-group)',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
         `.*\\[page=integer\\].*`
@@ -165,6 +166,7 @@ describe('sitemap.ts', () => {
 
       const excludePatterns = [
         '^/dashboard.*',
+        '(secret-group)',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
         `.*\\[page=integer\\].*`
