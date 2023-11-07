@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -38,7 +39,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: bun install --frozen-lockfile
+      - run: npm install
+      # - run: bun install --frozen-lockfile
       - run: ls -la && ls src/lib -la
       - name: Publish to NPM, if version was incremented
         uses: JS-DevTools/npm-publish@v2
