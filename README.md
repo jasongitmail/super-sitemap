@@ -300,7 +300,7 @@ sitemap and will require you to either exclude these using `excludePatterns` or
 provide param values for them using `paramValues`, within your sitemap
 config object.
 
-For example:
+### For example:
 
 - `/something` will exist in your sitemap unless excluded with a pattern of
   `/something$`.
