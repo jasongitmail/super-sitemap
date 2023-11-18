@@ -112,10 +112,10 @@ describe('sitemap.ts', () => {
         expect(resultXml).toEqual(expectedSitemapXml.trim());
       });
 
-      it.only.each([
+      it.each([
         ['1', './src/lib/fixtures/expected-sitemap-index-subpage1.xml'],
         ['2', './src/lib/fixtures/expected-sitemap-index-subpage2.xml'],
-        // ['3', './src/lib/fixtures/expected-sitemap-index-subpage3.xml'],
+        ['3', './src/lib/fixtures/expected-sitemap-index-subpage3.xml'],
       ])(
         'subpage (e.g. sitemap%s.xml) should return a sitemap with expected URL subset',
         async (page, expectedFile) => {

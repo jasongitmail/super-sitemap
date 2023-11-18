@@ -28,6 +28,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://example.com/optionals/many</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/pricing</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -59,6 +64,26 @@
   </url>
   <url>
     <loc>https://example.com/optionals/optional-2</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/optionals/many/param-a1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/optionals/many/param-a2</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/optionals/many/param-a1/param-b1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/optionals/many/param-a2/param-b2</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>

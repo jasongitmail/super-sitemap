@@ -459,7 +459,7 @@ Feel free to use or adapt this example test:
 
 import { expect, test } from '@playwright/test';
 
-test.only('/sitemap.xml is valid', async ({ page }) => {
+test('/sitemap.xml is valid', async ({ page }) => {
   const response = await page.goto('/sitemap.xml');
   expect(response.status()).toBe(200);
 
