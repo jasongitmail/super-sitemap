@@ -24,6 +24,7 @@
   - [Basic example](#basic-example)
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
+  - [Optional Params](#optional-params)
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
@@ -82,7 +83,7 @@ Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#pla
 
 ## Usage
 
-### Basic example
+## Basic example
 
 JavaScript:
 
@@ -92,7 +93,7 @@ import * as sitemap from 'super-sitemap';
 
 export const GET = async () => {
   return await sitemap.response({
-    origin: 'https://example.com'
+    origin: 'https://example.com',
   });
 };
 ```
@@ -106,12 +107,12 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
   return await sitemap.response({
-    origin: 'https://example.com'
+    origin: 'https://example.com',
   });
 };
 ```
 
-### The "everything" example
+## The "everything" example
 
 All aspects of the below example are optional, except for `origin` and
 `paramValues` to provide data for parameterized routes.
@@ -137,9 +138,9 @@ export const GET = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*',          // i.e. routes starting with `/dashboard`
+      '^/dashboard.*', // i.e. routes starting with `/dashboard`
       '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '.*\\(authenticated\\).*' // i.e. routes within a group
+      '.*\\(authenticated\\).*', // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
@@ -147,18 +148,18 @@ export const GET = async () => {
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
-        ['canada', 'toronto']
-      ]
+        ['canada', 'toronto'],
+      ],
     },
     headers: {
-      'custom-header': 'foo' // case insensitive; xml content type & 1h CDN cache by default
+      'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
-      '/foo.pdf' // e.g. to a file in your static dir
+      '/foo.pdf', // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // excluded by default b/c ignored by modern search engines
     priority: 0.7, // excluded by default b/c ignored by modern search engines
-    sort: 'alpha' // default is false; 'alpha' sorts all paths alphabetically.
+    sort: 'alpha', // default is false; 'alpha' sorts all paths alphabetically.
   });
 };
 ```
@@ -185,9 +186,9 @@ export const GET: RequestHandler = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludePatterns: [
-      '^/dashboard.*',          // i.e. routes starting with `/dashboard`
+      '^/dashboard.*', // i.e. routes starting with `/dashboard`
       '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '.*\\(authenticated\\).*' // i.e. routes within a group
+      '.*\\(authenticated\\).*', // i.e. routes within a group
     ],
     paramValues: {
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
@@ -195,23 +196,23 @@ export const GET: RequestHandler = async () => {
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
-        ['canada', 'toronto']
-      ]
+        ['canada', 'toronto'],
+      ],
     },
     headers: {
-      'custom-header': 'foo' // case insensitive; xml content type & 1h CDN cache by default
+      'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
-      '/foo.pdf' // e.g. to a file in your static dir
+      '/foo.pdf', // e.g. to a file in your static dir
     ],
     changefreq: 'daily', // excluded by default b/c ignored by modern search engines
     priority: 0.7, // excluded by default b/c ignored by modern search engines
-    sort: 'alpha' // default is false; 'alpha' sorts all paths alphabetically.
+    sort: 'alpha', // default is false; 'alpha' sorts all paths alphabetically.
   });
 };
 ```
 
-### Sitemap Index
+## Sitemap Index
 
 You can enable sitemap index support with just two changes:
 
@@ -227,7 +228,7 @@ import * as sitemap from 'super-sitemap';
 export const GET = async ({ params }) => {
   return await sitemap.response({
     origin: 'https://example.com',
-    page: params.page
+    page: params.page,
     // maxPerPage: 45_000 // optional; defaults to 50_000
   });
 };
@@ -243,7 +244,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     origin: 'https://example.com',
-    page: params.page
+    page: params.page,
     // maxPerPage: 45_000 // optional; defaults to 50_000
   });
 };
@@ -273,6 +274,53 @@ paginated URLs automatically.
   </sitemap>
 </sitemapindex>
 ```
+
+## Optional Params
+
+SvelteKit allows you to create a route with one or more optional parameters like this:
+
+```text
+src/
+  routes/
+    something/
+      [[paramA]]/
+        [[paramB]]/
+          +page.svelte
+          +page.ts
+```
+
+Your app would then respond to HTTP requests for all of the following:
+
+- `/something`
+- `/something/foo`
+- `/something/foo/bar`
+
+Consequently, Super Sitemap will include all such path variations in your
+sitemap and will require you to either exclude these using `excludePatterns` or
+provide param values for them using `paramValues`, within your Super Sitemap
+config object.
+
+For example:
+
+- `/something` will exist in your sitemap unless excluded with a pattern of
+  `/something$`.
+- `/something/[[paramA]]` must be either excluded using an `excludePattern` of
+  `.*/something/\\[\\[paramA\\]\\]$` _or_ appear within your config's
+  `paramValues` like this: `'/something/[[paramA]]': ['foo', 'foo2', 'foo3']`.
+- And `/something/[[paramA]]/[[paramB]]` must be either excluded using an
+  `excludePattern` of `.*/something/\\[\\[paramA\\]\\]/\\[\\[paramB\\]\\]$` _or_
+  appear within your config's `paramValues` like this: `'/something/[[paramA]]':
+[['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
+
+Alternatively, you can exclude ALL versions of this route by providing a single
+regex pattern within `excludePatterns` that matches all of them, such as
+`/something`; notice this do NOT end with a `$`, thereby allowing this pattern
+to match all 3 versions of your route.
+
+If you plan to mix and match use of `excludePatterns` and `paramValues` for a
+given route that contains optional params, terminate all of your
+`excludePatterns` for that route with `$`, to target only the specific desired
+versions of that route.
 
 ## Sampled URLs
 
@@ -388,7 +436,7 @@ export async function GET(): Promise<Response> {
   ].join('\n').trim();
 
   const headers = {
-    'Content-Type': 'text/plain'
+    'Content-Type': 'text/plain',
   };
 
   return new Response(body, { headers });
@@ -419,7 +467,7 @@ test.only('/sitemap.xml is valid', async ({ page }) => {
   // cannot be parsed.
   const urls = await page.$$eval('url', (urls) =>
     urls.map((url) => ({
-      loc: url.querySelector('loc').textContent
+      loc: url.querySelector('loc').textContent,
       // changefreq: url.querySelector('changefreq').textContent, // if you enabled in your sitemap
       // priority: url.querySelector('priority').textContent,
     }))

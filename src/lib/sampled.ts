@@ -268,7 +268,6 @@ export function findFirstMatches(regexPatterns: Set<string>, haystack: string[])
  * for recursion)
  * @returns An array of strings representing disk paths to each route.
  */
-
 export function extractPaths(obj: dirTree.DirectoryTree, paths: string[] = []): string[] {
   if (obj.path) {
     paths.push(obj.path);

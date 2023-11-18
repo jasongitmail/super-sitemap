@@ -1,5 +1,3 @@
-// import { page } from '$app/stores';
-
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
@@ -74,15 +72,14 @@ export async function response({
   page,
   paramValues,
   priority = false,
-  sort = false
+  sort = false,
 }: SitemapConfig): Promise<Response> {
   // 500 error
   if (!origin) {
     throw new Error('Sitemap: `origin` property is required in sitemap config.');
   }
 
-  let paths = generatePaths(excludePatterns, paramValues);
-  paths = [...paths, ...additionalPaths];
+  let paths = [...generatePaths(excludePatterns, paramValues), ...additionalPaths];
 
   if (sort === 'alpha') paths.sort();
 
@@ -91,16 +88,15 @@ export async function response({
   let body;
   if (!page) {
     // User is visiting `sitemap.xml` or `sitemap[[page]].xml`.
-    if (paths.length > maxPerPage) {
-      body = generateSitemapIndex(origin, totalPages);
-    } else {
+    if (paths.length <= maxPerPage) {
       body = generateBody(origin, new Set(paths), changefreq, priority);
+    } else {
+      body = generateSitemapIndex(origin, totalPages);
     }
   } else {
-    // User is visiting `sitemap[[page]].xml`.
+    // User is visiting a sitemap index's subpage: `sitemap[[page]].xml`.
 
-    // We use this, instead of requiring the dev to create a route matcher, to
-    // keep set up easier for them.
+    // This avoids the need to instruct devs to create a route matcher, to keep set up easier.
     if (!/^[1-9]\d*$/.test(page)) {
       return new Response('Invalid page param', { status: 400 });
     }
@@ -118,7 +114,9 @@ export async function response({
   const _headers = {
     'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
     'content-type': 'application/xml',
-    ...Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]))
+    ...Object.fromEntries(
+      Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])
+    ),
   };
 
   return new Response(body, { headers: _headers });
@@ -191,12 +189,11 @@ export function generatePaths(
   paramValues: ParamValues = {}
 ): string[] {
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
+  routes = processRoutesForOptionalParams(routes);
   routes = filterRoutes(routes, excludePatterns);
 
-  let parameterizedPaths = [];
-  [routes, parameterizedPaths] = buildMultiParamPaths(routes, paramValues);
-
-  return [...routes, ...parameterizedPaths];
+  const [staticPaths, parameterizedPaths] = generateParamPaths(routes, paramValues);
+  return [...staticPaths, ...parameterizedPaths];
 }
 
 /**
@@ -221,17 +218,23 @@ export function generatePaths(
 export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
   return (
     routes
-      // remove `/src/routes` prefix and `+page.svelte suffix`
-      .map((x) => x.substring(11, x.length - 12))
+      // Remove `/src/routes` prefix, `+page.svelte suffix`, and trailing slash except on homepage.
+      // Trailing slash must be removed before excludePatterns so `$` termination of a regex pattern
+      // will work as expected.
+      .map((x) => {
+        x = x.substring(11, x.length - 13);
+        return !x ? '/' : x;
+      })
 
-      // remove any routes that match an exclude pattern--e.g. `(dashboard)`
+      // Remove any routes that match an exclude pattern–e.g. `(dashboard)`
       .filter((x) => !excludePatterns.some((pattern) => new RegExp(pattern).test(x)))
 
-      // remove `/(groups)` because decorative only
-      .map((x) => x.replaceAll(/\/\(\w+\)/g, ''))
-
-      // remove trailing "/" except from the homepage
-      .map((x) => (x !== '/' && x.endsWith('/') ? x.slice(0, -1) : x))
+      // Remove any `/(groups)` because decorative only. Must follow excludePatterns.
+      // Ensure index page is '/' in case it was part of a group.
+      .map((x) => {
+        x = x.replaceAll(/\/\(\w+\)/g, '');
+        return !x ? '/' : x;
+      })
 
       .sort()
   );
@@ -265,7 +268,7 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
  * @throws Will throw an error if a parameterized route does not have data
  *         within paramValues, for visibility to the developer.
  */
-export function buildMultiParamPaths(
+export function generateParamPaths(
   routes: string[],
   paramValues: ParamValues
 ): [string[], string[]] {
@@ -336,4 +339,53 @@ export function generateSitemapIndex(origin: string, pages: number): string {
 </sitemapindex>`;
 
   return str;
+}
+
+/**
+ * Given all routes, return a new array of routes that includes all versions of
+ * any route that contains one or more optional params.
+ *
+ * @private
+ * @param routes - Array of routes to process.
+ * @returns Array of routes containing all version for those with optional
+ * params.
+ */
+export function processRoutesForOptionalParams(routes: string[]): string[] {
+  return routes.flatMap((route) => {
+    return /\[\[.*\]\]/.test(route) ? processOptionalParams(route) : route;
+  });
+}
+
+/**
+ * Processes a route containing 1+ optional parameter, represented by double
+ * square brackets. It generates all possible versions of this route that
+ * SvelteKit considers valid. Notice we add `+/page.svelte`, that is so these
+ * routes have a consistent pattern as others so that `filterRoutes()` will
+ * apply consistently when called later.
+ *
+ * @private
+ * @param route - Route to process. E.g. `/foo/[[paramA]]`
+ * @returns An array of routes. E.g. [`/foo`, `/foo/[[paramA]]`]
+ */
+
+export function processOptionalParams(route: string): string[] {
+  const routes = [];
+
+  // Get path before first optional param. `i-1` to exclude trailing slash.
+  const i = route.indexOf('[[');
+  routes.push(route.slice(0, i - 1) + '/+page.svelte');
+
+  // Split and filter to remove first empty item when str starts with '/'.
+  const segments = route.split('/').filter(Boolean);
+
+  let currentPath = '';
+  for (const segment of segments) {
+    currentPath += '/' + segment;
+
+    if (segment.startsWith('[[') && segment.endsWith(']]')) {
+      routes.push(currentPath + '/+page.svelte');
+    }
+  }
+
+  return routes;
 }

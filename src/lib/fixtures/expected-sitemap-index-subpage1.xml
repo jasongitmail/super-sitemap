@@ -28,6 +28,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://example.com/optionals/many</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/pricing</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
