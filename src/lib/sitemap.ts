@@ -289,7 +289,8 @@ export function buildMultiParamPaths(
         // `paramValues[route]` is all data for all paths for this route.
         ...paramValues[route].map((data) => {
           let i = 0;
-          return route.replace(/\[[^\]]+\]/g, () => data[i++] || '');
+          // Replace every [[foo]] or [foo] with a value from the array.
+          return route.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
         })
       );
     } else {
@@ -309,7 +310,8 @@ export function buildMultiParamPaths(
   // Throw error if app contains any parameterized routes NOT handled in the
   // sitemap, to alert the developer. Prevents accidental omission of any paths.
   for (const route of routes) {
-    const regex = /.*\[[^\]]+\].*/;
+    // Check whether any instance of [foo] or [[foo]] exists.
+    const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
     if (regex.test(route)) {
       throw new Error(
         `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`

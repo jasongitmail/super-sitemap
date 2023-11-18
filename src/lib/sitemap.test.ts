@@ -12,8 +12,10 @@ describe('sitemap.ts', () => {
       additionalPaths: ['/additional-path'],
       changefreq: 'daily',
       excludePatterns: [
-        '^/dashboard.*',
+        '.*/dashboard.*',
         '(secret-group)',
+        // exclude a single optional parameter
+        '/optionals/to-exclude/\\[\\[optional\\]\\]',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
         `.*\\[page=integer\\].*`
@@ -22,8 +24,12 @@ describe('sitemap.ts', () => {
         'custom-header': 'mars'
       },
       origin: 'https://example.com',
+
+      /* eslint-disable perfectionist/sort-objects */
       paramValues: {
+        // Optional params
         '/[foo]': ['foo-path-1'],
+        '/optionals/[[optional]]': ['optional-1', 'optional-2'],
         // 1D array
         '/blog/[slug]': ['hello-world', 'another-post', 'awesome-post'],
         // 2D with only 1 element each
@@ -85,7 +91,7 @@ describe('sitemap.ts', () => {
 
     describe('sitemap index', () => {
       it('when URLs > maxPerPage, should return a sitemap index', async () => {
-        config.maxPerPage = 4;
+        config.maxPerPage = 8;
         const res = await sitemap.response(config);
         const resultXml = await res.text();
         const expectedSitemapXml = await fs.promises.readFile(
@@ -95,22 +101,26 @@ describe('sitemap.ts', () => {
         expect(resultXml).toEqual(expectedSitemapXml.trim());
       });
 
-      it('subpage (e.g. sitemap2.xml) should return a sitemap with expected URL subset', async () => {
-        config.maxPerPage = 4;
-        config.page = '2';
-        const res = await sitemap.response(config);
-        const resultXml = await res.text();
-        const expectedSitemapXml = await fs.promises.readFile(
-          './src/lib/fixtures/expected-sitemap-subpage.xml',
-          'utf-8'
-        );
-        expect(resultXml).toEqual(expectedSitemapXml.trim());
-      });
+      it.each([
+        ['1', './src/lib/fixtures/expected-sitemap-index-subpage1.xml'],
+        ['2', './src/lib/fixtures/expected-sitemap-index-subpage2.xml'],
+        ['3', './src/lib/fixtures/expected-sitemap-index-subpage3.xml']
+      ])(
+        'subpage (e.g. sitemap%s.xml) should return a sitemap with expected URL subset',
+        async (page, expectedFile) => {
+          config.maxPerPage = 8;
+          config.page = page;
+          const res = await sitemap.response(config);
+          const resultXml = await res.text();
+          const expectedSitemapXml = await fs.promises.readFile(expectedFile, 'utf-8');
+          expect(resultXml).toEqual(expectedSitemapXml.trim());
+        }
+      );
 
       it.each([['-3'], ['3.3'], ['invalid']])(
         `when page param is invalid ('%s'), should respond 400`,
         async (page) => {
-          config.maxPerPage = 4;
+          config.maxPerPage = 8;
           config.page = page;
           const res = await sitemap.response(config);
           expect(res.status).toEqual(400);
@@ -118,7 +128,7 @@ describe('sitemap.ts', () => {
       );
 
       it('when page param is greater than subpages that exist, should respond 404', async () => {
-        config.maxPerPage = 4;
+        config.maxPerPage = 8;
         config.page = '999999';
         const res = await sitemap.response(config);
         expect(res.status).toEqual(404);
@@ -165,16 +175,21 @@ describe('sitemap.ts', () => {
       // `import.meta.glob()`.
 
       const excludePatterns = [
-        '^/dashboard.*',
+        '.*/dashboard.*',
         '(secret-group)',
+        // exclude a single optional parameter
+        '/optionals/to-exclude/\\[\\[optional\\]\\]',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
         `.*\\[page=integer\\].*`
       ];
 
       // Provide data for parameterized routes
+      /* eslint-disable perfectionist/sort-objects */
       const paramValues = {
+        // Optional params
         '/[foo]': ['foo-path-1'],
+        '/optionals/[[optional]]': ['optional-1', 'optional-2'],
         // 1D array
         '/blog/[slug]': ['hello-world', 'another-post'],
         // 2D with only 1 element each
@@ -199,6 +214,8 @@ describe('sitemap.ts', () => {
         '/signup',
         '/terms',
         '/foo-path-1',
+        '/optionals/optional-1',
+        '/optionals/optional-2',
         '/blog/hello-world',
         '/blog/another-post',
         '/blog/tag/red',
@@ -270,9 +287,12 @@ describe('sitemap.ts', () => {
       '/blog',
       '/blog/[slug]',
       '/blog/tag/[tag]',
-      '/campsites/[country]/[state]'
+      '/campsites/[country]/[state]',
+      '/optionals/[[optional]]'
     ];
     const paramValues = {
+      '/optionals/[[optional]]': ['optional-1', 'optional-2'],
+
       // 1D array
       '/blog/[slug]': ['hello-world', 'another-post'],
       // 2D with only 1 element each
@@ -288,6 +308,8 @@ describe('sitemap.ts', () => {
     it('should build parameterized paths and remove the original tokenized route(s)', () => {
       const expectedRoutes = ['/', '/about', '/pricing', '/blog'];
       const expectedPaths = [
+        '/optionals/optional-1',
+        '/optionals/optional-2',
         '/blog/hello-world',
         '/blog/another-post',
         '/blog/tag/red',

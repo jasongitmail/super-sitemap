@@ -53,6 +53,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://example.com/optionals/optional-1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/optionals/optional-2</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/blog/hello-world</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

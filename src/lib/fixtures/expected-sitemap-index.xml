@@ -9,10 +9,4 @@
   <sitemap>
     <loc>https://example.com/sitemap3.xml</loc>
   </sitemap>
-  <sitemap>
-    <loc>https://example.com/sitemap4.xml</loc>
-  </sitemap>
-  <sitemap>
-    <loc>https://example.com/sitemap5.xml</loc>
-  </sitemap>
 </sitemapindex>

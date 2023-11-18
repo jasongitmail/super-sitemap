@@ -8,6 +8,16 @@
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 >
   <url>
+    <loc>https://example.com/blog/tag/green</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/blog/tag/cyan</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/campsites/usa/new-york</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

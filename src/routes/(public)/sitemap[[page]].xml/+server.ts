@@ -8,12 +8,7 @@ import { error } from '@sveltejs/kit';
 //   parameterized routes does not change between your builds builds. Otherwise,
 //   disabling prerendering will allow your database that generate param values
 //   to be executed when a user request to the sitemap does not hit cache.
-// - When prerendering is set to true, using `npm run preview` serves an
-//   `text/html` content type because it's up to the server to decide what mime
-//   type to use. But in production, Cloudflare Pages is smart and automatically
-//   uses `application/xml` when serving your prerendered sitemap. Other hosts
-//   should as well. https://github.com/sveltejs/kit/issues/9408
-export const prerender = true;
+// export const prerender = true;
 
 export const GET: RequestHandler = async ({ params }) => {
   // Get data for parameterized routes
@@ -27,7 +22,9 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. file in `static` dir
     excludePatterns: [
-      '^/dashboard.*',
+      '.*/dashboard.*',
+      '.*/to-exclude/\\[\\[optional\\]\\]',
+      '.*(secret-group).*',
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
       `.*\\[page=integer\\].*`
@@ -35,8 +32,11 @@ export const GET: RequestHandler = async ({ params }) => {
     maxPerPage: 6,
     origin: 'https://example.com',
     page: params.page,
+
+    /* eslint-disable perfectionist/sort-objects */
     paramValues: {
       '/[foo]': ['foo-path-1'],
+      '/optionals/[[optional]]': ['optional-1', 'optional-2'],
       '/blog/[slug]': slugs,
       '/blog/tag/[tag]': tags,
       '/campsites/[country]/[state]': [

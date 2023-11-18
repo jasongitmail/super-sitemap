@@ -32,10 +32,6 @@ describe('sample.ts', () => {
         const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
         const result = await sitemap._sampledUrls(xml);
         expect(result).toEqual(expectedSampledUrls);
-        expect(result).not.toEqual([
-          'https://example.com/dashboard',
-          'https://example.com/dashboard/settings'
-        ]);
       });
     });
 
@@ -47,10 +43,6 @@ describe('sample.ts', () => {
         );
         const result = await sitemap._sampledUrls(xml);
         expect(result).toEqual(expectedSampledUrls);
-        expect(result).not.toEqual([
-          'https://example.com/dashboard',
-          'https://example.com/dashboard/settings'
-        ]);
       });
     });
   });
