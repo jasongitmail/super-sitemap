@@ -297,7 +297,7 @@ Your app would then respond to HTTP requests for all of the following:
 
 Consequently, Super Sitemap will include all such path variations in your
 sitemap and will require you to either exclude these using `excludePatterns` or
-provide param values for them using `paramValues`, within your Super Sitemap
+provide param values for them using `paramValues`, within your sitemap
 config object.
 
 For example:
