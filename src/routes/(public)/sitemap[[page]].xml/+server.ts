@@ -22,12 +22,12 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. file in `static` dir
     excludePatterns: [
-      '.*/dashboard.*',
-      '.*/to-exclude/\\[\\[optional\\]\\]',
-      '.*(secret-group).*',
+      '/dashboard.*',
+      '/to-exclude',
+      '(secret-group)',
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-      `.*\\[page=integer\\].*`
+      `.*\\[page=integer\\].*`,
     ],
     maxPerPage: 6,
     origin: 'https://example.com',
@@ -37,13 +37,18 @@ export const GET: RequestHandler = async ({ params }) => {
     paramValues: {
       '/[foo]': ['foo-path-1'],
       '/optionals/[[optional]]': ['optional-1', 'optional-2'],
+      '/optionals/many/[[paramA]]': ['param-a1', 'param-a2'],
+      '/optionals/many/[[paramA]]/[[paramB]]': [
+        ['param-a1', 'param-b1'],
+        ['param-a2', 'param-b2'],
+      ],
       '/blog/[slug]': slugs,
       '/blog/tag/[tag]': tags,
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
-        ['canada', 'toronto']
-      ]
-    }
+        ['canada', 'toronto'],
+      ],
+    },
   });
 };
