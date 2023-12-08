@@ -315,7 +315,7 @@ config object.
 Alternatively, you can exclude ALL versions of this route by providing a single
 regex pattern within `excludePatterns` that matches all of them, such as
 `/something`; notice this do NOT end with a `$`, thereby allowing this pattern
-to match all 3 versions of your route.
+to match all 3 versions of this route.
 
 If you plan to mix and match use of `excludePatterns` and `paramValues` for a
 given route that contains optional params, terminate all of your
