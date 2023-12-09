@@ -223,18 +223,24 @@ export function generateBody(
 export function generatePaths(
   excludePatterns: string[] = [],
   paramValues: ParamValues = {},
-  lang?: LangConfig
+  lang: LangConfig = { alternates: [], default: '' }
 ): PathObj[] {
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
   // Validation: if dev has one or more routes that start with `[[lang]]`,
   // require that they have defined the `lang.default` and `lang.alternates` in
   // their config. or throw an error to cause 500 error for visibility.
-  //
-  // TODO Check if one or more routes starts with [[lang]], and if yes, run this check...
-  const routesContainLangParam = false;
+  let routesContainLangParam = false;
+  for (const route of routes) {
+    if (route.includes('[[lang]]')) {
+      routesContainLangParam = true;
+      break;
+    }
+  }
   if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
-    throw Error('The `lang` property must be specified in the sitemap config.');
+    throw Error(
+      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]].'
+    );
   }
 
   routes = processRoutesForOptionalParams(routes);
@@ -242,26 +248,31 @@ export function generatePaths(
   // Notice this means devs MUST include `[[lang]]/` within any route strings
   // used within `excludePatterns` if that's part of their route.
   routes = filterRoutes(routes, excludePatterns);
+  // console.log('routes', routes);
 
   ///////////////////////////////////////////////
   ///////////////////////////////////////////////
 
-  // TODO 2.1: Inside this, group routes based on existence of [[lang]] prefix, then remove it from all routes, so param replacement logic isn't messed up by it.
-  // TODO 2.2: For both groups, perform param replacements.
-  // TODO 2.3: At
+  // TODO [ ] 2.1: Inside this, group routes based on existence of [[lang]] prefix, then remove it from [[lang]], so param replacement logic isn't messed up by it.
+  // TODO [ ] 2.2: For both groups, perform param replacements.
+  // TODO [ ] 2.3: Return both groups separately from generateParamPaths(), in PathObj format.
+  // TODO [ ] 2.4: For the group of routes that contain 'lang', run generatePathsWithLang().
+  // TODO [ ] 2.4: For the group of routes that does NOT contain 'lang', put into PathObj format.
   //
-  const [staticPaths, parameterizedPaths] = generateParamPaths(routes, paramValues);
-  const paths = [...staticPaths, ...parameterizedPaths];
+  // const [staticPaths, parameterizedPaths] = generateParamPaths(routes, paramValues);
+  // const paths = [...staticPaths, ...parameterizedPaths];
 
-  const _paths = generatePathsWithLang(paths, lang);
+  // eslint-disable-next-line prefer-const
+  let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
+
   ///////////////////////////////////////////////
   ///////////////////////////////////////////////
 
-  return _paths;
-  // return [
-  //   ...staticPaths.map((path) => ({ path })),
-  //   ...parameterizedPaths.map((path) => ({ path })),
-  // ];
+  // Return as an array of PathObj's
+  return [
+    ...pathsWithoutLang.map((path) => ({ path } as PathObj)),
+    ...(pathsWithLang.length ? generatePathsWithLang(pathsWithLang, lang) : []),
+  ];
 }
 
 /**
@@ -336,52 +347,85 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
  * @throws Will throw an error if a parameterized route does not have data
  *         within paramValues, for visibility to the developer.
  */
-export function generateParamPaths(
+export function generatePathsWithParamValues(
   routes: string[],
   paramValues: ParamValues
-): [string[], string[]] {
-  const parameterizedPaths = [];
-
-  for (const route in paramValues) {
-    if (!routes.includes(route)) {
+): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
+  for (const paramValueKey in paramValues) {
+    if (!routes.includes(paramValueKey)) {
       throw new Error(
-        `Sitemap: paramValues were provided for route that no longer exists: '${route}' within your project's 'src/routes/'. Remove this property from paramValues.`
+        `Sitemap: paramValues were provided for a route that does not exists within src/routes/: '${paramValueKey}'. Remove this property from your paramValues.`
       );
     }
+  }
 
-    // First, determine if this is a 1D array, which we allow as a user convenience.
-    // If the first item is an array, then it's a 2D array.
-    if (Array.isArray(paramValues[route][0])) {
+  let pathsWithLang = [];
+  let pathsWithoutLang = [];
+
+  for (const paramValuesKey in paramValues) {
+    const hasLang = paramValuesKey.startsWith('/[[lang]]');
+    const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
+
+    const paths = [];
+
+    if (Array.isArray(paramValues[paramValuesKey][0])) {
+      // First, determine if this is a 1D array, which we allow as a user convenience.
+      // If the first item is an array, then it's a 2D array.
       // 2D array of one or more elements each.
       // - e.g. [['usa','miami'], ['usa','new-york'], ['canada, toronto']]
       // - e.g. [['hello-world'], ['another-post'], ['post3']] (also valid to offer flexibility)
-      parameterizedPaths.push(
+      paths.push(
         // Given all data for this route, loop over and generate a path for each.
         // `paramValues[route]` is all data for all paths for this route.
-        ...paramValues[route].map((data) => {
+        ...paramValues[paramValuesKey].map((data) => {
           let i = 0;
           // Replace every [[foo]] or [foo] with a value from the array.
-          return route.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
+          return routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
         })
       );
     } else {
       // 1D array of one or more elements.
       // - e.g. ['hello-world', 'another-post', 'post3']
       // Generate paths using data from paramValues–e.g. `/blog/hello-world`
-      parameterizedPaths.push(
+      paths.push(
         // @ts-expect-error for map, we know this is a 1D array
-        ...paramValues[route].map((value: string) => route.replace(/\[.*\]/, value))
+        ...paramValues[paramValuesKey].map((value: string) =>
+          routeSansLang.replace(/\[.*\]/, value)
+        )
       );
     }
 
-    // Remove route containing the token placeholder–e.g. `/blog/[slug]`
-    routes.splice(routes.indexOf(route), 1);
+    if (hasLang) {
+      pathsWithLang.push(...paths.map((path) => '/[[lang]]' + path));
+    } else {
+      pathsWithoutLang.push(...paths);
+    }
+
+    // Remove this from routes
+    routes.splice(routes.indexOf(paramValuesKey), 1);
   }
+
+  // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). Will not have any
+  // parameters other than exactly [[lang]].
+  const staticWithLang = [];
+  const staticWithoutLang = [];
+  for (const route of routes) {
+    const hasLang = route.startsWith('/[[lang]]');
+    if (hasLang) {
+      staticWithLang.push(route);
+    } else {
+      staticWithoutLang.push(route);
+    }
+  }
+
+  // This just keeps static paths first, which I prefer.
+  pathsWithLang = [...staticWithLang, ...pathsWithLang];
+  pathsWithoutLang = [...staticWithoutLang, ...pathsWithoutLang];
 
   // Throw error if app contains any parameterized routes NOT handled in the
   // sitemap, to alert the developer. Prevents accidental omission of any paths.
   for (const route of routes) {
-    // Check whether any instance of [foo] or [[foo]] exists.
+    // Check whether any instance of [foo] or [[foo]] exists
     const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
     if (regex.test(route)) {
       throw new Error(
@@ -390,7 +434,7 @@ export function generateParamPaths(
     }
   }
 
-  return [routes, parameterizedPaths];
+  return { pathsWithLang, pathsWithoutLang };
 }
 
 export function generateSitemapIndex(origin: string, pages: number): string {

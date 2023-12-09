@@ -18,37 +18,37 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://example.com/additional-path</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://example.com/login</loc>
+    <loc>https://example.com/blog/another-post</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://example.com/optionals/many</loc>
+    <loc>https://example.com/blog/awesome-post</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://example.com/pricing</loc>
+    <loc>https://example.com/blog/hello-world</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://example.com/privacy</loc>
+    <loc>https://example.com/blog/tag/blue</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://example.com/signup</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://example.com/terms</loc>
+    <loc>https://example.com/blog/tag/cyan</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>

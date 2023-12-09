@@ -21,10 +21,10 @@ describe('sample.ts', () => {
       'https://example.com/signup',
       'https://example.com/terms',
       // dynamic
-      'https://example.com/blog/hello-world',
-      'https://example.com/blog/tag/red',
-      'https://example.com/campsites/usa/new-york',
-      'https://example.com/foo-path-1'
+      'https://example.com/additional-path',
+      'https://example.com/blog/another-post',
+      'https://example.com/blog/tag/blue',
+      'https://example.com/campsites/canada/toronto',
     ];
 
     describe('sitemap', () => {
@@ -36,7 +36,7 @@ describe('sample.ts', () => {
     });
 
     describe('sitemap index', () => {
-      it('should return expected urls', async () => {
+      it('should return expected urls from subpages', async () => {
         const xml = await fs.promises.readFile(
           './src/lib/fixtures/expected-sitemap-index.xml',
           'utf-8'
@@ -57,10 +57,10 @@ describe('sample.ts', () => {
       '/privacy',
       '/signup',
       '/terms',
-      '/blog/hello-world',
-      '/blog/tag/red',
-      '/campsites/usa/new-york',
-      '/foo-path-1'
+      '/additional-path',
+      '/blog/another-post',
+      '/blog/tag/blue',
+      '/campsites/canada/toronto',
     ];
 
     describe('sitemap', () => {
@@ -105,7 +105,7 @@ describe('sample.ts', () => {
         // /campsites/[country]/[state]
         'https://example.com/campsites/usa/new-york',
         'https://example.com/campsites/usa/california',
-        'https://example.com/campsites/canada/ontario'
+        'https://example.com/campsites/canada/ontario',
       ];
       const result = sitemap.findFirstMatches(patterns, haystack);
       expect(result).toEqual(

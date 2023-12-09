@@ -54,6 +54,7 @@ describe('sitemap.ts', () => {
         ],
       },
       priority: 0.7,
+      sort: 'alpha', // helps predictability of test data
     };
 
     it('when URLs <= maxPerPage, should return a sitemap', async () => {
@@ -96,8 +97,8 @@ describe('sitemap.ts', () => {
       const newConfig = JSON.parse(JSON.stringify(config));
       newConfig.paramValues['/old-route/[foo]'] = ['a', 'b', 'c'];
       const fn = () => sitemap.response(newConfig);
-      expect(fn()).rejects.toThrow(
-        "Sitemap: paramValues were provided for route that no longer exists: '/old-route/[foo]' within your project's 'src/routes/'. Remove this property from paramValues."
+      await expect(fn()).rejects.toThrow(
+        "Sitemap: paramValues were provided for a route that does not exists within src/routes/: '/old-route/[foo]'. Remove this property from your paramValues."
       );
     });
 
@@ -149,7 +150,7 @@ describe('sitemap.ts', () => {
   });
 
   describe('generateBody()', () => {
-    const paths = new Set(['/path1', '/path2']);
+    const paths = new Set([{ path: '/path1' }, { path: '/path2' }]);
     const resultXml = sitemap.generateBody('https://example.com', paths);
 
     it('should generate the expected XML sitemap string', () => {
@@ -221,32 +222,32 @@ describe('sitemap.ts', () => {
 
       const resultPaths = sitemap.generatePaths(excludePatterns, paramValues);
       const expectedPaths = [
-        '/',
-        '/about',
-        '/blog',
-        '/login',
-        '/optionals',
-        '/optionals/many',
-        '/pricing',
-        '/privacy',
-        '/signup',
-        '/terms',
-        '/foo-path-1',
-        '/optionals/optional-1',
-        '/optionals/optional-2',
-        '/optionals/many/param-a1',
-        '/optionals/many/param-a2',
-        '/optionals/many/param-a1/param-b1',
-        '/optionals/many/param-a2/param-b2',
-        '/blog/hello-world',
-        '/blog/another-post',
-        '/blog/tag/red',
-        '/blog/tag/blue',
-        '/blog/tag/green',
-        '/blog/tag/cyan',
-        '/campsites/usa/new-york',
-        '/campsites/usa/california',
-        '/campsites/canada/toronto',
+        { path: '/' },
+        { path: '/about' },
+        { path: '/blog' },
+        { path: '/login' },
+        { path: '/optionals' },
+        { path: '/optionals/many' },
+        { path: '/pricing' },
+        { path: '/privacy' },
+        { path: '/signup' },
+        { path: '/terms' },
+        { path: '/foo-path-1' },
+        { path: '/optionals/optional-1' },
+        { path: '/optionals/optional-2' },
+        { path: '/optionals/many/param-a1' },
+        { path: '/optionals/many/param-a2' },
+        { path: '/optionals/many/param-a1/param-b1' },
+        { path: '/optionals/many/param-a2/param-b2' },
+        { path: '/blog/hello-world' },
+        { path: '/blog/another-post' },
+        { path: '/blog/tag/red' },
+        { path: '/blog/tag/blue' },
+        { path: '/blog/tag/green' },
+        { path: '/blog/tag/cyan' },
+        { path: '/campsites/usa/new-york' },
+        { path: '/campsites/usa/california' },
+        { path: '/campsites/canada/toronto' },
       ];
 
       expect(resultPaths).toEqual(expectedPaths);
@@ -306,7 +307,7 @@ describe('sitemap.ts', () => {
   });
 
   describe('generateParamPaths()', () => {
-    let routes = [
+    const routes = [
       '/',
       '/about',
       '/pricing',
@@ -332,8 +333,11 @@ describe('sitemap.ts', () => {
     };
 
     it('should build parameterized paths and remove the original tokenized route(s)', () => {
-      const expectedRoutes = ['/', '/about', '/pricing', '/blog'];
-      const expectedPaths = [
+      const expectedPathsWithoutLang = [
+        '/',
+        '/about',
+        '/pricing',
+        '/blog',
         '/optionals/optional-1',
         '/optionals/optional-2',
         '/blog/hello-world',
@@ -346,42 +350,42 @@ describe('sitemap.ts', () => {
         '/campsites/canada/toronto',
       ];
 
-      let parameterizedPaths;
-      [routes, parameterizedPaths] = sitemap.generateParamPaths(routes, paramValues);
-      expect(parameterizedPaths).toEqual(expectedPaths);
-      expect(routes).toEqual(expectedRoutes);
+      const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues
+      );
+      expect(pathsWithoutLang).toEqual(expectedPathsWithoutLang);
+      expect(pathsWithLang).toEqual([]);
+      // expect(routes).toEqual(expectedRoutes);
     });
 
     it('should return routes unchanged, when no tokenized routes exist & given no paramValues', () => {
-      let routes = ['/', '/about', '/pricing', '/blog'];
+      const routes = ['/', '/about', '/pricing', '/blog'];
       const paramValues = {};
 
-      let parameterizedPaths;
-      // eslint-disable-next-line prefer-const
-      [routes, parameterizedPaths] = sitemap.generateParamPaths(routes, paramValues);
-      expect(parameterizedPaths).toEqual([]);
-      expect(routes).toEqual(routes);
+      const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues
+      );
+      expect(pathsWithLang).toEqual([]);
+      expect(pathsWithoutLang).toEqual(routes);
     });
 
     it('should throw error, when paramValues contains data for a route that no longer exists', () => {
-      let routes = ['/', '/about', '/pricing', '/blog'];
+      const routes = ['/', '/about', '/pricing', '/blog'];
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let parameterizedPaths;
       const result = () => {
-        [routes, parameterizedPaths] = sitemap.generateParamPaths(routes, paramValues);
+        sitemap.generatePathsWithParamValues(routes, paramValues);
       };
       expect(result).toThrow(Error);
     });
 
     it('should throw error, when tokenized routes exist that are not given data via paramValues', () => {
-      let routes = ['/', '/about', '/blog', '/products/[product]'];
+      const routes = ['/', '/about', '/blog', '/products/[product]'];
       const paramValues = {};
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let parameterizedPaths;
       const result = () => {
-        [routes, parameterizedPaths] = sitemap.generateParamPaths(routes, paramValues);
+        sitemap.generatePathsWithParamValues(routes, paramValues);
       };
       expect(result).toThrow(Error);
     });
@@ -478,7 +482,7 @@ describe('sitemap.ts', () => {
     }
   });
 
-  describe.only('generatePathsWithlang()', () => {
+  describe('generatePathsWithlang()', () => {
     const paths = ['/', '/about', '/foo/something'];
     const langConfig: LangConfig = {
       default: 'en',
