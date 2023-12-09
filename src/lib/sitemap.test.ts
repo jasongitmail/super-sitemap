@@ -2,6 +2,7 @@ import { XMLValidator } from 'fast-xml-parser';
 import fs from 'fs';
 import { describe, expect, it } from 'vitest';
 
+import type { LangConfig } from './sitemap.js';
 import type { SitemapConfig } from './sitemap.js';
 
 import * as sitemap from './sitemap.js';
@@ -475,5 +476,71 @@ describe('sitemap.ts', () => {
         expect(result).toEqual(expected);
       });
     }
+  });
+
+  describe.only('generatePathsWithlang()', () => {
+    const paths = ['/', '/about', '/foo/something'];
+    const langConfig: LangConfig = {
+      default: 'en',
+      alternates: ['de', 'es'],
+    };
+
+    it('should return expected objects for all paths', () => {
+      const result = sitemap.generatePathsWithLang(paths, langConfig);
+      const expectedRootAlternates = [
+        { lang: 'en', path: '/' },
+        { lang: 'de', path: '/de' },
+        { lang: 'es', path: '/es' },
+      ];
+      const expectedAboutAlternates = [
+        { lang: 'en', path: '/about' },
+        { lang: 'de', path: '/de/about' },
+        { lang: 'es', path: '/es/about' },
+      ];
+      const expectedFooAlternates = [
+        { lang: 'en', path: '/foo/something' },
+        { lang: 'de', path: '/de/foo/something' },
+        { lang: 'es', path: '/es/foo/something' },
+      ];
+      const expected = [
+        {
+          path: '/',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/de',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/es',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/de/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/es/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/foo/something',
+          alternates: expectedFooAlternates,
+        },
+        {
+          path: '/de/foo/something',
+          alternates: expectedFooAlternates,
+        },
+        {
+          path: '/es/foo/something',
+          alternates: expectedFooAlternates,
+        },
+      ];
+      expect(result).toEqual(expected);
+    });
   });
 });

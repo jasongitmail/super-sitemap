@@ -7,12 +7,29 @@ export type SitemapConfig = {
   changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
   excludePatterns?: [] | string[];
   headers?: Record<string, string>;
+  lang?: {
+    /* eslint-disable perfectionist/sort-object-types */
+    default: string;
+    alternates: string[];
+  };
   maxPerPage?: number;
   origin: string;
   page?: string;
   paramValues?: Record<string, never | string[] | string[][]>;
   priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
   sort?: 'alpha' | false;
+};
+
+export type LangConfig = {
+  /* eslint-disable perfectionist/sort-object-types */
+  default: string;
+  alternates: string[];
+};
+
+export type PathObj = {
+  /* eslint-disable perfectionist/sort-object-types */
+  path: string;
+  alternates?: { lang: string; path: string }[];
 };
 
 /**
@@ -44,9 +61,8 @@ export type SitemapConfig = {
  *     `.*\\[page=integer\\].*`
  *   ],
  *   paramValues: {
- *     '/blog/[slug]': ['hello-world', 'another-post']   // preferred
- *     '/blog/tag/[tag]': [['red'], ['blue'], ['green']] // valid
- *     '/campsites/[country]/[state]': [ // preferred; unlimited params supported
+ *     '/blog/[slug]': ['hello-world', 'another-post']
+ *     '/campsites/[country]/[state]': [
  *       ['usa', 'new-york'],
  *       ['usa', 'california'],
  *       ['canada', 'toronto']
@@ -54,7 +70,7 @@ export type SitemapConfig = {
  *   },
  *   additionalPaths: ['/foo.pdf'],
  *   headers: {
- *    'Custom-Header': 'mars'
+ *    'Custom-Header': 'blazing-fast'
  *   },
  *   changefreq: 'daily',
  *   priority: 0.7,
@@ -67,6 +83,7 @@ export async function response({
   changefreq = false,
   excludePatterns,
   headers = {},
+  lang,
   maxPerPage = 50_000,
   origin,
   page,
@@ -79,24 +96,33 @@ export async function response({
     throw new Error('Sitemap: `origin` property is required in sitemap config.');
   }
 
-  let paths = [...generatePaths(excludePatterns, paramValues), ...additionalPaths];
+  // - Put `additionalPaths` into PathObj format and ensure each starts with a
+  //   '/', for consistency. We will not translate any additionalPaths, b/c they
+  //   could be something like a PDF within the user's static dir.
+  //   prettier-ignore
+  const paths: PathObj[] = [
+    ...generatePaths(excludePatterns, paramValues, lang),
+    ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
+  ];
 
-  if (sort === 'alpha') paths.sort();
+  if (sort === 'alpha') paths.sort((a, b) => a.path.localeCompare(b.path));
 
-  const totalPages = Math.ceil(paths.length / maxPerPage);
+  const pathSet = new Set(paths);
+  const totalPages = Math.ceil(pathSet.size / maxPerPage);
 
   let body;
   if (!page) {
-    // User is visiting `sitemap.xml` or `sitemap[[page]].xml`.
+    // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without a page.
     if (paths.length <= maxPerPage) {
-      body = generateBody(origin, new Set(paths), changefreq, priority);
+      body = generateBody(origin, pathSet, changefreq, priority);
     } else {
       body = generateSitemapIndex(origin, totalPages);
     }
   } else {
-    // User is visiting a sitemap index's subpage: `sitemap[[page]].xml`.
+    // User is visiting a sitemap index's subpage–e.g. `sitemap[[page]].xml`.
 
-    // This avoids the need to instruct devs to create a route matcher, to keep set up easier.
+    // This avoids the need to instruct devs to create a route matcher, to keep
+    // set up easier for them.
     if (!/^[1-9]\d*$/.test(page)) {
       return new Response('Invalid page param', { status: 400 });
     }
@@ -106,8 +132,8 @@ export async function response({
       return new Response('Page does not exist', { status: 404 });
     }
 
-    paths = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
-    body = generateBody(origin, new Set(paths), changefreq, priority);
+    const pathsSubset = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
+    body = generateBody(origin, new Set(pathsSubset), changefreq, priority);
   }
 
   // Merge keys case-insensitive
@@ -145,12 +171,10 @@ export async function response({
 
 export function generateBody(
   origin: string,
-  paths: Set<string>,
+  paths: Set<PathObj>,
   changefreq: SitemapConfig['changefreq'] = false,
   priority: SitemapConfig['priority'] = false
 ): string {
-  const normalizedPaths = Array.from(paths).map((path) => (path[0] !== '/' ? `/${path}` : path));
-
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -159,19 +183,31 @@ export function generateBody(
   xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
   xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
->${normalizedPaths
+>${Array.from(paths)
     .map(
-      (path: string) =>
+      ({ alternates, path }) =>
         `
   <url>
     <loc>${origin}${path}</loc>\n` +
         (changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '') +
         (priority ? `    <priority>${priority}</priority>\n` : '') +
+        (!alternates
+          ? ''
+          : alternates
+              .map(
+                ({ lang, path }) =>
+                  `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />`
+              )
+              .join('\n')) +
         `  </url>`
     )
     .join('')}
 </urlset>`;
 }
+
+// export function generateUrlBody() {
+
+// }
 
 /**
  * Generates an array of route paths to be included in a sitemap.
@@ -186,14 +222,46 @@ export function generateBody(
  */
 export function generatePaths(
   excludePatterns: string[] = [],
-  paramValues: ParamValues = {}
-): string[] {
+  paramValues: ParamValues = {},
+  lang?: LangConfig
+): PathObj[] {
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
+
+  // Validation: if dev has one or more routes that start with `[[lang]]`,
+  // require that they have defined the `lang.default` and `lang.alternates` in
+  // their config. or throw an error to cause 500 error for visibility.
+  //
+  // TODO Check if one or more routes starts with [[lang]], and if yes, run this check...
+  const routesContainLangParam = false;
+  if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
+    throw Error('The `lang` property must be specified in the sitemap config.');
+  }
+
   routes = processRoutesForOptionalParams(routes);
+
+  // Notice this means devs MUST include `[[lang]]/` within any route strings
+  // used within `excludePatterns` if that's part of their route.
   routes = filterRoutes(routes, excludePatterns);
 
+  ///////////////////////////////////////////////
+  ///////////////////////////////////////////////
+
+  // TODO 2.1: Inside this, group routes based on existence of [[lang]] prefix, then remove it from all routes, so param replacement logic isn't messed up by it.
+  // TODO 2.2: For both groups, perform param replacements.
+  // TODO 2.3: At
+  //
   const [staticPaths, parameterizedPaths] = generateParamPaths(routes, paramValues);
-  return [...staticPaths, ...parameterizedPaths];
+  const paths = [...staticPaths, ...parameterizedPaths];
+
+  const _paths = generatePathsWithLang(paths, lang);
+  ///////////////////////////////////////////////
+  ///////////////////////////////////////////////
+
+  return _paths;
+  // return [
+  //   ...staticPaths.map((path) => ({ path })),
+  //   ...parameterizedPaths.map((path) => ({ path })),
+  // ];
 }
 
 /**
@@ -388,4 +456,46 @@ export function processOptionalParams(route: string): string[] {
   }
 
   return routes;
+}
+
+export function generatePathsWithLang(paths: string[], langConfig: LangConfig): PathObj[] {
+  const allPathObjs = [];
+
+  for (const path of paths) {
+    // The Sitemap standard specifies for hreflang elements to include 1.) the
+    // current path itself, and 2.) all of its alternates. So all versions of
+    // this path will be given the same "variations" array that will be used to
+    // build hreflang items for the path.
+    // https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site
+    const variations = [
+      // default path (e.g. '/about').
+      {
+        lang: langConfig.default,
+        path,
+      },
+    ];
+
+    for (const lang of langConfig.alternates) {
+      // alternate paths (e.g. '/de/about', etc.)
+      variations.push({
+        lang,
+        path: '/' + (path === '/' ? lang : lang + path),
+      });
+    }
+
+    // Generate all path objects. I.e. an array containing 1.) default path +
+    // the alternates array, 2.) every other path variation + the alternates
+    // array.
+    const pathObjs = [];
+    for (const x of variations) {
+      pathObjs.push({
+        alternates: variations,
+        path: x.path,
+      });
+    }
+
+    allPathObjs.push(...pathObjs);
+  }
+
+  return allPathObjs;
 }
