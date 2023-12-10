@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ params }) => {
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
       `.*\\[page=integer\\].*`,
     ],
-    maxPerPage: 6,
+    // maxPerPage: 20,
     origin: 'https://example.com',
     page: params.page,
 
@@ -37,10 +37,14 @@ export const GET: RequestHandler = async ({ params }) => {
     paramValues: {
       '/[[lang]]/[foo]': ['foo-path-1'],
       '/[[lang]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
-      '/[[lang]]/optionals/many/[[paramA]]': ['param-a1', 'param-a2'],
+      '/[[lang]]/optionals/many/[[paramA]]': ['data-a1', 'data-a2'],
       '/[[lang]]/optionals/many/[[paramA]]/[[paramB]]': [
-        ['param-a1', 'param-b1'],
-        ['param-a2', 'param-b2'],
+        ['data-a1', 'data-b1'],
+        ['data-a2', 'data-b2'],
+      ],
+      '/[[lang]]/optionals/many/[[paramA]]/[[paramB]]/foo': [
+        ['data-a1', 'data-b1'],
+        ['data-a2', 'data-b2'],
       ],
       '/[[lang]]/blog/[slug]': slugs,
       '/[[lang]]/blog/tag/[tag]': tags,
@@ -51,9 +55,12 @@ export const GET: RequestHandler = async ({ params }) => {
       ],
     },
 
+    priority: 0.7,
+    changefreq: 'daily',
+    sort: 'alpha', // helps predictability of test data
     lang: {
       default: 'en',
-      alternates: ['de', 'zh'],
+      alternates: ['zh'],
     },
   });
 };

@@ -1,3 +1,5 @@
+// import { coverageConfigDefaults } from 'vitest/config.js';
+
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
@@ -271,8 +273,8 @@ export function generatePaths(
 
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-  // console.log({ pathsWithLang });
-  // console.log({ pathsWithoutLang });
+  console.log('AFTER', { pathsWithLang });
+  console.log('AFTER', { pathsWithoutLang });
 
   // Return as an array of PathObj's
   return [
@@ -359,6 +361,7 @@ export function generatePathsWithParamValues(
 ): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
   console.log('>>>!! routes', routes);
 
+  // check for superfluous paramValues
   for (const paramValueKey in paramValues) {
     if (!routes.includes(paramValueKey)) {
       throw new Error(
@@ -373,6 +376,8 @@ export function generatePathsWithParamValues(
   for (const paramValuesKey in paramValues) {
     const hasLang = paramValuesKey.startsWith('/[[lang]]');
     const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
+
+    console.log('>>>!! paramValuesKey', paramValuesKey);
 
     const paths = [];
 
@@ -411,10 +416,18 @@ export function generatePathsWithParamValues(
     } else {
       pathsWithoutLang.push(...paths);
     }
-    console.log({ pathsWithLang });
+
+    // console.log({ pathsWithLang });
+    // console.log('>>>!! pathsWithLang', pathsWithLang);
+    // console.log('>>>!! pathsWithoutLang', pathsWithoutLang);
+    // console.log('paramValuesKey', paramValuesKey);
+    // console.log('routes.indexOf(paramValuesKey)', routes.indexOf(paramValuesKey));
+    // console.log('routes before splice:', routes);
 
     // Remove this from routes
     routes.splice(routes.indexOf(paramValuesKey), 1);
+
+    // console.log('routes after splice:', routes);
   }
 
   // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). Will not have any
@@ -424,17 +437,21 @@ export function generatePathsWithParamValues(
   for (const route of routes) {
     const hasLang = route.startsWith('/[[lang]]');
     if (hasLang) {
-      const routeSansLang = route.replace('/[[lang]]', '');
+      // "or" needed because otherwise root becomes empty string
+      const routeSansLang = route.replace('/[[lang]]', '') || '/';
       staticWithLang.push(routeSansLang);
     } else {
       staticWithoutLang.push(route);
     }
   }
+  console.log('NEW', { staticWithLang });
+  console.log('NEW', { staticWithoutLang });
 
   // This just keeps static paths first, which I prefer.
   pathsWithLang = [...staticWithLang, ...pathsWithLang];
   pathsWithoutLang = [...staticWithoutLang, ...pathsWithoutLang];
 
+  // Check for missing paramValues.
   // Throw error if app contains any parameterized routes NOT handled in the
   // sitemap, to alert the developer. Prevents accidental omission of any paths.
   // for (const route of routes) {
@@ -461,10 +478,13 @@ export function generatePathsWithParamValues(
  * params.
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
-  return routes.flatMap((route) => {
+  routes = routes.flatMap((route) => {
     const routeWithoutLangIfAny = route.replace('/[[lang]]', '');
     return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
   });
+
+  // Ensure no duplicates exist after processing
+  return Array.from(new Set(routes));
 }
 
 /**

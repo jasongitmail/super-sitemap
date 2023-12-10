@@ -2,4 +2,4 @@
   //
 </script>
 
-<h1>Route with an optional param</h1>
+<h1>Route with an optional param foo</h1>

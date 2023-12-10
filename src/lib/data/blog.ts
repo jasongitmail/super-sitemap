@@ -1,7 +1,7 @@
 export async function getSlugs() {
-  return ['hello-world', 'another-post', 'another-post-2'];
+  return ['hello-world', 'another-post', 'awesome-post'];
 }
 
 export async function getTags() {
-  return ['red', 'green', 'blue', 'magenta'];
+  return ['red', 'blue'];
 }

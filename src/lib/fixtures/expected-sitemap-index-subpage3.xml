@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -8,48 +9,108 @@
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 >
   <url>
-    <loc>https://example.com/optionals/many/param-a1/param-b1</loc>
+    <loc>https://example.com/zh/login</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/login" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/login" />
   </url>
   <url>
-    <loc>https://example.com/optionals/many/param-a2</loc>
+    <loc>https://example.com/zh/optionals</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals" />
   </url>
   <url>
-    <loc>https://example.com/optionals/many/param-a2/param-b2</loc>
+    <loc>https://example.com/zh/optionals/many</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many" />
   </url>
   <url>
-    <loc>https://example.com/optionals/optional-1</loc>
+    <loc>https://example.com/zh/optionals/many/data-a1</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a1" />
   </url>
   <url>
-    <loc>https://example.com/optionals/optional-2</loc>
+    <loc>https://example.com/zh/optionals/many/data-a1/data-b1</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a1/data-b1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a1/data-b1" />
   </url>
   <url>
-    <loc>https://example.com/pricing</loc>
+    <loc>https://example.com/zh/optionals/many/data-a1/data-b1/foo</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a1/data-b1/foo" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a1/data-b1/foo" />
   </url>
   <url>
-    <loc>https://example.com/privacy</loc>
+    <loc>https://example.com/zh/optionals/many/data-a2</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a2" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a2" />
   </url>
   <url>
-    <loc>https://example.com/signup</loc>
+    <loc>https://example.com/zh/optionals/many/data-a2/data-b2</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a2/data-b2" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a2/data-b2" />
   </url>
   <url>
-    <loc>https://example.com/terms</loc>
+    <loc>https://example.com/zh/optionals/many/data-a2/data-b2/foo</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a2/data-b2/foo" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a2/data-b2/foo" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/optionals/optional-1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/optional-1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/optional-1" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/optionals/optional-2</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/optional-2" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/optional-2" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/pricing</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/pricing" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/pricing" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/privacy</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/privacy" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/privacy" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/signup</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/signup" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/signup" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/terms</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/terms" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/terms" />
   </url>
 </urlset>

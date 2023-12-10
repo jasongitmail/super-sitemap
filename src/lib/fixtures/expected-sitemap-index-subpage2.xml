@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -8,48 +9,143 @@
   xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 >
   <url>
-    <loc>https://example.com/blog/tag/green</loc>
+    <loc>https://example.com/optionals/many/data-a2/data-b2</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a2/data-b2" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a2/data-b2" />
   </url>
   <url>
-    <loc>https://example.com/blog/tag/red</loc>
+    <loc>https://example.com/optionals/many/data-a2/data-b2/foo</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/many/data-a2/data-b2/foo" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/many/data-a2/data-b2/foo" />
   </url>
   <url>
-    <loc>https://example.com/campsites/canada/toronto</loc>
+    <loc>https://example.com/optionals/optional-1</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/optional-1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/optional-1" />
   </url>
   <url>
-    <loc>https://example.com/campsites/usa/california</loc>
+    <loc>https://example.com/optionals/optional-2</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/optionals/optional-2" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/optionals/optional-2" />
   </url>
   <url>
-    <loc>https://example.com/campsites/usa/new-york</loc>
+    <loc>https://example.com/pricing</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/pricing" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/pricing" />
   </url>
   <url>
-    <loc>https://example.com/foo-path-1</loc>
+    <loc>https://example.com/privacy</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/privacy" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/privacy" />
   </url>
   <url>
-    <loc>https://example.com/login</loc>
+    <loc>https://example.com/signup</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/signup" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/signup" />
   </url>
   <url>
-    <loc>https://example.com/optionals/many</loc>
+    <loc>https://example.com/terms</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/terms" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/terms" />
   </url>
   <url>
-    <loc>https://example.com/optionals/many/param-a1</loc>
+    <loc>https://example.com/zh</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/about</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog/another-post</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog/another-post" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog/another-post" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog/awesome-post</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog/awesome-post" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog/awesome-post" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog/hello-world</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog/hello-world" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog/hello-world" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog/tag/blue</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog/tag/blue" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog/tag/blue" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/blog/tag/red</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/blog/tag/red" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/blog/tag/red" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/campsites/canada/toronto</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/campsites/canada/toronto" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/campsites/canada/toronto" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/campsites/usa/california</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/campsites/usa/california" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/campsites/usa/california" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/campsites/usa/new-york</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/campsites/usa/new-york" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/campsites/usa/new-york" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/foo-path-1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/foo-path-1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/foo-path-1" />
   </url>
 </urlset>
