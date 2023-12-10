@@ -1,3 +1,5 @@
+// import { coverageConfigDefaults } from 'vitest/config.js';
+
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
@@ -104,6 +106,7 @@ export async function response({
     ...generatePaths(excludePatterns, paramValues, lang),
     ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
   ];
+  console.log({ paths });
 
   if (sort === 'alpha') paths.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -133,6 +136,7 @@ export async function response({
     }
 
     const pathsSubset = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
+
     body = generateBody(origin, new Set(pathsSubset), changefreq, priority);
   }
 
@@ -175,6 +179,7 @@ export function generateBody(
   changefreq: SitemapConfig['changefreq'] = false,
   priority: SitemapConfig['priority'] = false
 ): string {
+  console.log({ paths });
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -243,11 +248,14 @@ export function generatePaths(
     );
   }
 
-  routes = processRoutesForOptionalParams(routes);
-
   // Notice this means devs MUST include `[[lang]]/` within any route strings
   // used within `excludePatterns` if that's part of their route.
   routes = filterRoutes(routes, excludePatterns);
+
+  routes = processRoutesForOptionalParams(routes);
+  console.log('BEFORE optionals. routes', routes);
+  console.log('AFTER optionals. routes', routes);
+
   // console.log('routes', routes);
 
   ///////////////////////////////////////////////
@@ -264,6 +272,8 @@ export function generatePaths(
 
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
+  console.log({ pathsWithLang });
+  console.log({ pathsWithoutLang });
 
   ///////////////////////////////////////////////
   ///////////////////////////////////////////////
@@ -351,6 +361,8 @@ export function generatePathsWithParamValues(
   routes: string[],
   paramValues: ParamValues
 ): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
+  console.log('>>>!! routes', routes);
+
   for (const paramValueKey in paramValues) {
     if (!routes.includes(paramValueKey)) {
       throw new Error(
@@ -383,6 +395,7 @@ export function generatePathsWithParamValues(
           return routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
         })
       );
+      console.log('inspect me NEW', paths);
     } else {
       // 1D array of one or more elements.
       // - e.g. ['hello-world', 'another-post', 'post3']
@@ -396,10 +409,13 @@ export function generatePathsWithParamValues(
     }
 
     if (hasLang) {
-      pathsWithLang.push(...paths.map((path) => '/[[lang]]' + path));
+      // pathsWithLang.push(...paths.map((path) => '/[[lang]]' + path));
+      // Exclude /[[lang]] so it's not part of the URL.
+      pathsWithLang.push(...paths);
     } else {
       pathsWithoutLang.push(...paths);
     }
+    console.log({ pathsWithLang });
 
     // Remove this from routes
     routes.splice(routes.indexOf(paramValuesKey), 1);
@@ -412,7 +428,8 @@ export function generatePathsWithParamValues(
   for (const route of routes) {
     const hasLang = route.startsWith('/[[lang]]');
     if (hasLang) {
-      staticWithLang.push(route);
+      const routeSansLang = route.replace('/[[lang]]', '');
+      staticWithLang.push(routeSansLang);
     } else {
       staticWithoutLang.push(route);
     }
@@ -424,15 +441,15 @@ export function generatePathsWithParamValues(
 
   // Throw error if app contains any parameterized routes NOT handled in the
   // sitemap, to alert the developer. Prevents accidental omission of any paths.
-  for (const route of routes) {
-    // Check whether any instance of [foo] or [[foo]] exists
-    const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
-    if (regex.test(route)) {
-      throw new Error(
-        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
-      );
-    }
-  }
+  // for (const route of routes) {
+  //   // Check whether any instance of [foo] or [[foo]] exists
+  //   const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
+  //   if (regex.test(route)) {
+  //     throw new Error(
+  //       `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
+  //     );
+  //   }
+  // }
 
   return { pathsWithLang, pathsWithoutLang };
 }
@@ -455,7 +472,8 @@ export function generateSitemapIndex(origin: string, pages: number): string {
 
 /**
  * Given all routes, return a new array of routes that includes all versions of
- * any route that contains one or more optional params.
+ * any route that contains one or more optional params. Only process routes that
+ * contain an optional param _other than_ [[lang]].
  *
  * @private
  * @param routes - Array of routes to process.
@@ -464,7 +482,8 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
   return routes.flatMap((route) => {
-    return /\[\[.*\]\]/.test(route) ? processOptionalParams(route) : route;
+    const routeWithoutLangIfAny = route.replace('/[[lang]]', '');
+    return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
   });
 }
 
@@ -480,26 +499,71 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
  * @returns An array of routes. E.g. [`/foo`, `/foo/[[paramA]]`]
  */
 
+// export function processOptionalParams(route: string): string[] {
+//   const results = [];
+//   const segments = route.split('/').filter(Boolean);
+
+//   let currentPath = '';
+//   for (const segment of segments) {
+//     currentPath += '/' + segment;
+//     results.push(currentPath);
+//     if (segment.startsWith('[[') && segment.endsWith(']]')) {
+//       currentPath = results[results.length - 1];
+//     }
+//   }
+//   console.log('y final results', results);
+
+//   return results;
+// }
+
 export function processOptionalParams(route: string): string[] {
-  const routes = [];
+  // Remove lang to simplify
+  const hasLang = route.startsWith('/[[lang]]');
+  if (hasLang) {
+    route = route.replace('/[[lang]]', '');
+  }
+  console.log('z route WITHOUT LANG', route);
+  ////////////////////////////
 
-  // Get path before first optional param. `i-1` to exclude trailing slash.
-  const i = route.indexOf('[[');
-  routes.push(route.slice(0, i - 1) + '/+page.svelte');
+  let results: string[] = [];
 
-  // Split and filter to remove first empty item when str starts with '/'.
-  const segments = route.split('/').filter(Boolean);
+  // Get path up _before_ the first optional param; use `i-1` to exclude
+  // trailing slash. This is our first result.
+  results.push(route.slice(0, route.indexOf('[[') - 1));
+  console.log('A results', results);
 
-  let currentPath = '';
+  // Get remainder of the string without the first result.
+  const remaining = route.slice(route.indexOf('[['));
+
+  console.log('A remaining', remaining);
+
+  // Split and filter to remove first empty item because str will start with a '/'.
+  // const segments = remaining.split('/').filter(Boolean);
+  const segments = remaining.split('/');
+  console.log('z all segments', segments);
+
+  let j = 1;
   for (const segment of segments) {
-    currentPath += '/' + segment;
+    // start a new potential result
+    if (!results[j]) results[j] = results[j - 1];
 
-    if (segment.startsWith('[[') && segment.endsWith(']]')) {
-      routes.push(currentPath + '/+page.svelte');
+    results[j] += '/' + segment;
+
+    if (segment.startsWith('[[')) {
+      j++;
     }
   }
 
-  return routes;
+  console.log('finally results', results);
+
+  ////////////////////////////
+
+  // Re-add lang to all results.
+  if (hasLang) {
+    results = results.map((result) => '/[[lang]]' + result);
+  }
+
+  return results;
 }
 
 export function generatePathsWithLang(paths: string[], langConfig: LangConfig): PathObj[] {

@@ -35,20 +35,25 @@ export const GET: RequestHandler = async ({ params }) => {
 
     /* eslint-disable perfectionist/sort-objects */
     paramValues: {
-      '/[foo]': ['foo-path-1'],
-      '/optionals/[[optional]]': ['optional-1', 'optional-2'],
-      '/optionals/many/[[paramA]]': ['param-a1', 'param-a2'],
-      '/optionals/many/[[paramA]]/[[paramB]]': [
+      '/[[lang]]/[foo]': ['foo-path-1'],
+      '/[[lang]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
+      '/[[lang]]/optionals/many/[[paramA]]': ['param-a1', 'param-a2'],
+      '/[[lang]]/optionals/many/[[paramA]]/[[paramB]]': [
         ['param-a1', 'param-b1'],
         ['param-a2', 'param-b2'],
       ],
-      '/blog/[slug]': slugs,
-      '/blog/tag/[tag]': tags,
-      '/campsites/[country]/[state]': [
+      '/[[lang]]/blog/[slug]': slugs,
+      '/[[lang]]/blog/tag/[tag]': tags,
+      '/[[lang]]/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto'],
       ],
+    },
+
+    lang: {
+      default: 'en',
+      alternates: ['de', 'zh'],
     },
   });
 };
