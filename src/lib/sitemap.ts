@@ -1,16 +1,14 @@
-// import { coverageConfigDefaults } from 'vitest/config.js';
-
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
 // helpful for the dev to see these allowed values in their IDE.
+/* eslint-disable perfectionist/sort-object-types */
 export type SitemapConfig = {
   additionalPaths?: [] | string[];
   changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
   excludePatterns?: [] | string[];
   headers?: Record<string, string>;
   lang?: {
-    /* eslint-disable perfectionist/sort-object-types */
     default: string;
     alternates: string[];
   };
@@ -23,13 +21,11 @@ export type SitemapConfig = {
 };
 
 export type LangConfig = {
-  /* eslint-disable perfectionist/sort-object-types */
   default: string;
   alternates: string[];
 };
 
 export type PathObj = {
-  /* eslint-disable perfectionist/sort-object-types */
   path: string;
   alternates?: { lang: string; path: string }[];
 };
@@ -158,12 +154,10 @@ export async function response({
  *
  * @private
  * @remarks
- * - Based on structure specified by
- *   https://kit.svelte.dev/docs/seo#manual-setup-sitemaps
- * - Google ignores changefreq and priority, so this uses default values for
- *   those to appease dumb bots.
- * - We could consider adding `<lastmod>` with an ISO 8601 datetime, but not
- *   worrying about this for now.
+ * - Based on https://kit.svelte.dev/docs/seo#manual-setup-sitemaps
+ * - Google ignores changefreq and priority, but we support these optionally.
+ * - TODO We could consider adding `<lastmod>` with an ISO 8601 datetime, but
+ *   not worrying about this for now.
  *   https://developers.google.com/search/blog/2014/10/best-practices-for-xml-sitemaps-rssatom
  *
  * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash
@@ -172,7 +166,6 @@ export async function response({
  *                start with '/'; but if not, it will be added.
  * @returns The generated XML sitemap.
  */
-
 export function generateBody(
   origin: string,
   paths: Set<PathObj>,
@@ -210,9 +203,29 @@ export function generateBody(
 </urlset>`;
 }
 
-// export function generateUrlBody() {
+/**
+ * Generates a sitemap index XML string.
+ *
+ * @private
+ * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash.
+ * @param pages - The number of sitemap pages to include in the index.
+ * @returns The generated XML sitemap index.
+ */
+export function generateSitemapIndex(origin: string, pages: number): string {
+  let str = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
-// }
+  for (let i = 1; i <= pages; i++) {
+    str += `
+  <sitemap>
+    <loc>${origin}/sitemap${i}.xml</loc>
+  </sitemap>`;
+  }
+  str += `
+</sitemapindex>`;
+
+  return str;
+}
 
 /**
  * Generates an array of route paths to be included in a sitemap.
@@ -253,30 +266,13 @@ export function generatePaths(
   routes = filterRoutes(routes, excludePatterns);
 
   routes = processRoutesForOptionalParams(routes);
-  console.log('BEFORE optionals. routes', routes);
-  console.log('AFTER optionals. routes', routes);
 
   // console.log('routes', routes);
 
-  ///////////////////////////////////////////////
-  ///////////////////////////////////////////////
-
-  // TODO [ ] 2.1: Inside this, group routes based on existence of [[lang]] prefix, then remove it from [[lang]], so param replacement logic isn't messed up by it.
-  // TODO [ ] 2.2: For both groups, perform param replacements.
-  // TODO [ ] 2.3: Return both groups separately from generateParamPaths(), in PathObj format.
-  // TODO [ ] 2.4: For the group of routes that contain 'lang', run generatePathsWithLang().
-  // TODO [ ] 2.4: For the group of routes that does NOT contain 'lang', put into PathObj format.
-  //
-  // const [staticPaths, parameterizedPaths] = generateParamPaths(routes, paramValues);
-  // const paths = [...staticPaths, ...parameterizedPaths];
-
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-  console.log({ pathsWithLang });
-  console.log({ pathsWithoutLang });
-
-  ///////////////////////////////////////////////
-  ///////////////////////////////////////////////
+  // console.log({ pathsWithLang });
+  // console.log({ pathsWithoutLang });
 
   // Return as an array of PathObj's
   return [
@@ -454,22 +450,6 @@ export function generatePathsWithParamValues(
   return { pathsWithLang, pathsWithoutLang };
 }
 
-export function generateSitemapIndex(origin: string, pages: number): string {
-  let str = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-
-  for (let i = 1; i <= pages; i++) {
-    str += `
-  <sitemap>
-    <loc>${origin}/sitemap${i}.xml</loc>
-  </sitemap>`;
-  }
-  str += `
-</sitemapindex>`;
-
-  return str;
-}
-
 /**
  * Given all routes, return a new array of routes that includes all versions of
  * any route that contains one or more optional params. Only process routes that
@@ -488,7 +468,7 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
 }
 
 /**
- * Processes a route containing 1+ optional parameter, represented by double
+ * Processes a route containing >=1 optional parameters, represented by double
  * square brackets. It generates all possible versions of this route that
  * SvelteKit considers valid. Notice we add `+/page.svelte`, that is so these
  * routes have a consistent pattern as others so that `filterRoutes()` will
@@ -498,49 +478,31 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
  * @param route - Route to process. E.g. `/foo/[[paramA]]`
  * @returns An array of routes. E.g. [`/foo`, `/foo/[[paramA]]`]
  */
-
-// export function processOptionalParams(route: string): string[] {
-//   const results = [];
-//   const segments = route.split('/').filter(Boolean);
-
-//   let currentPath = '';
-//   for (const segment of segments) {
-//     currentPath += '/' + segment;
-//     results.push(currentPath);
-//     if (segment.startsWith('[[') && segment.endsWith(']]')) {
-//       currentPath = results[results.length - 1];
-//     }
-//   }
-//   console.log('y final results', results);
-
-//   return results;
-// }
-
 export function processOptionalParams(route: string): string[] {
   // Remove lang to simplify
   const hasLang = route.startsWith('/[[lang]]');
   if (hasLang) {
     route = route.replace('/[[lang]]', '');
   }
-  console.log('z route WITHOUT LANG', route);
+  // console.log('z route WITHOUT LANG', route);
   ////////////////////////////
 
   let results: string[] = [];
 
   // Get path up _before_ the first optional param; use `i-1` to exclude
-  // trailing slash. This is our first result.
+  // trailing slash after this. This is our first result.
   results.push(route.slice(0, route.indexOf('[[') - 1));
-  console.log('A results', results);
+
+  // console.log('A results', results);
 
   // Get remainder of the string without the first result.
   const remaining = route.slice(route.indexOf('[['));
 
-  console.log('A remaining', remaining);
+  // console.log('A remaining', remaining);
 
   // Split and filter to remove first empty item because str will start with a '/'.
-  // const segments = remaining.split('/').filter(Boolean);
-  const segments = remaining.split('/');
-  console.log('z all segments', segments);
+  const segments = remaining.split('/').filter(Boolean);
+  // console.log('z all segments', segments);
 
   let j = 1;
   for (const segment of segments) {
@@ -554,7 +516,7 @@ export function processOptionalParams(route: string): string[] {
     }
   }
 
-  console.log('finally results', results);
+  // console.log('finally results', results);
 
   ////////////////////////////
 
@@ -563,9 +525,19 @@ export function processOptionalParams(route: string): string[] {
     results = results.map((result) => '/[[lang]]' + result);
   }
 
+  // If first segment is optional param other than `/[[lang]]` (e.g. /[[foo]])),
+  // ensure we have '/' as the first result. Otherwise it'll be empty.
+  if (!results[0].length) results[0] = '/';
+
   return results;
 }
 
+/**
+ * Generate path objects with language variations.
+ * @param paths - An array of paths.
+ * @param langConfig - The language configuration.
+ * @returns An array of path objects.
+ */
 export function generatePathsWithLang(paths: string[], langConfig: LangConfig): PathObj[] {
   const allPathObjs = [];
 
@@ -583,8 +555,8 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
       },
     ];
 
+    // alternate paths (e.g. '/de/about', etc.)
     for (const lang of langConfig.alternates) {
-      // alternate paths (e.g. '/de/about', etc.)
       variations.push({
         lang,
         path: '/' + (path === '/' ? lang : lang + path),
