@@ -776,7 +776,7 @@ describe('sitemap.ts', () => {
       expect(result).toThrow(Error);
     });
 
-    it.skip('should throw error, when tokenized routes exist that are not given data via paramValues', () => {
+    it('should throw error, when tokenized routes exist that are not given data via paramValues', () => {
       const routes = ['/', '/about', '/blog', '/products/[product]'];
       const paramValues = {};
 

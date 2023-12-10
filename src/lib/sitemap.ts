@@ -104,7 +104,7 @@ export async function response({
     ...generatePaths(excludePatterns, paramValues, lang),
     ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
   ];
-  console.log({ paths });
+  // console.log({ paths });
 
   if (sort === 'alpha') paths.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -174,7 +174,7 @@ export function generateBody(
   changefreq: SitemapConfig['changefreq'] = false,
   priority: SitemapConfig['priority'] = false
 ): string {
-  console.log({ paths });
+  // console.log({ paths });
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -273,8 +273,8 @@ export function generatePaths(
 
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-  console.log('AFTER', { pathsWithLang });
-  console.log('AFTER', { pathsWithoutLang });
+  // console.log('AFTER', { pathsWithLang });
+  // console.log('AFTER', { pathsWithoutLang });
 
   // Return as an array of PathObj's
   return [
@@ -359,7 +359,7 @@ export function generatePathsWithParamValues(
   routes: string[],
   paramValues: ParamValues
 ): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
-  console.log('>>>!! routes', routes);
+  // console.log('>>>!! routes', routes);
 
   // check for superfluous paramValues
   for (const paramValueKey in paramValues) {
@@ -377,7 +377,7 @@ export function generatePathsWithParamValues(
     const hasLang = paramValuesKey.startsWith('/[[lang]]');
     const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
 
-    console.log('>>>!! paramValuesKey', paramValuesKey);
+    // console.log('>>>!! paramValuesKey', paramValuesKey);
 
     const paths = [];
 
@@ -396,7 +396,7 @@ export function generatePathsWithParamValues(
           return routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
         })
       );
-      console.log('inspect me NEW', paths);
+      // console.log('inspect me NEW', paths);
     } else {
       // 1D array of one or more elements.
       // - e.g. ['hello-world', 'another-post', 'post3']
@@ -444,8 +444,8 @@ export function generatePathsWithParamValues(
       staticWithoutLang.push(route);
     }
   }
-  console.log('NEW', { staticWithLang });
-  console.log('NEW', { staticWithoutLang });
+  // console.log('NEW', { staticWithLang });
+  // console.log('NEW', { staticWithoutLang });
 
   // This just keeps static paths first, which I prefer.
   pathsWithLang = [...staticWithLang, ...pathsWithLang];
@@ -454,15 +454,16 @@ export function generatePathsWithParamValues(
   // Check for missing paramValues.
   // Throw error if app contains any parameterized routes NOT handled in the
   // sitemap, to alert the developer. Prevents accidental omission of any paths.
-  // for (const route of routes) {
-  //   // Check whether any instance of [foo] or [[foo]] exists
-  //   const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
-  //   if (regex.test(route)) {
-  //     throw new Error(
-  //       `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
-  //     );
-  //   }
-  // }
+  for (const route of routes) {
+    // Check whether any instance of [foo] or [[foo]] exists
+    const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
+    const routeSansLang = route.replace('/[[lang]]', '') || '/';
+    if (regex.test(routeSansLang)) {
+      throw new Error(
+        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
+      );
+    }
+  }
 
   return { pathsWithLang, pathsWithoutLang };
 }
