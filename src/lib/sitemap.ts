@@ -203,7 +203,7 @@ export function generateBody(
                 ({ lang, path }) =>
                   `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />`
               )
-              .join('\n')) +
+              .join('\n') + '\n') +
         `  </url>`
     )
     .join('')}

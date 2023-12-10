@@ -149,9 +149,22 @@ describe('sitemap.ts', () => {
     });
   });
 
-  describe('generateBody()', () => {
-    const paths = new Set([{ path: '/path1' }, { path: '/path2' }]);
-    const resultXml = sitemap.generateBody('https://example.com', paths);
+  describe.only('generateBody()', () => {
+    const paths = new Set([
+      { path: '/path1' },
+      { path: '/path2' },
+      // Note: in reality, an entry would already exist for /about, /es/about,
+      // /de/about, which would generate a url loc for each of these.
+      {
+        path: '/about',
+        alternates: [
+          { lang: 'en', path: '/about' },
+          { lang: 'de', path: '/de/about' },
+          { lang: 'es', path: '/es/about' },
+        ],
+      },
+    ]);
+    const resultXml = sitemap.generateBody('https://example.com', paths, 'weekly', 0.3);
 
     it('should generate the expected XML sitemap string', () => {
       const expected = `
@@ -166,9 +179,21 @@ describe('sitemap.ts', () => {
 >
   <url>
     <loc>https://example.com/path1</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
   </url>
   <url>
     <loc>https://example.com/path2</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://example.com/es/about" />
   </url>
 </urlset>`.trim();
 
