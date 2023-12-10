@@ -112,6 +112,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // Can't use this because Playwright doesn't use Vite.
   // let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
 
+  // Read /src/routes to build 'routes'.
   let routes: string[] = [];
   try {
     let projDir;
@@ -145,6 +146,13 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // excludePatterns is empty the exclusion pattern was already applied during
   // generation of the sitemap.
   routes = filterRoutes(routes, []);
+
+  // Remove any `/[[lang]]` prefix. We can just use the default language that
+  // will not have this stem, for the purposes of this sampling. But ensure root
+  // becomes '/', not an empty string.
+  routes = routes.map((route) => {
+    return route.replace('/[[lang]]', '') || '/';
+  });
 
   // Separate static and dynamic routes. Remember these are _routes_ from disk
   // and consequently have not had any exclusion patterns applied against them,

@@ -21,10 +21,10 @@ describe('sample.ts', () => {
       'https://example.com/signup',
       'https://example.com/terms',
       // dynamic
-      'https://example.com/additional-path',
       'https://example.com/blog/another-post',
       'https://example.com/blog/tag/blue',
       'https://example.com/campsites/canada/toronto',
+      'https://example.com/foo-path-1',
     ];
 
     describe('sitemap', () => {
@@ -57,10 +57,10 @@ describe('sample.ts', () => {
       '/privacy',
       '/signup',
       '/terms',
-      '/additional-path',
       '/blog/another-post',
       '/blog/tag/blue',
       '/campsites/canada/toronto',
+      '/foo-path-1',
     ];
 
     describe('sitemap', () => {
