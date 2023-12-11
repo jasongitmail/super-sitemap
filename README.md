@@ -25,6 +25,7 @@
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
   - [Optional Params](#optional-params)
+  - [i18n](#i18n)
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
@@ -127,7 +128,7 @@ import * as blog from '$lib/data/blog';
 export const prerender = true; // optional
 
 export const GET = async () => {
-  // Get data for parameterized routes
+  // Get data for parameterized routes however you need to; this is only an example.
   let blogSlugs, blogTags;
   try {
     [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
@@ -175,7 +176,7 @@ import * as blog from '$lib/data/blog';
 export const prerender = true; // optional
 
 export const GET: RequestHandler = async () => {
-  // Get data for parameterized routes
+  // Get data for parameterized routes however you need to; this is only an example.
   let blogSlugs, blogTags;
   try {
     [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
@@ -321,6 +322,103 @@ If you plan to mix and match use of `excludePatterns` and `paramValues` for a
 given route that contains optional params, terminate all of your
 `excludePatterns` for that route with `$`, to target only the specific desired
 versions of that route.
+
+## i18n
+
+Super Sitemap supports [multilingual site
+annotations](https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site)
+within your sitemap. This allows search engines to be aware of alternate
+language versions of your pages.
+
+### Set up
+
+1. Create a directory named `[[lang]]` at `src/routes/[[lang]]`. Place any
+   routes that you intend to translate inside here.
+
+   **This must be named `[[lang]]`.** It can be within a group if you want, e.g.
+   `src/routes/(public)/[[lang]]`.
+
+2. Within your `sitemap.xml` route, update your Super Sitemap config object to
+   add a `lang` property specifying your desired languages.
+
+   ```js
+     lang: {
+       default: 'en',           // e.g. /about
+       alternates: ['zh', 'de'] // e.g. /zh/about, /de/about
+     }
+   ```
+
+   The default language will not appear in your URLs (e.g. `/about`). Alternate
+   languages will appear as part of the URLs within your sitemap (e.g.
+   `/zh/about`, `/de/about`).
+
+   These language properties accept any string value, but choose a valid
+   language code. They will appear in two places: 1.) as a slug within your
+   paths (e.g. `/zh/about`), and 2.) as `hreflang` attributes within the sitemap
+   output.
+
+3. Within your `sitemap.xml` route again, update your Super Sitemap config
+   object's `paramValues` to prepend `/[[lang]]` onto the property names of all
+   routes you moved into your `/src/routes/[[lang]]` directory, e.g.:
+
+   ```js
+   paramValues: {
+     '/[[lang]]/blog/[slug]': ['hello-world', 'post-2'], // was '/blog/[slug]'
+     '/[[lang]]/campsites/[country]/[state]': [ // was '/campsites/[country]/[state]'
+       ['usa', 'new-york'],
+       ['canada', 'toronto'],
+     ],
+   },
+   ```
+
+### Example
+
+1. Create `/src/routes/[[lang]]/about/+page.svelte` with any content.
+2. Assuming you have a [basic sitemap](#basic-example) set up at
+   `/src/routes/sitemap.xml/+server.ts`, add a `lang` property to your sitemap's
+   config object, as described earlier.
+3. Your `sitemap.xml` will then include the following:
+
+```xml
+  ...
+  <url>
+    <loc>https://example.com/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
+  </url>
+  <url>
+    <loc>https://example.com/de/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
+  </url>
+  ...
+```
+
+### Note on i18n
+
+Super Sitemap handles creation of URLs within your sitemap, but it is
+_not_ an i18n library.
+
+You need a separate i18n library to translate strings within your app. Just
+ensure the library you choose allows a similar URL pattern as described here,
+with a default language (e.g. `/about`) and lang slugs for alternate languages
+(e.g. `/zh/about`, `/de/about`).
+
+### Q&A on i18n
+
+- **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (Germany)?**
+
+  Realistically, this would break the route patterns and assumptions that Super
+  Sitemap relies on to identify your routes, know what language to use, and
+  build the sitemap. "Never say never", but there are no plans to support this.
 
 ## Sampled URLs
 
@@ -633,6 +731,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `0.14.12` - Adds [`i18n`](#i18n) support.
 - `0.14.11` - Adds [`optional params`](#optional-params) support.
 - `0.14.0` - Adds [`sitemap index`](#sitemap-index) support.
 - `0.13.0` - Adds [`sampledUrls()`](#sampled-urls) and [`sampledPaths()`](#sampled-paths).
