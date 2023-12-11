@@ -104,7 +104,6 @@ export async function response({
     ...generatePaths(excludePatterns, paramValues, lang),
     ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
   ];
-  // console.log({ paths });
 
   if (sort === 'alpha') paths.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -174,7 +173,6 @@ export function generateBody(
   changefreq: SitemapConfig['changefreq'] = false,
   priority: SitemapConfig['priority'] = false
 ): string {
-  // console.log({ paths });
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -269,12 +267,8 @@ export function generatePaths(
 
   routes = processRoutesForOptionalParams(routes);
 
-  // console.log('routes', routes);
-
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-  // console.log('AFTER', { pathsWithLang });
-  // console.log('AFTER', { pathsWithoutLang });
 
   // Return as an array of PathObj's
   return [
@@ -359,8 +353,6 @@ export function generatePathsWithParamValues(
   routes: string[],
   paramValues: ParamValues
 ): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
-  // console.log('>>>!! routes', routes);
-
   // check for superfluous paramValues
   for (const paramValueKey in paramValues) {
     if (!routes.includes(paramValueKey)) {
@@ -376,8 +368,6 @@ export function generatePathsWithParamValues(
   for (const paramValuesKey in paramValues) {
     const hasLang = paramValuesKey.startsWith('/[[lang]]');
     const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
-
-    // console.log('>>>!! paramValuesKey', paramValuesKey);
 
     const paths = [];
 
@@ -396,7 +386,6 @@ export function generatePathsWithParamValues(
           return routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
         })
       );
-      // console.log('inspect me NEW', paths);
     } else {
       // 1D array of one or more elements.
       // - e.g. ['hello-world', 'another-post', 'post3']
@@ -410,24 +399,13 @@ export function generatePathsWithParamValues(
     }
 
     if (hasLang) {
-      // pathsWithLang.push(...paths.map((path) => '/[[lang]]' + path));
-      // Exclude /[[lang]] so it's not part of the URL.
       pathsWithLang.push(...paths);
     } else {
       pathsWithoutLang.push(...paths);
     }
 
-    // console.log({ pathsWithLang });
-    // console.log('>>>!! pathsWithLang', pathsWithLang);
-    // console.log('>>>!! pathsWithoutLang', pathsWithoutLang);
-    // console.log('paramValuesKey', paramValuesKey);
-    // console.log('routes.indexOf(paramValuesKey)', routes.indexOf(paramValuesKey));
-    // console.log('routes before splice:', routes);
-
     // Remove this from routes
     routes.splice(routes.indexOf(paramValuesKey), 1);
-
-    // console.log('routes after splice:', routes);
   }
 
   // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). Will not have any
@@ -444,8 +422,6 @@ export function generatePathsWithParamValues(
       staticWithoutLang.push(route);
     }
   }
-  // console.log('NEW', { staticWithLang });
-  // console.log('NEW', { staticWithoutLang });
 
   // This just keeps static paths first, which I prefer.
   pathsWithLang = [...staticWithLang, ...pathsWithLang];
@@ -505,8 +481,6 @@ export function processOptionalParams(route: string): string[] {
   if (hasLang) {
     route = route.replace('/[[lang]]', '');
   }
-  // console.log('z route WITHOUT LANG', route);
-  ////////////////////////////
 
   let results: string[] = [];
 
@@ -514,16 +488,11 @@ export function processOptionalParams(route: string): string[] {
   // trailing slash after this. This is our first result.
   results.push(route.slice(0, route.indexOf('[[') - 1));
 
-  // console.log('A results', results);
-
   // Get remainder of the string without the first result.
   const remaining = route.slice(route.indexOf('[['));
 
-  // console.log('A remaining', remaining);
-
   // Split and filter to remove first empty item because str will start with a '/'.
   const segments = remaining.split('/').filter(Boolean);
-  // console.log('z all segments', segments);
 
   let j = 1;
   for (const segment of segments) {
@@ -536,10 +505,6 @@ export function processOptionalParams(route: string): string[] {
       j++;
     }
   }
-
-  // console.log('finally results', results);
-
-  ////////////////////////////
 
   // Re-add lang to all results.
   if (hasLang) {
