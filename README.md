@@ -342,10 +342,10 @@ language versions of your pages.
    add a `lang` property specifying your desired languages.
 
    ```js
-     lang: {
-       default: 'en',           // e.g. /about
-       alternates: ['zh', 'de'] // e.g. /zh/about, /de/about
-     }
+   lang: {
+     default: 'en',           // e.g. /about
+     alternates: ['zh', 'de'] // e.g. /zh/about, /de/about
+   }
    ```
 
    The default language will not appear in your URLs (e.g. `/about`). Alternate
