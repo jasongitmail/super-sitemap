@@ -55,9 +55,10 @@
   such, these properties are not included by default to minimize KB size and
   enable faster crawling. Optionally, you can enable them like so:
   `sitemap.response({ changefreq:'daily', priority: 0.7, ...})`.
+- 🗺️ [Sitemap indexes](#sitemap-index)
+- 🌎 [i18n](#i18n)
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
-- 🗺️ (Nearly automatic) [sitemap indexes](#sitemap-index)!
 
 ## Limitations
 
