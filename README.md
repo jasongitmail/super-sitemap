@@ -732,6 +732,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `0.14.13` - Support route files named to allow [breaking out of a layout](https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts).
 - `0.14.12` - Adds [`i18n`](#i18n) support.
 - `0.14.11` - Adds [`optional params`](#optional-params) support.
 - `0.14.0` - Adds [`sitemap index`](#sitemap-index) support.
