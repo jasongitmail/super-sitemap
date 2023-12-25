@@ -243,7 +243,9 @@ export function generatePaths(
   paramValues: ParamValues = {},
   lang: LangConfig = { alternates: [], default: '' }
 ): PathObj[] {
-  let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
+  // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
+  // See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
+  let routes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
 
   // Validation: if dev has one or more routes that start with `[[lang]]`,
   // require that they have defined the `lang.default` and `lang.alternates` in
@@ -299,19 +301,23 @@ export function generatePaths(
 export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
   return (
     routes
-      // Remove `/src/routes` prefix, `+page.svelte suffix`, and trailing slash except on homepage.
-      // Trailing slash must be removed before excludePatterns so `$` termination of a regex pattern
-      // will work as expected.
+      // Remove `/src/routes` prefix, `+page.svelte suffix` or any variation
+      // like `+page@.svelte`, and trailing slash except on homepage. Trailing
+      // slash must be removed before excludePatterns so `$` termination of a
+      // regex pattern will work as expected.
       .map((x) => {
-        x = x.substring(11, x.length - 13);
+        // Don't trim initial '/' yet, b/c a developer's excludePattens may start with it.
+        x = x.substring(11);
+        x = x.replace(/\/\+page.*\.svelte$/, '');
         return !x ? '/' : x;
       })
 
-      // Remove any routes that match an exclude pattern–e.g. `(dashboard)`
+      // Remove any routes that match an exclude pattern
       .filter((x) => !excludePatterns.some((pattern) => new RegExp(pattern).test(x)))
 
-      // Remove any `/(groups)` because decorative only. Must follow excludePatterns.
-      // Ensure index page is '/' in case it was part of a group.
+      // Remove initial `/` now and any `/(groups)`, because decorative only.
+      // Must follow excludePatterns. Ensure index page is '/' in case it was
+      // part of a group.
       .map((x) => {
         x = x.replaceAll(/\/\(\w+\)/g, '');
         return !x ? '/' : x;

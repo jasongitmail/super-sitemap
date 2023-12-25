@@ -666,7 +666,7 @@ describe('sitemap.ts', () => {
         '/src/routes/(marketing)/privacy/+page.svelte',
         '/src/routes/(marketing)/signup/+page.svelte',
         '/src/routes/(marketing)/support/+page.svelte',
-        '/src/routes/(marketing)/terms/+page.svelte',
+        '/src/routes/(marketing)/terms/+page@.svelte',
         '/src/routes/(marketing)/foo/[[paramA]]/+page.svelte',
         '/src/routes/dashboard/(index)/+page.svelte',
         '/src/routes/dashboard/settings/+page.svelte',

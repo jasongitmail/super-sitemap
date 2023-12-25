@@ -129,7 +129,9 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
 
     const dirTreeRes = dirTree(projDir + 'src/routes');
     routes = extractPaths(dirTreeRes);
-    routes = routes.filter((route) => route.endsWith('+page.svelte'));
+    // Match +page.svelte or +page@.svelte (used to break out of a layout).
+    //https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
+    routes = routes.filter((route) => route.match(/\+page.*\.svelte$/));
 
     // 1. Trim everything to left of '/src/routes/' so it starts with
     //    `src/routes/` as `filterRoutes()` expects.
