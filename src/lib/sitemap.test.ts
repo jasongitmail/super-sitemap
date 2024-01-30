@@ -671,6 +671,7 @@ describe('sitemap.ts', () => {
         '/src/routes/dashboard/(index)/+page.svelte',
         '/src/routes/dashboard/settings/+page.svelte',
         '/src/routes/(authenticated)/hidden/+page.svelte',
+        '/src/routes/(test-non-aplhanumeric-group-name)/test-group/+page.svelte'
       ];
 
       const excludePatterns = [
@@ -695,6 +696,7 @@ describe('sitemap.ts', () => {
         '/signup',
         '/support',
         '/terms',
+        '/test-group'
       ];
 
       const result = sitemap.filterRoutes(routes, excludePatterns);

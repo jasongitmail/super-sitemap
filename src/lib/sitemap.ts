@@ -317,9 +317,10 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
 
       // Remove initial `/` now and any `/(groups)`, because decorative only.
       // Must follow excludePatterns. Ensure index page is '/' in case it was
-      // part of a group.
+      // part of a group. The pattern to match the group is from 
+      // https://github.com/sveltejs/kit/blob/99cddbfdb2332111d348043476462f5356a23660/packages/kit/src/utils/routing.js#L119
       .map((x) => {
-        x = x.replaceAll(/\/\(\w+\)/g, '');
+        x = x.replaceAll(/\/\([^)]+\)/g, '');
         return !x ? '/' : x;
       })
 
