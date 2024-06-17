@@ -247,23 +247,23 @@ export function generatePaths(
   // See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
 
-  // Validation: if dev has one or more routes that start with `[[lang]]`,
+  // Validation: if dev has one or more routes that start with `[[lang]]` or `[lang]`,
   // require that they have defined the `lang.default` and `lang.alternates` in
   // their config. or throw an error to cause 500 error for visibility.
   let routesContainLangParam = false;
   for (const route of routes) {
-    if (route.includes('[[lang]]')) {
+    if (route.includes('[[lang]]') || route.includes('[lang]')) {
       routesContainLangParam = true;
       break;
     }
   }
   if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
     throw Error(
-      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]].'
+      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]] or [lang].'
     );
   }
 
-  // Notice this means devs MUST include `[[lang]]/` within any route strings
+  // Notice this means devs MUST include `[[lang]]/` or `[lang]/` within any route strings
   // used within `excludePatterns` if that's part of their route.
   routes = filterRoutes(routes, excludePatterns);
 
@@ -317,7 +317,7 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
 
       // Remove initial `/` now and any `/(groups)`, because decorative only.
       // Must follow excludePatterns. Ensure index page is '/' in case it was
-      // part of a group. The pattern to match the group is from 
+      // part of a group. The pattern to match the group is from
       // https://github.com/sveltejs/kit/blob/99cddbfdb2332111d348043476462f5356a23660/packages/kit/src/utils/routing.js#L119
       .map((x) => {
         x = x.replaceAll(/\/\([^)]+\)/g, '');
@@ -373,8 +373,9 @@ export function generatePathsWithParamValues(
   let pathsWithoutLang = [];
 
   for (const paramValuesKey in paramValues) {
-    const hasLang = paramValuesKey.startsWith('/[[lang]]');
-    const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
+    const hasLang = paramValuesKey.startsWith('/[[lang]]') || paramValuesKey.startsWith('/[lang]');
+    const routeSansLang =
+      paramValuesKey.replace('/[[lang]]', '') || paramValuesKey.replace('/[lang]', '');
 
     const paths = [];
 
@@ -416,14 +417,14 @@ export function generatePathsWithParamValues(
   }
 
   // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). Will not have any
-  // parameters other than exactly [[lang]].
+  // parameters other than exactly [[lang]] or [lang].
   const staticWithLang = [];
   const staticWithoutLang = [];
   for (const route of routes) {
-    const hasLang = route.startsWith('/[[lang]]');
+    const hasLang = route.startsWith('/[[lang]]') || route.startsWith('/[lang]');
     if (hasLang) {
       // "or" needed because otherwise root becomes empty string
-      const routeSansLang = route.replace('/[[lang]]', '') || '/';
+      const routeSansLang = route.replace('/[[lang]]', '') || route.replace('/[lang]', '') || '/';
       staticWithLang.push(routeSansLang);
     } else {
       staticWithoutLang.push(route);
@@ -440,7 +441,7 @@ export function generatePathsWithParamValues(
   for (const route of routes) {
     // Check whether any instance of [foo] or [[foo]] exists
     const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
-    const routeSansLang = route.replace('/[[lang]]', '') || '/';
+    const routeSansLang = route.replace('/[[lang]]', '') || route.replace('/[lang]', '') || '/';
     if (regex.test(routeSansLang)) {
       throw new Error(
         `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
@@ -463,7 +464,7 @@ export function generatePathsWithParamValues(
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
   routes = routes.flatMap((route) => {
-    const routeWithoutLangIfAny = route.replace('/[[lang]]', '');
+    const routeWithoutLangIfAny = route.replace('/[[lang]]', '') || route.replace('/[lang]', '');
     return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
   });
 
@@ -485,8 +486,12 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
 export function processOptionalParams(route: string): string[] {
   // Remove lang to simplify
   const hasLang = route.startsWith('/[[lang]]');
+  const hasLangRequired = route.startsWith('/[lang]');
+
   if (hasLang) {
     route = route.replace('/[[lang]]', '');
+  } else if (hasLangRequired) {
+    route = route.replace('/[lang]', '');
   }
 
   let results: string[] = [];
@@ -516,6 +521,8 @@ export function processOptionalParams(route: string): string[] {
   // Re-add lang to all results.
   if (hasLang) {
     results = results.map((result) => '/[[lang]]' + result);
+  } else if (hasLangRequired) {
+    results = results.map((result) => '/[lang]' + result);
   }
 
   // If first segment is optional param other than `/[[lang]]` (e.g. /[[foo]])),

@@ -149,11 +149,11 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // generation of the sitemap.
   routes = filterRoutes(routes, []);
 
-  // Remove any `/[[lang]]` prefix. We can just use the default language that
+  // Remove any `/[[lang]]` or `/[lang]` prefix. We can just use the default language that
   // will not have this stem, for the purposes of this sampling. But ensure root
   // becomes '/', not an empty string.
   routes = routes.map((route) => {
-    return route.replace('/[[lang]]', '') || '/';
+    return route.replace('/[[lang]]', '') || route.replace('/[lang]', '') || '/';
   });
 
   // Separate static and dynamic routes. Remember these are _routes_ from disk
