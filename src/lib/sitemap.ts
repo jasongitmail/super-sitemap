@@ -174,14 +174,7 @@ export function generateBody(
   priority: SitemapConfig['priority'] = false
 ): string {
   return `<?xml version="1.0" encoding="UTF-8" ?>
-<urlset
-  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-  xmlns:xhtml="https://www.w3.org/1999/xhtml"
-  xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-  xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-  xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
->${Array.from(paths)
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">${Array.from(paths)
     .map(
       ({ alternates, path }) =>
         `
@@ -317,7 +310,7 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
 
       // Remove initial `/` now and any `/(groups)`, because decorative only.
       // Must follow excludePatterns. Ensure index page is '/' in case it was
-      // part of a group. The pattern to match the group is from 
+      // part of a group. The pattern to match the group is from
       // https://github.com/sveltejs/kit/blob/99cddbfdb2332111d348043476462f5356a23660/packages/kit/src/utils/routing.js#L119
       .map((x) => {
         x = x.replaceAll(/\/\([^)]+\)/g, '');

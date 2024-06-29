@@ -628,13 +628,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
   <summary><h2>Example output</h2></summary>
 
 ```xml
-<urlset
-    xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-    xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-    xmlns:xhtml="https://www.w3.org/1999/xhtml"
-    xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-    xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-    xmlns:video="https://www.google.com/schemas/sitemap-video/1.1">
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://example/</loc>
         <changefreq>daily</changefreq>
