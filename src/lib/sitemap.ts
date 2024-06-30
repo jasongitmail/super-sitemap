@@ -137,7 +137,7 @@ export async function response({
     body = generateBody(origin, new Set(pathsSubset), changefreq, priority);
   }
 
-  // Merge keys case-insensitive
+  // Merge keys case-insensitive; custom headers take precedence over defaults.
   const _headers = {
     'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
     'content-type': 'application/xml',

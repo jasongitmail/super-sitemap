@@ -45,8 +45,8 @@
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
-- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L84-L85):
-  `sitemap.response({ headers: {'cache-control: '...'}, ...})`.
+- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L142):
+  `sitemap.response({ headers: {'cache-control: 'max-age=0, s-maxage=60'}, ...})`.
 - 🫡 Uses [SvelteKit's recommended sitemap XML
   structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
 - 💡 Google, and other modern search engines, [ignore `priority` and
