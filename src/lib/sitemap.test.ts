@@ -1014,4 +1014,71 @@ describe('sitemap.ts', () => {
       expect(result).toEqual(expected);
     });
   });
+
+  describe('generatePathsWithRequiredlang()', () => {
+    const paths = ['/[lang]', '/[lang]/about', '/[lang]/foo/something'];
+    const langConfig: LangConfig = {
+      default: 'en',
+      alternates: ['de', 'es'],
+    };
+
+    it('should return expected objects for all paths', () => {
+      const result = sitemap.generatePathsWithLang(paths, langConfig);
+      const expectedRootAlternates = [
+        { lang: 'en', path: '/en' },
+        { lang: 'de', path: '/de' },
+        { lang: 'es', path: '/es' },
+      ];
+      const expectedAboutAlternates = [
+        { lang: 'en', path: '/en/about' },
+        { lang: 'de', path: '/de/about' },
+        { lang: 'es', path: '/es/about' },
+      ];
+      const expectedFooAlternates = [
+        { lang: 'en', path: '/en/foo/something' },
+        { lang: 'de', path: '/de/foo/something' },
+        { lang: 'es', path: '/es/foo/something' },
+      ];
+      const expected = [
+        {
+          path: '/en',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/de',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/es',
+          alternates: expectedRootAlternates,
+        },
+        {
+          path: '/en/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/de/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/es/about',
+          alternates: expectedAboutAlternates,
+        },
+        {
+          path: '/en/foo/something',
+          alternates: expectedFooAlternates,
+        },
+        {
+          path: '/de/foo/something',
+          alternates: expectedFooAlternates,
+        },
+        {
+          path: '/es/foo/something',
+          alternates: expectedFooAlternates,
+        },
+      ];
+      console.log(result)
+      expect(result).toEqual(expected);
+    });
+  });
 });

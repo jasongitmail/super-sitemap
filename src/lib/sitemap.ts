@@ -484,7 +484,7 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
 export function processOptionalParams(route: string): string[] {
   // Remove lang to simplify
   const hasLang = langRegex.exec(route);
-  const hasLangRequired = !hasLang && /\[lang(=[a-z]+)?\]/.exec(route);
+  const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(route);
 
   if (hasLang) {
     route = route.replace(langRegex, '');
@@ -544,12 +544,15 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
   const allPathObjs = [];
 
   for (const path of paths) {
+    // const hasLang = langRegex.exec(path);
+    const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(path);
+
     // The Sitemap standard specifies for hreflang elements to include 1.) the
     // current path itself, and 2.) all of its alternates. So all versions of
     // this path will be given the same "variations" array that will be used to
     // build hreflang items for the path.
     // https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site
-    const variations = [
+    const variations = hasLangRequired ? [] : [
       // default path (e.g. '/about').
       {
         lang: langConfig.default,
@@ -558,7 +561,7 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
     ];
 
     // alternate paths (e.g. '/de/about', etc.)
-    for (const lang of langConfig.alternates) {
+    for (const lang of hasLangRequired ? [langConfig.default, ...langConfig.alternates] : langConfig.alternates) {
       variations.push({
         lang,
         path: path.replace(langRegexNoPath, lang),
