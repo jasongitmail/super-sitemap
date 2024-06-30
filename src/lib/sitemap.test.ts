@@ -856,6 +856,33 @@ describe('sitemap.ts', () => {
       const result = sitemap.processRoutesForOptionalParams(routes);
       expect(result).toEqual(expected);
     });
+
+    it('when /[lang] exists, should process routes with optional parameters correctly', () => {
+      const routes = [
+        '/[lang=lang]',
+        '/[lang]/foo/[[paramA]]',
+        '/[lang]/foo/bar/[paramB]/[[paramC]]/[[paramD]]',
+        '/[lang]/product/[id]',
+        '/[lang]/other',
+      ];
+      const expected = [
+        '/[lang=lang]',
+        // route 0
+        '/[lang]/foo',
+        '/[lang]/foo/[[paramA]]',
+        // route 1
+        '/[lang]/foo/bar/[paramB]',
+        '/[lang]/foo/bar/[paramB]/[[paramC]]',
+        '/[lang]/foo/bar/[paramB]/[[paramC]]/[[paramD]]',
+        // route 2
+        '/[lang]/product/[id]',
+        // route 3
+        '/[lang]/other',
+      ];
+
+      const result = sitemap.processRoutesForOptionalParams(routes);
+      expect(result).toEqual(expected);
+    });
   });
 
   describe('processOptionalParams()', () => {
@@ -923,7 +950,7 @@ describe('sitemap.ts', () => {
   });
 
   describe('generatePathsWithlang()', () => {
-    const paths = ['/', '/about', '/foo/something'];
+    const paths = ['/[[lang]]', '/[[lang]]/about', '/[[lang]]/foo/something'];
     const langConfig: LangConfig = {
       default: 'en',
       alternates: ['de', 'es'],

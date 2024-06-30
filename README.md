@@ -336,8 +336,10 @@ language versions of your pages.
 1. Create a directory named `[[lang]]` at `src/routes/[[lang]]`. Place any
    routes that you intend to translate inside here.
 
-   **This must be named `[[lang]]`.** It can be within a group if you want, e.g.
+   **This parameter must be named `lang`.** It can be within a group if you want, e.g.
    `src/routes/(public)/[[lang]]`.
+
+   To require a language to be specified, name the directory `[lang]`. You may also use a [matcher](https://kit.svelte.dev/docs/advanced-routing#matching).
 
 2. Within your `sitemap.xml` route, update your Super Sitemap config object to
    add a `lang` property specifying your desired languages.
