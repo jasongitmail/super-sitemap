@@ -154,7 +154,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // will not have this stem, for the purposes of this sampling. But ensure root
   // becomes '/', not an empty string.
   routes = routes.map((route) => {
-    return route.replace(/\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/, '') || '/';
+    return route.replace(/\/?\[\[lang(=[a-z]+)?\]\]/, '') || '/';
   });
 
   // Separate static and dynamic routes. Remember these are _routes_ from disk
