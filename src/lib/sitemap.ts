@@ -243,7 +243,7 @@ export function generatePaths(
   // See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
 
-  // Validation: if dev has one or more routes that have the lang parameter
+  // Validation: if dev has one or more routes that contain a lang parameter, optional or required,
   // require that they have defined the `lang.default` and `lang.alternates` in
   // their config. or throw an error to cause 500 error for visibility.
   let routesContainLangParam = false;
