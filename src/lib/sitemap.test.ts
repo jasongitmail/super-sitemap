@@ -1077,7 +1077,6 @@ describe('sitemap.ts', () => {
           alternates: expectedFooAlternates,
         },
       ];
-      console.log(result)
       expect(result).toEqual(expected);
     });
   });
