@@ -405,10 +405,9 @@ export function generatePathsWithParamValues(
     }
 
     if (hasLang) {
+      const lang = hasLang?.[0];
       pathsWithLang.push(
-        ...paths.map(
-          (result) => result.slice(0, hasLang?.index) + hasLang?.[0] + result.slice(hasLang?.index)
-        )
+        ...paths.map((path) => path.slice(0, hasLang?.index) + lang + path.slice(hasLang?.index))
       );
     } else {
       pathsWithoutLang.push(...paths);
@@ -487,7 +486,6 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
 export function processOptionalParams(route: string): string[] {
   // Remove lang to simplify
   const hasLang = langRegex.exec(route);
-  const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(route);
 
   if (hasLang) {
     route = route.replace(langRegex, '');
@@ -516,17 +514,12 @@ export function processOptionalParams(route: string): string[] {
       j++;
     }
   }
+
   // Re-add lang to all results.
-  if (hasLangRequired) {
+  if (hasLang) {
+    const lang = hasLang?.[0];
     results = results.map(
-      (result) =>
-        result.slice(0, hasLangRequired?.index) +
-        hasLangRequired?.[0] +
-        result.slice(hasLangRequired?.index)
-    );
-  } else if (hasLang) {
-    results = results.map(
-      (result) => result.slice(0, hasLang?.index) + hasLang?.[0] + result.slice(hasLang?.index)
+      (result) => result.slice(0, hasLang?.index) + lang + result.slice(hasLang?.index)
     );
   }
 
@@ -547,24 +540,31 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
   const allPathObjs = [];
 
   for (const path of paths) {
-    // const hasLang = langRegex.exec(path);
-    const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(path);
-
     // The Sitemap standard specifies for hreflang elements to include 1.) the
     // current path itself, and 2.) all of its alternates. So all versions of
     // this path will be given the same "variations" array that will be used to
     // build hreflang items for the path.
     // https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site
-    const variations = hasLangRequired ? [] : [
-      // default path (e.g. '/about').
+
+    // - If the lang param is required (i.e. `[lang]`), all variations of this
+    //   path must include the lang param within the path.
+    // - If the lang param is optional (i.e. `[[lang]]`), the default lang will
+    //   not contain the language in the path but all other variations will.
+    const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(path);
+    const _path = hasLangRequired
+      ? path.replace(langRegex, '/' + langConfig.default)
+      : path.replace(langRegex, '') || '/';
+
+    // Add the default path (e.g. '/about', or `/es/about` if lang is required).
+    const variations = [
       {
         lang: langConfig.default,
-        path: path.replace(langRegex, '') || '/',
+        path: _path,
       },
     ];
 
-    // alternate paths (e.g. '/de/about', etc.)
-    for (const lang of hasLangRequired ? [langConfig.default, ...langConfig.alternates] : langConfig.alternates) {
+    // Add alternate paths (e.g. '/de/about', etc.)
+    for (const lang of langConfig.alternates) {
       variations.push({
         lang,
         path: path.replace(langRegexNoPath, lang),
