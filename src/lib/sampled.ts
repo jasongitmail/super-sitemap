@@ -133,6 +133,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
     //https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
     routes = routes.filter((route) => route.match(/\+page.*\.svelte$/));
 
+
     // 1. Trim everything to left of '/src/routes/' so it starts with
     //    `src/routes/` as `filterRoutes()` expects.
     // 2. Remove all grouping segments. i.e. those starting with '(' and ending
@@ -149,11 +150,11 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // generation of the sitemap.
   routes = filterRoutes(routes, []);
 
-  // Remove any `/[[lang]]` prefix. We can just use the default language that
+  // Remove any optional `/[[lang]]` prefix. We can just use the default language that
   // will not have this stem, for the purposes of this sampling. But ensure root
   // becomes '/', not an empty string.
   routes = routes.map((route) => {
-    return route.replace('/[[lang]]', '') || '/';
+    return route.replace(/\/?\[\[lang(=[a-z]+)?\]\]/, '') || '/';
   });
 
   // Separate static and dynamic routes. Remember these are _routes_ from disk

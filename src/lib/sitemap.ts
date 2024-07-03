@@ -32,6 +32,9 @@ export type PathObj = {
   alternates?: { lang: string; path: string }[];
 };
 
+const langRegex = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
+const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
+
 /**
  * Generates an HTTP response containing an XML sitemap.
  *
@@ -243,12 +246,13 @@ export function generatePaths(
   // See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
   let routes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
 
-  // Validation: if dev has one or more routes that start with `[[lang]]`,
+  // Validation: if dev has one or more routes that contain a lang parameter, optional or required,
   // require that they have defined the `lang.default` and `lang.alternates` in
   // their config. or throw an error to cause 500 error for visibility.
   let routesContainLangParam = false;
+
   for (const route of routes) {
-    if (route.includes('[[lang]]')) {
+    if (route.match(langRegex)?.length) {
       routesContainLangParam = true;
       break;
     }
@@ -267,7 +271,6 @@ export function generatePaths(
 
   // eslint-disable-next-line prefer-const
   let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-
   // Return as an array of PathObj's
   return [
     ...pathsWithoutLang.map((path) => ({ path } as PathObj)),
@@ -369,8 +372,8 @@ export function generatePathsWithParamValues(
   let pathsWithoutLang = [];
 
   for (const paramValuesKey in paramValues) {
-    const hasLang = paramValuesKey.startsWith('/[[lang]]');
-    const routeSansLang = paramValuesKey.replace('/[[lang]]', '');
+    const hasLang = langRegex.exec(paramValuesKey);
+    const routeSansLang = paramValuesKey.replace(langRegex, '');
 
     const paths = [];
 
@@ -402,7 +405,11 @@ export function generatePathsWithParamValues(
     }
 
     if (hasLang) {
-      pathsWithLang.push(...paths);
+      pathsWithLang.push(
+        ...paths.map(
+          (result) => result.slice(0, hasLang?.index) + hasLang?.[0] + result.slice(hasLang?.index)
+        )
+      );
     } else {
       pathsWithoutLang.push(...paths);
     }
@@ -416,11 +423,10 @@ export function generatePathsWithParamValues(
   const staticWithLang = [];
   const staticWithoutLang = [];
   for (const route of routes) {
-    const hasLang = route.startsWith('/[[lang]]');
+    const hasLang = route.match(langRegex);
     if (hasLang) {
       // "or" needed because otherwise root becomes empty string
-      const routeSansLang = route.replace('/[[lang]]', '') || '/';
-      staticWithLang.push(routeSansLang);
+      staticWithLang.push(route);
     } else {
       staticWithoutLang.push(route);
     }
@@ -436,7 +442,7 @@ export function generatePathsWithParamValues(
   for (const route of routes) {
     // Check whether any instance of [foo] or [[foo]] exists
     const regex = /.*(\[\[.+\]\]|\[.+\]).*/;
-    const routeSansLang = route.replace('/[[lang]]', '') || '/';
+    const routeSansLang = route.replace(langRegex, '') || '/';
     if (regex.test(routeSansLang)) {
       throw new Error(
         `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
@@ -459,7 +465,7 @@ export function generatePathsWithParamValues(
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
   routes = routes.flatMap((route) => {
-    const routeWithoutLangIfAny = route.replace('/[[lang]]', '');
+    const routeWithoutLangIfAny = route.replace(langRegex, '');
     return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
   });
 
@@ -480,9 +486,11 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
  */
 export function processOptionalParams(route: string): string[] {
   // Remove lang to simplify
-  const hasLang = route.startsWith('/[[lang]]');
+  const hasLang = langRegex.exec(route);
+  const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(route);
+
   if (hasLang) {
-    route = route.replace('/[[lang]]', '');
+    route = route.replace(langRegex, '');
   }
 
   let results: string[] = [];
@@ -508,10 +516,18 @@ export function processOptionalParams(route: string): string[] {
       j++;
     }
   }
-
   // Re-add lang to all results.
-  if (hasLang) {
-    results = results.map((result) => '/[[lang]]' + result);
+  if (hasLangRequired) {
+    results = results.map(
+      (result) =>
+        result.slice(0, hasLangRequired?.index) +
+        hasLangRequired?.[0] +
+        result.slice(hasLangRequired?.index)
+    );
+  } else if (hasLang) {
+    results = results.map(
+      (result) => result.slice(0, hasLang?.index) + hasLang?.[0] + result.slice(hasLang?.index)
+    );
   }
 
   // If first segment is optional param other than `/[[lang]]` (e.g. /[[foo]])),
@@ -531,24 +547,27 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
   const allPathObjs = [];
 
   for (const path of paths) {
+    // const hasLang = langRegex.exec(path);
+    const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(path);
+
     // The Sitemap standard specifies for hreflang elements to include 1.) the
     // current path itself, and 2.) all of its alternates. So all versions of
     // this path will be given the same "variations" array that will be used to
     // build hreflang items for the path.
     // https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site
-    const variations = [
+    const variations = hasLangRequired ? [] : [
       // default path (e.g. '/about').
       {
         lang: langConfig.default,
-        path,
+        path: path.replace(langRegex, '') || '/',
       },
     ];
 
     // alternate paths (e.g. '/de/about', etc.)
-    for (const lang of langConfig.alternates) {
+    for (const lang of hasLangRequired ? [langConfig.default, ...langConfig.alternates] : langConfig.alternates) {
       variations.push({
         lang,
-        path: '/' + (path === '/' ? lang : lang + path),
+        path: path.replace(langRegexNoPath, lang),
       });
     }
 
