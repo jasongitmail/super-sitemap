@@ -372,9 +372,12 @@ language versions of your pages.
    paths (e.g. `/zh/about`), and 2.) as `hreflang` attributes within the sitemap
    output.
 
+   Note: If you're used a _required_ lang param (e.g. `[lang]`), you can set
+   _any_ of your desired languages as the `default` and the rest as the `alternates`; they will _all_ be
+   processed in the same way though.
+
 3. Within your `sitemap.xml` route again, update your Super Sitemap config
-   object's `paramValues` to prepend `/[[lang]]` (or `/[[lang=lang]]` if you
-   used a param matcher earlier) onto the property names of all routes you moved
+   object's `paramValues` to prepend `/[[lang]]` (or `/[[lang=lang]]`, `[lang]`, etc–whatever you used earlier) onto the property names of all routes you moved
    into your `/src/routes/[[lang]]` directory, e.g.:
 
    ```js
