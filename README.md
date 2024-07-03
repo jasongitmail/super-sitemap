@@ -336,10 +336,22 @@ language versions of your pages.
 1. Create a directory named `[[lang]]` at `src/routes/[[lang]]`. Place any
    routes that you intend to translate inside here.
 
-   **This parameter must be named `lang`.** It can be within a group if you want, e.g.
-   `src/routes/(public)/[[lang]]`.
-
-   To require a language to be specified, name the directory `[lang]`. You may also use a [matcher](https://kit.svelte.dev/docs/advanced-routing#matching).
+   - **This parameter must be named `lang`.**
+   - This parameter can specify a [param
+     matcher](https://kit.svelte.dev/docs/advanced-routing#matching), if
+     desired. For example: `src/routes/(public)/[[lang=lang]]`, when you defined
+     a param matcher at `src/params/lang.js`. The param matcher can have any
+     name as long as it uses only lowercase letters.
+   - This directory can be located within a route group, if desired, e.g.
+     `src/routes/(public)/[[lang]]`.
+   - Advanced: If you want to _require_ a language parameter as part of _all_
+     your urls, use single square brackets like `src/routes/[lang]` or
+     `src/routes/[lang=lang]`. Importantly, **if you take this approach, you
+     should redirect your index route (`/`) to one of your language-specific
+     index paths (e.g. `/en`, `/es`, etc)**, because a root url of `/` will not be
+     included in the sitemap when you have _required_ the language param to
+     exist. (The remainder of these docs will assume you are using an
+     _optional_ lang parameter.)
 
 2. Within your `sitemap.xml` route, update your Super Sitemap config object to
    add a `lang` property specifying your desired languages.
@@ -361,8 +373,9 @@ language versions of your pages.
    output.
 
 3. Within your `sitemap.xml` route again, update your Super Sitemap config
-   object's `paramValues` to prepend `/[[lang]]` onto the property names of all
-   routes you moved into your `/src/routes/[[lang]]` directory, e.g.:
+   object's `paramValues` to prepend `/[[lang]]` (or `/[[lang=lang]]` if you
+   used a param matcher earlier) onto the property names of all routes you moved
+   into your `/src/routes/[[lang]]` directory, e.g.:
 
    ```js
    paramValues: {
@@ -379,7 +392,7 @@ language versions of your pages.
 1. Create `/src/routes/[[lang]]/about/+page.svelte` with any content.
 2. Assuming you have a [basic sitemap](#basic-example) set up at
    `/src/routes/sitemap.xml/+server.ts`, add a `lang` property to your sitemap's
-   config object, as described earlier.
+   config object, as described in Step 2 in the previous section.
 3. Your `sitemap.xml` will then include the following:
 
 ```xml
