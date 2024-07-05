@@ -277,6 +277,24 @@ paginated URLs automatically.
 </sitemapindex>
 ```
 
+### No .xml extension
+
+It is also possible to create a sitemap without the `.xml` extension. To use the sitemap index feature; `url` is required on the config. It can be passed from the request handler. Example:
+
+```ts
+// /src/routes/sitemap[[page]]/+server.ts
+import * as sitemap from 'super-sitemap';
+import type { RequestHandler } from '@sveltejs/kit';
+
+export const GET: RequestHandler = async ({ params, url }) => {
+  return await sitemap.response({
+    origin: 'https://example.com',
+    page: params.page,
+    url,
+  });
+};
+```
+
 ## Optional Params
 
 SvelteKit allows you to create a route with one or more optional parameters like this:

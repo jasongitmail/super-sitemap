@@ -20,6 +20,7 @@ export type SitemapConfig = {
   paramValues?: Record<string, never | string[] | string[][]>;
   priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
   sort?: 'alpha' | false;
+  url?: URL;
 };
 
 export type LangConfig = {
@@ -93,6 +94,7 @@ export async function response({
   paramValues,
   priority = false,
   sort = false,
+  url,
 }: SitemapConfig): Promise<Response> {
   // 500 error
   if (!origin) {
@@ -119,7 +121,7 @@ export async function response({
     if (paths.length <= maxPerPage) {
       body = generateBody(origin, pathSet, changefreq, priority);
     } else {
-      body = generateSitemapIndex(origin, totalPages);
+      body = generateSitemapIndex(origin, totalPages, url?.pathname.endsWith('.xml') ?? true);
     }
   } else {
     // User is visiting a sitemap index's subpage–e.g. `sitemap[[page]].xml`.
@@ -210,14 +212,14 @@ export function generateBody(
  * @param pages - The number of sitemap pages to include in the index.
  * @returns The generated XML sitemap index.
  */
-export function generateSitemapIndex(origin: string, pages: number): string {
+export function generateSitemapIndex(origin: string, pages: number, extension = true): string {
   let str = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
   for (let i = 1; i <= pages; i++) {
     str += `
   <sitemap>
-    <loc>${origin}/sitemap${i}.xml</loc>
+    <loc>${origin}/sitemap${i}${extension ? '.xml' : ''}</loc>
   </sitemap>`;
   }
   str += `

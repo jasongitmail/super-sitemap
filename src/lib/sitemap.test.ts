@@ -1,6 +1,6 @@
 import { XMLValidator } from 'fast-xml-parser';
 import fs from 'fs';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { LangConfig } from './sitemap.js';
 import type { SitemapConfig } from './sitemap.js';
@@ -115,8 +115,12 @@ describe('sitemap.ts', () => {
     });
 
     describe('sitemap index', () => {
-      it('when URLs > maxPerPage, should return a sitemap index', async () => {
+      beforeEach(() => {
         config.maxPerPage = 20;
+        config.page = undefined;
+      });
+
+      it('when URLs > maxPerPage, should return a sitemap index', async () => {
         const res = await sitemap.response(config);
         const resultXml = await res.text();
         const expectedSitemapXml = await fs.promises.readFile(
@@ -133,7 +137,6 @@ describe('sitemap.ts', () => {
       ])(
         'subpage (e.g. sitemap%s.xml) should return a sitemap with expected URL subset',
         async (page, expectedFile) => {
-          config.maxPerPage = 20;
           config.page = page;
           const res = await sitemap.response(config);
           const resultXml = await res.text();
@@ -145,7 +148,6 @@ describe('sitemap.ts', () => {
       it.each([['-3'], ['3.3'], ['invalid']])(
         `when page param is invalid ('%s'), should respond 400`,
         async (page) => {
-          config.maxPerPage = 20;
           config.page = page;
           const res = await sitemap.response(config);
           expect(res.status).toEqual(400);
@@ -153,10 +155,20 @@ describe('sitemap.ts', () => {
       );
 
       it('when page param is greater than subpages that exist, should respond 404', async () => {
-        config.maxPerPage = 20;
         config.page = '999999';
         const res = await sitemap.response(config);
         expect(res.status).toEqual(404);
+      });
+
+      it('when url is supplied and it does not include an extension, should not include .xml extension for each page', async () => {
+        config.url = new URL('https://example.com/sitemap');
+        const res = await sitemap.response(config);
+        const resultXml = await res.text();
+        const expectedSitemapXml = await fs.promises.readFile(
+          './src/lib/fixtures/expected-sitemap-index-no-extension.xml',
+          'utf-8'
+        );
+        expect(resultXml).toEqual(expectedSitemapXml.trim());
       });
     });
   });
@@ -803,6 +815,26 @@ describe('sitemap.ts', () => {
 </sitemapindex>`;
 
       const sitemapIndex = sitemap.generateSitemapIndex(origin, pages);
+      expect(sitemapIndex).toEqual(expectedSitemapIndex);
+    });
+
+    it('should not include .xml extension if input is false', () => {
+      const origin = 'https://example.com';
+      const pages = 3;
+      const expectedSitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://example.com/sitemap1</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap2</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap3</loc>
+  </sitemap>
+</sitemapindex>`;
+
+      const sitemapIndex = sitemap.generateSitemapIndex(origin, pages, false);
       expect(sitemapIndex).toEqual(expectedSitemapIndex);
     });
   });
