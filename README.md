@@ -68,10 +68,6 @@
   ignore `lastmod` anyway since they only respect if it's ["consistently and
   verifiably
   accurate"](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#additional-notes-about-xml-sitemaps).
-- [Image](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps)
-  or
-  [video](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps)
-  sitemap extensions.
 
 ## Installation
 
@@ -113,6 +109,8 @@ export const GET: RequestHandler = async () => {
   });
 };
 ```
+
+Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.xml`. This ensures your web server always sends the correct `application/xml` content type even if you decide to prerender your sitemap to static files. 
 
 ## The "everything" example
 
