@@ -277,6 +277,12 @@ describe('sitemap.ts', () => {
       const expectedPaths = [
         // prettier-ignore
         {
+          path: '/markdown-md',
+        },
+        {
+          path: '/markdown-svx',
+        },
+        {
           alternates: [
             { lang: 'en', path: '/' },
             { lang: 'zh', path: '/zh' },
@@ -668,6 +674,8 @@ describe('sitemap.ts', () => {
         '/src/routes/dashboard/settings/+page.svelte',
         '/src/routes/(authenticated)/hidden/+page.svelte',
         '/src/routes/(test-non-aplhanumeric-group-name)/test-group/+page.svelte',
+        '/src/routes/(public)/markdown-md/+page.md',
+        '/src/routes/(public)/markdown-svx/+page.svx',
       ];
 
       const excludePatterns = [
@@ -687,6 +695,8 @@ describe('sitemap.ts', () => {
         '/do-not-remove-this-dashboard-occurrence',
         '/foo/[[paramA]]',
         '/login',
+        '/markdown-md',
+        '/markdown-svx',
         '/pricing',
         '/privacy',
         '/signup',

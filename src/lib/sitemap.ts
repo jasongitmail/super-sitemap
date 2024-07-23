@@ -243,8 +243,13 @@ export function generatePaths(
   lang: LangConfig = { alternates: [], default: '' }
 ): PathObj[] {
   // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
-  // See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
-  let routes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
+  // - See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
+  // - The `.md` and `.svx` extensions are to support MDSveX, which is a common
+  //   markdown preprocessor for SvelteKit.
+  const svelteRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
+  const mdRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.md'));
+  const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
+  let routes = [...svelteRoutes, ...mdRoutes, ...svxRoutes];
 
   // Validation: if dev has one or more routes that contain a lang parameter, optional or required,
   // require that they have defined the `lang.default` and `lang.alternates` in
@@ -296,7 +301,6 @@ export function generatePaths(
  *   read the user's preference, but it doesn't, we use SvelteKit's default no
  *   trailing slash https://kit.svelte.dev/docs/page-options#trailingslash
  */
-
 export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
   return (
     routes
@@ -307,7 +311,7 @@ export function filterRoutes(routes: string[], excludePatterns: string[]): strin
       .map((x) => {
         // Don't trim initial '/' yet, b/c a developer's excludePattens may start with it.
         x = x.substring(11);
-        x = x.replace(/\/\+page.*\.svelte$/, '');
+        x = x.replace(/\/\+page.*\.(svelte|md|svx)$/, '');
         return !x ? '/' : x;
       })
 

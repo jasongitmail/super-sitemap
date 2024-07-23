@@ -101,6 +101,16 @@
     <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/login" />
   </url>
   <url>
+    <loc>https://example.com/markdown-md</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://example.com/markdown-svx</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://example.com/optionals</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

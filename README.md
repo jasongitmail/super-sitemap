@@ -745,6 +745,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.
 - `0.14.17` - Support for param matchers (e.g. `[[lang=lang]]`) &
   required lang params (e.g. `[lang]`). Thanks @JadedBlueEyes & @epoxide!
 - `0.14.13` - Support route files named to allow [breaking out of a layout](https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts).

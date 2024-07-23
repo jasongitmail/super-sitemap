@@ -5,6 +5,20 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
   <url>
+    <loc>https://example.com/zh/campsites/usa/new-york</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/campsites/usa/new-york" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/campsites/usa/new-york" />
+  </url>
+  <url>
+    <loc>https://example.com/zh/foo-path-1</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/foo-path-1" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/foo-path-1" />
+  </url>
+  <url>
     <loc>https://example.com/zh/login</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

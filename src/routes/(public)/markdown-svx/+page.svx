@@ -1,0 +1,4 @@
+# Markdown example (`.svx`)
+
+This page is to test support markdown files for SvelteKit sites that use MDSveX.
+https://github.com/jasongitmail/super-sitemap/issues/34
