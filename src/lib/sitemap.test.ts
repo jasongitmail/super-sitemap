@@ -200,7 +200,7 @@ describe('sitemap.ts', () => {
   });
 
   describe('generateBody()', () => {
-    const paths = new Set([
+    const paths = [
       { path: '/path1' },
       { path: '/path2' },
       // Note: in reality, an entry would already exist for /about, /es/about,
@@ -213,7 +213,7 @@ describe('sitemap.ts', () => {
           { lang: 'es', path: '/es/about' },
         ],
       },
-    ]);
+    ];
     const resultXml = sitemap.generateBody('https://example.com', paths, 'weekly', 0.3);
 
     it('should generate the expected XML sitemap string', () => {
@@ -1141,8 +1141,15 @@ describe('sitemap.ts', () => {
         { path: '/path3' },
       ];
       const expected = [{ path: '/path1' }, { path: '/path2' }, { path: '/path3' }];
-
       expect(sitemap.deduplicatePaths(paths)).toEqual(expected);
+    });
+  });
+
+  describe('normalizeAdditionalPaths()', () => {
+    it('should normalize additionalPaths to ensure each starts with a forward slash', () => {
+      const additionalPaths = ['/foo', 'bar', '/baz'];
+      const expected = [{ path: '/foo' }, { path: '/bar' }, { path: '/baz' }];
+      expect(sitemap.normalizeAdditionalPaths(additionalPaths)).toEqual(expected);
     });
   });
 });

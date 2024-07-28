@@ -100,17 +100,14 @@ export async function response({
   processPaths,
   sort = false,
 }: SitemapConfig): Promise<Response> {
-  // 500 error
+  // Cause a 500 error for visibility
   if (!origin) {
     throw new Error('Sitemap: `origin` property is required in sitemap config.');
   }
 
-  // - Put `additionalPaths` into PathObj format and ensure each starts with a
-  //   '/', for consistency. We will not translate any additionalPaths, b/c they
-  //   could be something like a PDF within the user's static dir.
-  let paths: PathObj[] = [
+  let paths = [
     ...generatePaths(excludePatterns, paramValues, lang),
-    ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
+    ...normalizeAdditionalPaths(additionalPaths),
   ];
 
   if (processPaths) {
@@ -123,23 +120,21 @@ export async function response({
     paths.sort((a, b) => a.path.localeCompare(b.path));
   }
 
-  const pathSet = new Set(paths);
-  const totalPages = Math.ceil(pathSet.size / maxPerPage);
+  const totalPages = Math.ceil(paths.length / maxPerPage);
 
   let body: string;
   if (!page) {
-    // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without page
-    // param provided.
-    if (pathSet.size <= maxPerPage) {
-      body = generateBody(origin, pathSet, changefreq, priority);
+    // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without page.
+    if (paths.length <= maxPerPage) {
+      body = generateBody(origin, paths, changefreq, priority);
     } else {
       body = generateSitemapIndex(origin, totalPages);
     }
   } else {
     // User is visiting a sitemap index's subpage–e.g. `sitemap[[page]].xml`.
 
-    // Ensure `page` param is numeric. We do it this way to avoid the need to
-    // instruct devs to create a route matcher, to keep set up easier for them.
+    // Ensure `page` param is numeric. We do it this way to avoid needing to
+    // instruct devs to create a route matcher, to ease set up for best DX.
     if (!/^[1-9]\d*$/.test(page)) {
       return new Response('Invalid page param', { status: 400 });
     }
@@ -149,13 +144,12 @@ export async function response({
       return new Response('Page does not exist', { status: 404 });
     }
 
-    const pathsSubset = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
-
-    body = generateBody(origin, new Set(pathsSubset), changefreq, priority);
+    const pathsOnThisPage = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
+    body = generateBody(origin, pathsOnThisPage, changefreq, priority);
   }
 
   // Merge keys case-insensitive; custom headers take precedence over defaults.
-  const _headers = {
+  const newHeaders = {
     'cache-control': 'max-age=0, s-maxage=3600', // 1h CDN cache
     'content-type': 'application/xml',
     ...Object.fromEntries(
@@ -163,7 +157,7 @@ export async function response({
     ),
   };
 
-  return new Response(body, { headers: _headers });
+  return new Response(body, { headers: newHeaders });
 }
 
 /**
@@ -186,7 +180,7 @@ export async function response({
  */
 export function generateBody(
   origin: string,
-  paths: Set<PathObj>,
+  paths: PathObj[],
   changefreq: SitemapConfig['changefreq'] = false,
   priority: SitemapConfig['priority'] = false
 ): string {
@@ -194,7 +188,7 @@ export function generateBody(
 <urlset
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
->${Array.from(paths)
+>${paths
     .map(
       ({ alternates, path }) =>
         `
@@ -241,7 +235,8 @@ export function generateSitemapIndex(origin: string, pages: number): string {
 }
 
 /**
- * Generates an array of route paths to be included in a sitemap.
+ * Generates an array of paths, based on `src/routes`, to be included in a
+ * sitemap.
  *
  * @public
  *
@@ -249,6 +244,7 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  *                          excluded.
  * @param paramValues - Optional. An object mapping each parameterized route to
  *                      an array of param values for that route.
+ * @param lang - Optional. The language configuration.
  * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths(
@@ -625,4 +621,20 @@ export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
   }
 
   return Array.from(uniquePaths.values());
+}
+
+/**
+ * Normalizes the user-provided `additionalPaths` to ensure each starts with a
+ * forward slash and then returns a `PathObj[]` type.
+ *
+ * Note: `additionalPaths` are never translated based on the lang config because
+ * they could be something like a PDF within the user's static dir.
+ *
+ * @param additionalPaths - An array of string paths to be normalized
+ * @returns An array of PathObj
+ */
+export function normalizeAdditionalPaths(additionalPaths: string[]): PathObj[] {
+  return additionalPaths.map((path) => ({
+    path: path.startsWith('/') ? path : `/${path}`,
+  }));
 }
