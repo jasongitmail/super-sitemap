@@ -2,8 +2,7 @@ import { XMLValidator } from 'fast-xml-parser';
 import fs from 'fs';
 import { describe, expect, it } from 'vitest';
 
-import type { LangConfig } from './sitemap.js';
-import type { SitemapConfig } from './sitemap.js';
+import type { LangConfig, PathObj, SitemapConfig } from './sitemap.js';
 
 import * as sitemap from './sitemap.js';
 
@@ -91,6 +90,32 @@ describe('sitemap.ts', () => {
       delete newConfig.origin;
       const fn = () => sitemap.response(newConfig);
       expect(fn()).rejects.toThrow('Sitemap: `origin` property is required in sitemap config.');
+    });
+
+    it('when processPaths() is provided, should process all paths through it', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      newConfig.processPaths = (paths: PathObj[]) => {
+        paths = [
+          {
+            path: '/process-paths-was-here',
+          },
+          ...paths,
+        ];
+
+        return paths;
+      };
+      const res = await sitemap.response(newConfig);
+      const resultXml = await res.text();
+
+      // Adds a record like below, but I want this test to remain flexible and
+      // not break if changefreq or priority are changed within the test config.
+      //
+      // <url>
+      //   <loc>https://example.com/process-paths-was-here</loc>
+      //   <changefreq>daily</changefreq>
+      //   <priority>0.7</priority>
+      // </url>;
+      expect(resultXml).toContain('<loc>https://example.com/process-paths-was-here</loc>');
     });
 
     it.todo(

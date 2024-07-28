@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ params }) => {
   }
 
   return await sitemap.response({
-    additionalPaths: ['/foo.pdf'], // e.g. file in `static` dir
+    additionalPaths: ['/foo.pdf'], // e.g. a file in the `static` dir
     excludePatterns: [
       '/dashboard.*',
       '/to-exclude',
@@ -61,6 +61,24 @@ export const GET: RequestHandler = async ({ params }) => {
     lang: {
       default: 'en',
       alternates: ['zh'],
+    },
+    processPaths: (paths: sitemap.PathObj[]) => {
+      // Add trailing slashes. (In reality, using no trailing slash is
+      // preferrable b/c it provides consistency among all possible paths, even
+      // items like `/foo.pdf`; this is merely intended to test the
+      // `processPaths()` callback.)
+      return paths.map(({ path, alternates, ...rest }) => {
+        const rtrn = { path: `${path}/`, ...rest };
+
+        if (alternates) {
+          rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
+            ...alternate,
+            path: `${alternate.path}/`,
+          }));
+        }
+
+        return rtrn;
+      });
     },
   });
 };

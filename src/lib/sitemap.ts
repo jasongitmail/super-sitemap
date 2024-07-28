@@ -17,6 +17,7 @@ export type SitemapConfig = {
   page?: string;
   paramValues?: Record<string, never | string[] | string[][]>;
   priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
+  processPaths?: (paths: PathObj[]) => PathObj[];
   sort?: 'alpha' | false;
 };
 
@@ -25,9 +26,14 @@ export type LangConfig = {
   alternates: string[];
 };
 
+export type Alternate = {
+  lang: string;
+  path: string;
+};
+
 export type PathObj = {
   path: string;
-  alternates?: { lang: string; path: string }[];
+  alternates?: Alternate[];
 };
 
 const langRegex = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
@@ -45,8 +51,9 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  * @param config.paramValues - Optional. Object of parameter values. See format in example below.
  * @param config.additionalPaths - Optional. Array of paths to include manually. E.g. `/foo.pdf` in your `static` directory.
  * @param config.headers - Optional. Custom headers. Case insensitive.
- * @param config.changefreq - Optional. Default is `false`. `changefreq` value to use for all paths.
- * @param config.priority - Optional. Default is `false`. `priority` value to use for all paths.
+ * @param config.changefreq - Optional. `changefreq` value to use for all paths. Default is `false` to exclude this property from each sitemap entry.
+ * @param config.priority - Optional. `priority` value to use for all paths. Default is `false` to exclude this property from each sitemap entry.
+ * @param config.processPaths - Optional. Callback function to arbitrarily process path objects.
  * @param config.sort - Optional. Default is `false` and groups paths as static paths (sorted), dynamic paths (unsorted), and then additional paths (unsorted). `alpha` sorts all paths alphabetically.
  * @param config.maxPerPage - Optional. Default is `50_000`, as specified in https://www.sitemaps.org/protocol.html If you have more than this, a sitemap index will be created automatically.
  * @param config.page - Optional, but when using a route like `sitemap[[page]].xml to support automatic sitemap indexes. The `page` URL param.
@@ -90,6 +97,7 @@ export async function response({
   page,
   paramValues,
   priority = false,
+  processPaths,
   sort = false,
 }: SitemapConfig): Promise<Response> {
   // 500 error
@@ -100,13 +108,18 @@ export async function response({
   // - Put `additionalPaths` into PathObj format and ensure each starts with a
   //   '/', for consistency. We will not translate any additionalPaths, b/c they
   //   could be something like a PDF within the user's static dir.
-  //   prettier-ignore
-  const paths: PathObj[] = [
+  let paths: PathObj[] = [
     ...generatePaths(excludePatterns, paramValues, lang),
     ...additionalPaths.map((path) => ({ path: path.startsWith('/') ? path : '/' + path })),
   ];
 
-  if (sort === 'alpha') paths.sort((a, b) => a.path.localeCompare(b.path));
+  if (processPaths) {
+    paths = processPaths(paths);
+  }
+
+  if (sort === 'alpha') {
+    paths.sort((a, b) => a.path.localeCompare(b.path));
+  }
 
   const pathSet = new Set(paths);
   const totalPages = Math.ceil(pathSet.size / maxPerPage);
