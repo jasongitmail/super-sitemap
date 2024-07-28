@@ -834,6 +834,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `0.14.20` - Adds [processPaths() callback](#processpaths-callback).
 - `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.
 - `0.14.17` - Support for param matchers (e.g. `[[lang=lang]]`) &
   required lang params (e.g. `[lang]`). Thanks @JadedBlueEyes & @epoxide!
