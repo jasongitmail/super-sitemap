@@ -1,5 +1,3 @@
-// import { coverageConfigDefaults } from 'vitest/config.js';
-
 export type ParamValues = Record<string, never | string[] | string[][]>;
 
 // Don't use named types on properties, like ParamValues, because it's more
@@ -113,10 +111,11 @@ export async function response({
   const pathSet = new Set(paths);
   const totalPages = Math.ceil(pathSet.size / maxPerPage);
 
-  let body;
+  let body: string;
   if (!page) {
-    // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without a page.
-    if (paths.length <= maxPerPage) {
+    // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without page
+    // param provided.
+    if (pathSet.size <= maxPerPage) {
       body = generateBody(origin, pathSet, changefreq, priority);
     } else {
       body = generateSitemapIndex(origin, totalPages);
@@ -124,8 +123,8 @@ export async function response({
   } else {
     // User is visiting a sitemap index's subpage–e.g. `sitemap[[page]].xml`.
 
-    // This avoids the need to instruct devs to create a route matcher, to keep
-    // set up easier for them.
+    // Ensure `page` param is numeric. We do it this way to avoid the need to
+    // instruct devs to create a route matcher, to keep set up easier for them.
     if (!/^[1-9]\d*$/.test(page)) {
       return new Response('Invalid page param', { status: 400 });
     }
@@ -251,9 +250,10 @@ export function generatePaths(
   const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
   let routes = [...svelteRoutes, ...mdRoutes, ...svxRoutes];
 
-  // Validation: if dev has one or more routes that contain a lang parameter, optional or required,
-  // require that they have defined the `lang.default` and `lang.alternates` in
-  // their config. or throw an error to cause 500 error for visibility.
+  // Validation: if dev has one or more routes that contain a lang parameter,
+  // optional or required, require that they have defined the `lang.default` and
+  // `lang.alternates` in their config or throw an error to cause a 500 error
+  // for visibility.
   let routesContainLangParam = false;
 
   for (const route of routes) {
@@ -274,9 +274,8 @@ export function generatePaths(
 
   routes = processRoutesForOptionalParams(routes);
 
-  // eslint-disable-next-line prefer-const
-  let { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
-  // Return as an array of PathObj's
+  const { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
+
   return [
     ...pathsWithoutLang.map((path) => ({ path } as PathObj)),
     ...(pathsWithLang.length ? generatePathsWithLang(pathsWithLang, lang) : []),
