@@ -133,7 +133,6 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
     //https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
     routes = routes.filter((route) => route.match(/\+page.*\.svelte$/));
 
-
     // 1. Trim everything to left of '/src/routes/' so it starts with
     //    `src/routes/` as `filterRoutes()` expects.
     // 2. Remove all grouping segments. i.e. those starting with '(' and ending
@@ -146,7 +145,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   }
 
   // Filter to reformat from file paths into site paths. The 2nd arg for
-  // excludePatterns is empty the exclusion pattern was already applied during
+  // excludeRoutePatterns is empty the exclusion pattern was already applied during
   // generation of the sitemap.
   routes = filterRoutes(routes, []);
 
@@ -177,7 +176,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   // Using URLs as the source, separate into static and dynamic routes. This:
   // 1. Gather URLs that are static routes. We cannot use staticRoutes items
   //    directly because it is generated from reading `/src/routes` and has not
-  //    had the dev's `excludePatterns` applied so an excluded routes like
+  //    had the dev's `excludeRoutePatterns` applied so an excluded routes like
   //    `/dashboard` could exist within in, but _won't_ in the sitemap URLs.
   // 2. Removing static routes from the sitemap URLs before sampling for
   //    dynamic paths is necessary due to SvelteKit's route specificity rules.
@@ -195,7 +194,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
 
   // Convert dynamic route patterns into regex patterns.
   // - Use Set to make unique. Duplicates may occur given we haven't applied
-  //   excludePatterns to the dynamic **routes** (e.g. `/blog/[page=integer]`
+  //   excludeRoutePatterns to the dynamic **routes** (e.g. `/blog/[page=integer]`
   //   and `/blog/[slug]` both become `/blog/[^/]+`). When we sample URLs for
   //   each of these patterns, however the excluded patterns won't exist in the
   //   URLs from the sitemap, so it's not a problem.

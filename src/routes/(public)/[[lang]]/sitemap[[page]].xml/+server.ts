@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. a file in the `static` dir
-    excludePatterns: [
+    excludeRoutePatterns: [
       '/dashboard.*',
       '/to-exclude',
       '(secret-group)',

@@ -6,7 +6,7 @@ export type ParamValues = Record<string, never | string[] | string[][]>;
 export type SitemapConfig = {
   additionalPaths?: [] | string[];
   changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
-  excludePatterns?: [] | string[];
+  excludeRoutePatterns?: [] | string[];
   headers?: Record<string, string>;
   lang?: {
     default: string;
@@ -47,7 +47,7 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  *
  * @param config - Config object.
  * @param config.origin - Required. Origin URL. E.g. `https://example.com`. No trailing slash
- * @param config.excludePatterns - Optional. Array of regex patterns for paths to exclude.
+ * @param config.excludeRoutePatterns - Optional. Array of regex patterns for routes to exclude.
  * @param config.paramValues - Optional. Object of parameter values. See format in example below.
  * @param config.additionalPaths - Optional. Array of paths to include manually. E.g. `/foo.pdf` in your `static` directory.
  * @param config.headers - Optional. Custom headers. Case insensitive.
@@ -64,7 +64,7 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  * ```js
  * return await sitemap.response({
  *   origin: 'https://example.com',
- *   excludePatterns: [
+ *   excludeRoutePatterns: [
  *     '^/dashboard.*',
  *     `.*\\[page=integer\\].*`
  *   ],
@@ -89,7 +89,7 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 export async function response({
   additionalPaths = [],
   changefreq = false,
-  excludePatterns,
+  excludeRoutePatterns,
   headers = {},
   lang,
   maxPerPage = 50_000,
@@ -106,7 +106,7 @@ export async function response({
   }
 
   let paths = [
-    ...generatePaths(excludePatterns, paramValues, lang),
+    ...generatePaths(excludeRoutePatterns, paramValues, lang),
     ...normalizeAdditionalPaths(additionalPaths),
   ];
 
@@ -240,15 +240,14 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  *
  * @public
  *
- * @param excludePatterns - Optional. An array of patterns for routes to be
- *                          excluded.
+ * @param excludeRoutePatterns - Optional. An array of patterns for routes to be excluded.
  * @param paramValues - Optional. An object mapping each parameterized route to
  *                      an array of param values for that route.
  * @param lang - Optional. The language configuration.
  * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths(
-  excludePatterns: string[] = [],
+  excludeRoutePatterns: string[] = [],
   paramValues: ParamValues = {},
   lang: LangConfig = { alternates: [], default: '' }
 ): PathObj[] {
@@ -280,8 +279,8 @@ export function generatePaths(
   }
 
   // Notice this means devs MUST include `[[lang]]/` within any route strings
-  // used within `excludePatterns` if that's part of their route.
-  routes = filterRoutes(routes, excludePatterns);
+  // used within `excludeRoutePatterns` if that's part of their route.
+  routes = filterRoutes(routes, excludeRoutePatterns);
 
   routes = processRoutesForOptionalParams(routes);
 
@@ -300,7 +299,7 @@ export function generatePaths(
  *
  * @param routes - An array of route strings from Vite's `import.meta.blog`.
  *                 E.g. ['src/routes/blog/[slug]/+page.svelte', ...]
- * @param excludePatterns - An array of regular expression patterns to match
+ * @param excludeRoutePatterns - An array of regular expression patterns to match
  *                          routes to exclude.
  * @returns A sorted array of cleaned-up route strings.
  *          E.g. ['/blog/[slug]', ...]
@@ -311,25 +310,25 @@ export function generatePaths(
  *   read the user's preference, but it doesn't, we use SvelteKit's default no
  *   trailing slash https://kit.svelte.dev/docs/page-options#trailingslash
  */
-export function filterRoutes(routes: string[], excludePatterns: string[]): string[] {
+export function filterRoutes(routes: string[], excludeRoutePatterns: string[]): string[] {
   return (
     routes
       // Remove `/src/routes` prefix, `+page.svelte suffix` or any variation
       // like `+page@.svelte`, and trailing slash except on homepage. Trailing
-      // slash must be removed before excludePatterns so `$` termination of a
+      // slash must be removed before excludeRoutePatterns so `$` termination of a
       // regex pattern will work as expected.
       .map((x) => {
-        // Don't trim initial '/' yet, b/c a developer's excludePattens may start with it.
+        // Don't trim initial '/' yet, b/c a developer's excludeRoutePatterns may start with it.
         x = x.substring(11);
         x = x.replace(/\/\+page.*\.(svelte|md|svx)$/, '');
         return !x ? '/' : x;
       })
 
       // Remove any routes that match an exclude pattern
-      .filter((x) => !excludePatterns.some((pattern) => new RegExp(pattern).test(x)))
+      .filter((x) => !excludeRoutePatterns.some((pattern) => new RegExp(pattern).test(x)))
 
       // Remove initial `/` now and any `/(groups)`, because decorative only.
-      // Must follow excludePatterns. Ensure index page is '/' in case it was
+      // Must follow excludeRoutePatterns. Ensure index page is '/' in case it was
       // part of a group. The pattern to match the group is from
       // https://github.com/sveltejs/kit/blob/99cddbfdb2332111d348043476462f5356a23660/packages/kit/src/utils/routing.js#L119
       .map((x) => {
@@ -458,7 +457,7 @@ export function generatePathsWithParamValues(
     const routeSansLang = route.replace(langRegex, '') || '/';
     if (regex.test(routeSansLang)) {
       throw new Error(
-        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedPatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
+        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedRoutePatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
       );
     }
   }
@@ -469,7 +468,7 @@ export function generatePathsWithParamValues(
 /**
  * Given all routes, return a new array of routes that includes all versions of
  * any route that contains one or more optional params. Only process routes that
- * contain an optional param _other than_ [[lang]].
+ * contain an optional param _other than_ `[[lang]]`.
  *
  * @private
  * @param routes - Array of routes to process.

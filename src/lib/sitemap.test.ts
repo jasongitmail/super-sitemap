@@ -11,7 +11,7 @@ describe('sitemap.ts', () => {
     const config: SitemapConfig = {
       additionalPaths: ['/foo.pdf'],
       changefreq: 'daily',
-      excludePatterns: [
+      excludeRoutePatterns: [
         '.*/dashboard.*',
         '(secret-group)',
 
@@ -257,10 +257,10 @@ describe('sitemap.ts', () => {
       // This test creates a sitemap based off the actual routes found within
       // this projects `/src/routes`, given generatePaths() uses
       // `import.meta.glob()`.
-      const excludePatterns: string[] = [];
+      const excludeRoutePatterns: string[] = [];
       const paramValues = {};
       const fn = () => {
-        sitemap.generatePaths(excludePatterns, paramValues);
+        sitemap.generatePaths(excludeRoutePatterns, paramValues);
       };
       expect(fn).toThrowError();
     });
@@ -270,7 +270,7 @@ describe('sitemap.ts', () => {
       // this projects `/src/routes`, given generatePaths() uses
       // `import.meta.glob()`.
 
-      const excludePatterns = [
+      const excludeRoutePatterns = [
         '.*/dashboard.*',
         '(secret-group)',
         '(authenticated)',
@@ -311,7 +311,7 @@ describe('sitemap.ts', () => {
         default: 'en',
         alternates: ['zh'],
       };
-      const resultPaths = sitemap.generatePaths(excludePatterns, paramValues, langConfig);
+      const resultPaths = sitemap.generatePaths(excludeRoutePatterns, paramValues, langConfig);
       const expectedPaths = [
         // prettier-ignore
         {
@@ -716,7 +716,7 @@ describe('sitemap.ts', () => {
         '/src/routes/(public)/markdown-svx/+page.svx',
       ];
 
-      const excludePatterns = [
+      const excludeRoutePatterns = [
         '^/dashboard.*',
         '(authenticated)',
 
@@ -743,7 +743,7 @@ describe('sitemap.ts', () => {
         '/test-group',
       ];
 
-      const result = sitemap.filterRoutes(routes, excludePatterns);
+      const result = sitemap.filterRoutes(routes, excludeRoutePatterns);
       expect(result).toEqual(expectedResult);
     });
   });
