@@ -64,7 +64,7 @@ export const GET: RequestHandler = async ({ params }) => {
     },
     processPaths: (paths: sitemap.PathObj[]) => {
       // Add trailing slashes. (In reality, using no trailing slash is
-      // preferrable b/c it provides consistency among all possible paths, even
+      // preferable b/c it provides consistency among all possible paths, even
       // items like `/foo.pdf`; this is merely intended to test the
       // `processPaths()` callback.)
       return paths.map(({ path, alternates, ...rest }) => {
