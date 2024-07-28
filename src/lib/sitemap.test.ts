@@ -118,6 +118,19 @@ describe('sitemap.ts', () => {
       expect(resultXml).toContain('<loc>https://example.com/process-paths-was-here</loc>');
     });
 
+    it('should deduplicate paths objects based on value of path', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      newConfig.processPaths = (paths: PathObj[]) => {
+        paths = [{ path: '/duplicate-path' }, { path: '/duplicate-path' }, ...paths];
+        return paths;
+      };
+      const res = await sitemap.response(newConfig);
+      const resultXml = await res.text();
+      expect(
+        resultXml.match(/<loc>https:\/\/example\.com\/duplicate-path<\/loc>/g)?.length
+      ).toBeLessThanOrEqual(1);
+    });
+
     it.todo(
       'when param values are not provided for a parameterized route, should throw error',
       async () => {
@@ -1116,6 +1129,20 @@ describe('sitemap.ts', () => {
         },
       ];
       expect(result).toEqual(expected);
+    });
+  });
+
+  describe('deduplicatePaths()', () => {
+    it('should remove duplicate paths', () => {
+      const paths = [
+        { path: '/path1' },
+        { path: '/path2' },
+        { path: '/path1' },
+        { path: '/path3' },
+      ];
+      const expected = [{ path: '/path1' }, { path: '/path2' }, { path: '/path3' }];
+
+      expect(sitemap.deduplicatePaths(paths)).toEqual(expected);
     });
   });
 });

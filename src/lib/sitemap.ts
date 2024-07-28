@@ -117,6 +117,8 @@ export async function response({
     paths = processPaths(paths);
   }
 
+  paths = deduplicatePaths(paths);
+
   if (sort === 'alpha') {
     paths.sort((a, b) => a.path.localeCompare(b.path));
   }
@@ -602,4 +604,25 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
   }
 
   return allPathObjs;
+}
+
+/**
+ * Removes duplicate paths from an array of PathObj, keeping the last occurrence
+ * of any duplicates.
+ *
+ * Duplicate pathObjs could occur due to a developer using additionalPaths or
+ * processPaths() and not properly excluding a pre-existing path.
+ *
+ * @param pathObjs - An array of PathObj to deduplicate.
+ * @returns A new array of PathObj with duplicates removed, retaining the last
+ * occurrence of any duplicates.
+ */
+export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
+  const uniquePaths = new Map<string, PathObj>();
+
+  for (const pathObj of pathObjs) {
+    uniquePaths.set(pathObj.path, pathObj);
+  }
+
+  return Array.from(uniquePaths.values());
 }
