@@ -459,7 +459,7 @@ language versions of your pages.
    paths (e.g. `/zh/about`), and 2.) as `hreflang` attributes within the sitemap
    output.
 
-   Note: If you're used a _required_ lang param (e.g. `[lang]`), you can set
+   Note: If you used a _required_ lang param (e.g. `[lang]`), you can set
    _any_ of your desired languages as the `default` and the rest as the `alternates`; they will _all_ be
    processed in the same way though.
 
@@ -520,7 +520,7 @@ with a default language (e.g. `/about`) and lang slugs for alternate languages
 
 ### Q&A on i18n
 
-- **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (Germany)?**
+- **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (German)?**
 
   Realistically, this would break the route patterns and assumptions that Super
   Sitemap relies on to identify your routes, know what language to use, and
