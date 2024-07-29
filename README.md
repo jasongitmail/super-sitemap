@@ -48,8 +48,6 @@
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L142):
   `sitemap.response({ headers: {'cache-control: 'max-age=0, s-maxage=60'}, ...})`.
-- 🫡 Uses [SvelteKit's recommended sitemap XML
-  structure](https://kit.svelte.dev/docs/seo#manual-setup-sitemaps).
 - 💡 Google, and other modern search engines, [ignore `priority` and
   `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
   and use their own heuristics to determine when to crawl pages on your site. As
