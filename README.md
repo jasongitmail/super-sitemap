@@ -318,7 +318,7 @@ config object.
   `paramValues` like this: `'/something/[[paramA]]': ['foo', 'foo2', 'foo3']`.
 - And `/something/[[paramA]]/[[paramB]]` must be either excluded using an
   `excludeRoutePattern` of `.*/something/\\[\\[paramA\\]\\]/\\[\\[paramB\\]\\]$` _or_
-  appear within your config's `paramValues` like this: `'/something/[[paramA]]':
+  appear within your config's `paramValues` like this: `'/something/[[paramA]]/[[paramB]]':
 [['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
 
 Alternatively, you can exclude ALL versions of this route by providing a single
