@@ -1,18 +1,18 @@
 <div align="center">
-  <img src="https://github.com/jasongitmail/super-sitemap/assets/50032291/505f6461-b358-4b6f-a8e0-80c81f57e51e" alt="Svelte Super Sitemap logo" width="550" />
-  <h1 align="center">Super Sitemap</h1>
+  <img src="https://github.com/user-attachments/assets/cfffebc5-dcda-44c2-8238-7c2ab65ac84a" alt="Svelte Super Sitemap">
+  
+  <br/> 
+  <p>SvelteKit sitemap focused on ease of use and <br>making it impossible to forget to add your paths.</p>
 
-  <a href="https://github.com/jasongitmail/super-sitemap/actions/workflows/ci.yml">
-    <img alt="unit tests badge" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/super-sitemap/ci.yml?label=tests">
-  </a>
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
     <img alt="license badge" src="https://img.shields.io/npm/l/super-sitemap?color=limegreen">
   </a>
   <a href="https://www.npmjs.com/package/super-sitemap">
     <img alt="npm badge" src="https://img.shields.io/npm/v/super-sitemap?color=limegreen">
   </a>
-  <br/>
-  <p>SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.</p>
+  <a href="https://github.com/jasongitmail/super-sitemap/actions/workflows/ci.yml">
+    <img alt="unit tests badge" src="https://img.shields.io/github/actions/workflow/status/jasongitmail/super-sitemap/ci.yml?label=tests">
+  </a>
 </div>
 
 ## Table of Contents
