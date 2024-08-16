@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/cfffebc5-dcda-44c2-8238-7c2ab65ac84a" alt="Svelte Super Sitemap">
+  <img src="https://github.com/user-attachments/assets/7d897ca4-a54f-4fba-91a8-549a2e61117b" alt="Svelte Super Sitemap">
   
-  <br/> 
   <p>SvelteKit sitemap focused on ease of use and <br>making it impossible to forget to add your paths.</p>
 
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
