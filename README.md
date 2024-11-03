@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://github.com/user-attachments/assets/7d897ca4-a54f-4fba-91a8-549a2e61117b" alt="Svelte Super Sitemap">
-  
+
   <p>SvelteKit sitemap focused on ease of use and <br>making it impossible to forget to add your paths.</p>
 
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
@@ -332,19 +332,14 @@ versions of that route.
 
 ## processPaths() callback
 
-The `processPaths()` callback is powerful, but _not_ needed in most cases.
+The `processPaths()` callback is powerful, but rarely needed.
 
-It runs after all paths have been generated for your site, but prior to
-de-duplication of paths based on unique path names, sorting (if enabled by your
-config), and creation of XML.
-
-This allows you to arbitrarily process the path objects for your site before
-they become XML, with the only requirement that your callback function must
-return the expected type of
+It allows you to arbitrarily process the path objects for your site before they become XML, with the
+only requirement that your callback function must return the expected type of
 [`PathObj[]`](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L34).
 
-This can be useful to do something bespoke that would not otherwise be possible.
-For example:
+
+This can be useful to do something bespoke that would not otherwise be possible. For example:
 
 1. Excluding a specific path, when `excludeRoutePatterns` based on the _route
    pattern_ would be too broad. (For example, you might want to exclude a path
@@ -356,13 +351,16 @@ For example:
    backend. However, you can also accomplish this by providing these within the
    `additionalPaths` array in your super sitemap config, which is a more concise approach.
 
+`processPaths()` runs after all paths have been generated for your site, but prior to de-duplication
+of paths based on unique path names, sorting (if enabled by your config), and creation of XML.
+
 Note that `processPaths()` is intentionally NOT async. This design decision is
 to encourage a consistent pattern within the sitemap request handler where all HTTP
 requests, including any to fetch param values from a database, [occur
 together using `Promise.all()`](<https://github.com/jasongitmail/super-sitemap/blob/main/src/routes/(public)/%5B%5Blang%5D%5D/sitemap%5B%5Bpage%5D%5D.xml/%2Bserver.ts#L14-L20>), for best performance and consistent code pattern
 among super sitemap users for best DX.
 
-### Example code - remove specific paths
+### Example code - to remove specific paths
 
 ```ts
 return await sitemap.response({
@@ -382,7 +380,7 @@ difference will be inconsequential in virtually all cases, unless you have a
 very large number of excluded paths and many millions of generated paths to
 search within.
 
-### Example code - add trailing slashes
+### Example code - to add trailing slashes
 
 ```ts
 return await sitemap.response({
@@ -520,8 +518,8 @@ with a default language (e.g. `/about`) and lang slugs for alternate languages
 - **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (German)?**
 
   Realistically, this would break the route patterns and assumptions that Super
-  Sitemap relies on to identify your routes, know what language to use, and
-  build the sitemap. "Never say never", but there are no plans to support this.
+  Sitemap relies on to identify your routes, to know what language to use, and
+  to build the sitemap. "Never say never", but there are no plans to support this.
 
 ## Sampled URLs
 
