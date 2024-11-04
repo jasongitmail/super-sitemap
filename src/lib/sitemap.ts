@@ -1,11 +1,18 @@
+export type Changefreq = 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly';
 export type ParamValues = Record<string, never | string[] | string[][]>;
+export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 
-// Don't use named types on properties, like ParamValues, because it's more
-// helpful for the dev to see these allowed values in their IDE.
 /* eslint-disable perfectionist/sort-object-types */
 export type SitemapConfig = {
   additionalPaths?: [] | string[];
-  changefreq?: 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly' | false;
+
+  /**
+   * Optional. Default changefreq, when not specified within a route's `paramValues` objects.
+   * Omitting from sitemap config will omit changefreq from all sitemap entries except
+   * those where you set `changefreq` property with a route's `paramValues` objects.
+   */
+  changefreq?: Changefreq;
+
   excludeRoutePatterns?: [] | string[];
   headers?: Record<string, string>;
   lang?: {
@@ -15,8 +22,21 @@ export type SitemapConfig = {
   maxPerPage?: number;
   origin: string;
   page?: string;
-  paramValues?: Record<string, never | string[] | string[][]>;
-  priority?: 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | false;
+
+  /**
+   * Parameter values for dynamic routes, where the values can be:
+   * - `string[]`
+   * - `string[][]`
+   */
+  paramValues?: ParamValues;
+
+  /**
+   * Optional. Default priority, when not specified within a route's `paramValues` objects.
+   * Omitting from sitemap config will omit priority from all sitemap entries except
+   * those where you set `priority` property with a route's `paramValues` objects.
+   */
+  priority?: Priority;
+
   processPaths?: (paths: PathObj[]) => PathObj[];
   sort?: 'alpha' | false;
 };
@@ -33,6 +53,9 @@ export type Alternate = {
 
 export type PathObj = {
   path: string;
+  lastmod?: string;
+  changefreq?: Changefreq;
+  priority?: Priority;
   alternates?: Alternate[];
 };
 
@@ -88,7 +111,7 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  */
 export async function response({
   additionalPaths = [],
-  changefreq = false,
+  changefreq,
   excludeRoutePatterns,
   headers = {},
   lang,
@@ -96,7 +119,7 @@ export async function response({
   origin,
   page,
   paramValues,
-  priority = false,
+  priority,
   processPaths,
   sort = false,
 }: SitemapConfig): Promise<Response> {
@@ -181,8 +204,8 @@ export async function response({
 export function generateBody(
   origin: string,
   paths: PathObj[],
-  changefreq: SitemapConfig['changefreq'] = false,
-  priority: SitemapConfig['priority'] = false
+  changefreq: SitemapConfig['changefreq'],
+  priority: SitemapConfig['priority']
 ): string {
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
