@@ -197,39 +197,50 @@ export async function response({
  *
  * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash
  *                 because "/" is the index page.
- * @param paths - Array of string paths to include in the sitemap. Each should
- *                start with '/'; but if not, it will be added.
+ * @param pathObjs - Array of path objects to include in the sitemap. Each path within it should
+ *                 start with a '/'; but if not, it will be added.
+ * @param defaultChangefreq - The sitemap wide default changefreq value. Optional.
+ * @param defaultPriority - The sitemap wide default priority value. Optional.
  * @returns The generated XML sitemap.
  */
 export function generateBody(
   origin: string,
-  paths: PathObj[],
-  changefreq: SitemapConfig['changefreq'],
-  priority: SitemapConfig['priority']
+  pathObjs: PathObj[],
+  defaultChangefreq: SitemapConfig['changefreq'],
+  defaultPriority: SitemapConfig['priority']
 ): string {
+  const urlElements = pathObjs
+    .map((pathObj) => {
+      // Set to 1.) value within this pathObj if it exists, 2.) default value if that exists or
+      // undefined. A sitemap-wide default does not & should not exist for `lastmod`.
+      const changefreq = pathObj.changefreq || defaultChangefreq;
+      const lastmod = pathObj.lastmod;
+      const priority = pathObj.priority || defaultPriority;
+
+      let url = '\n  <url>\n';
+      url += `    <loc>${origin}${pathObj.path}</loc>\n`;
+      if (changefreq) url += `    <changefreq>${changefreq}</changefreq>\n`;
+      if (lastmod) url += `    <lastmod>${lastmod}</lastmod>\n`;
+      if (priority) url += `    <priority>${priority}</priority>\n`;
+      if (pathObj.alternates) {
+        url += pathObj.alternates
+          .map(
+            ({ lang, path }) =>
+              `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />\n`
+          )
+          .join('');
+      }
+      url += '  </url>';
+
+      return url;
+    })
+    .join('');
+
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <urlset
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
->${paths
-    .map(
-      ({ alternates, path }) =>
-        `
-  <url>
-    <loc>${origin}${path}</loc>\n` +
-        (changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '') +
-        (priority ? `    <priority>${priority}</priority>\n` : '') +
-        (!alternates
-          ? ''
-          : alternates
-              .map(
-                ({ lang, path }) =>
-                  `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />`
-              )
-              .join('\n') + '\n') +
-        `  </url>`
-    )
-    .join('')}
+>${urlElements}
 </urlset>`;
 }
 
