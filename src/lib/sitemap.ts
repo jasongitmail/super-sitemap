@@ -9,13 +9,7 @@ export type ParamValue = {
 };
 
 /* eslint-disable perfectionist/sort-object-types */
-export type ParamValues = Record<
-  string,
-  | never
-  | string[]
-  | string[][]
-  | ParamValue[]
->;
+export type ParamValues = Record<string, ParamValue[] | never | string[] | string[][]>;
 
 export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 
@@ -161,11 +155,11 @@ export async function response({
 
   let paths = [
     ...generatePaths({
-      excludeRoutePatterns,
-      paramValues,
-      lang,
       defaultChangefreq,
       defaultPriority,
+      excludeRoutePatterns,
+      lang,
+      paramValues,
     }),
     ...generateAdditionalPaths({
       additionalPaths,
@@ -242,19 +236,16 @@ export async function response({
  *                 start with a '/'; but if not, it will be added.
  * @returns The generated XML sitemap.
  */
-export function generateBody(
-  origin: string,
-  pathObjs: PathObj[]
-): string {
+export function generateBody(origin: string, pathObjs: PathObj[]): string {
   const urlElements = pathObjs
     .map((pathObj) => {
-      const { path, lastmod, changefreq, priority, alternates } = pathObj;
+      const { alternates, changefreq, lastmod, path, priority } = pathObj;
 
       let url = '\n  <url>\n';
       url += `    <loc>${origin}${path}</loc>\n`;
-      url += lastmod    ? `    <lastmod>${lastmod}</lastmod>\n` : '';
+      url += lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : '';
       url += changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '';
-      url += priority   ? `    <priority>${priority}</priority>\n` : '';
+      url += priority ? `    <priority>${priority}</priority>\n` : '';
 
       if (alternates) {
         url += alternates
@@ -316,11 +307,11 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths({
-  excludeRoutePatterns = [],
-  paramValues = {},
-  lang,
   defaultChangefreq,
-  defaultPriority
+  defaultPriority,
+  excludeRoutePatterns = [],
+  lang,
+  paramValues = {},
 }: {
   excludeRoutePatterns?: string[];
   paramValues?: ParamValues;
@@ -368,10 +359,7 @@ export function generatePaths({
 
   const pathsWithLangAlternates = processPathsWithLang(pathsWithLang, lang);
 
-  return [
-    ...pathsWithoutLang,
-    ...pathsWithLangAlternates
-  ];
+  return [...pathsWithoutLang, ...pathsWithLangAlternates];
 }
 
 /**
@@ -485,8 +473,8 @@ export function generatePathsWithParamValues(
   // not specify them either in pathObj or as defaults in the sitemap config.
   const defaults = {
     changefreq: defaultChangefreq,
-    priority: defaultPriority,
     lastmod: undefined,
+    priority: defaultPriority,
   };
 
   let pathsWithLang: PathObj[] = [];
@@ -508,15 +496,14 @@ export function generatePathsWithParamValues(
           let i = 0;
 
           return {
-            path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => item.values[i++] || ''),
-            lastmod: item.lastmod,
             changefreq: item.changefreq ?? defaults.changefreq,
+            lastmod: item.lastmod,
+            path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => item.values[i++] || ''),
             priority: item.priority ?? defaults.priority,
           };
         })
       );
-    }
-    else if (Array.isArray(paramValue[0])) {
+    } else if (Array.isArray(paramValue[0])) {
       // Handle when paramValue contains a 2D array of strings (e.g. [['usa', 'new-york'], ['usa',
       // 'california']])
       // - `replace()` replaces every [[foo]] or [foo] with a value from the array.
@@ -528,8 +515,7 @@ export function generatePathsWithParamValues(
           path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || ''),
         };
       });
-    }
-    else {
+    } else {
       // Handle 1D array of strings (e.g. ['hello-world', 'another-post', 'foo-post']) to generate
       // paths using these param values.
       const array1D = paramValue as string[];
@@ -708,8 +694,8 @@ export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig
     for (const x of variations) {
       pathObjs.push({
         ...pathObj, // keep original pathObj properties
-        path: x.path,
         alternates: variations,
+        path: x.path,
       });
     }
 
@@ -757,12 +743,12 @@ export function generateAdditionalPaths({
 }): PathObj[] {
   const defaults = {
     changefreq: defaultChangefreq,
-    priority: defaultPriority,
     lastmod: undefined,
+    priority: defaultPriority,
   };
 
   return additionalPaths.map((path) => ({
     ...defaults,
-    path: path.startsWith("/") ? path : `/${path}`,
+    path: path.startsWith('/') ? path : `/${path}`,
   }));
 }

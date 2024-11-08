@@ -1,5 +1,5 @@
-import fs from 'node:fs';
 import { XMLValidator } from 'fast-xml-parser';
+import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import type { LangConfig, PathObj, SitemapConfig } from './sitemap.js';
@@ -10,7 +10,7 @@ describe('sitemap.ts', () => {
   describe('response()', async () => {
     const config: SitemapConfig = {
       additionalPaths: ['/foo.pdf'],
-      changefreq: 'daily',
+      defaultChangefreq: 'daily',
       excludeRoutePatterns: [
         '.*/dashboard.*',
         '(secret-group)',
@@ -57,7 +57,7 @@ describe('sitemap.ts', () => {
           ['canada', 'toronto'],
         ],
       },
-      priority: 0.7,
+      defaultPriority: 0.7,
       sort: 'alpha', // helps predictability of test data
       lang: {
         default: 'en',
@@ -198,24 +198,24 @@ describe('sitemap.ts', () => {
     });
   });
 
-  describe("generateBody()", () => {
-    it("should generate the expected XML sitemap string with changefreq, priority, and lastmod when exists within pathObj", () => {
+  describe('generateBody()', () => {
+    it('should generate the expected XML sitemap string with changefreq, priority, and lastmod when exists within pathObj', () => {
       const pathObjs: PathObj[] = [
-        { path: "/path1", changefreq: "weekly", priority: 0.5, lastmod: "2024-10-01" },
-        { path: "/path2", changefreq: "daily", priority: 0.6, lastmod: "2024-10-02" },
+        { path: '/path1', changefreq: 'weekly', priority: 0.5, lastmod: '2024-10-01' },
+        { path: '/path2', changefreq: 'daily', priority: 0.6, lastmod: '2024-10-02' },
         {
-          path: "/about",
-          changefreq: "monthly",
+          path: '/about',
+          changefreq: 'monthly',
           priority: 0.4,
-          lastmod: "2024-10-05",
+          lastmod: '2024-10-05',
           alternates: [
-            { lang: "en", path: "/about" },
-            { lang: "de", path: "/de/about" },
-            { lang: "es", path: "/es/about" },
+            { lang: 'en', path: '/about' },
+            { lang: 'de', path: '/de/about' },
+            { lang: 'es', path: '/es/about' },
           ],
         },
       ];
-      const resultXml = sitemap.generateBody("https://example.com", pathObjs);
+      const resultXml = sitemap.generateBody('https://example.com', pathObjs);
 
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -249,20 +249,20 @@ describe('sitemap.ts', () => {
       expect(resultXml).toEqual(expected);
     });
 
-    it("should generate XML sitemap string without changefreq and priority when no defaults are defined", () => {
+    it('should generate XML sitemap string without changefreq and priority when no defaults are defined', () => {
       const pathObjs = [
-        { path: "/path1" },
-        { path: "/path2" },
+        { path: '/path1' },
+        { path: '/path2' },
         {
-          path: "/about",
+          path: '/about',
           alternates: [
-            { lang: "en", path: "/about" },
-            { lang: "de", path: "/de/about" },
-            { lang: "es", path: "/es/about" },
+            { lang: 'en', path: '/about' },
+            { lang: 'de', path: '/de/about' },
+            { lang: 'es', path: '/es/about' },
           ],
         },
       ];
-      const resultXml = sitemap.generateBody("https://example.com", pathObjs, undefined, undefined);
+      const resultXml = sitemap.generateBody('https://example.com', pathObjs, undefined, undefined);
 
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -287,20 +287,20 @@ describe('sitemap.ts', () => {
       expect(resultXml).toEqual(expected);
     });
 
-    it("should return valid XML", () => {
+    it('should return valid XML', () => {
       const paths = [
-        { path: "/path1" },
-        { path: "/path2" },
+        { path: '/path1' },
+        { path: '/path2' },
         {
-          path: "/about",
+          path: '/about',
           alternates: [
-            { lang: "en", path: "/about" },
-            { lang: "de", path: "/de/about" },
-            { lang: "es", path: "/es/about" },
+            { lang: 'en', path: '/about' },
+            { lang: 'de', path: '/de/about' },
+            { lang: 'es', path: '/es/about' },
           ],
         },
       ];
-      const resultXml = sitemap.generateBody("https://example.com", paths);
+      const resultXml = sitemap.generateBody('https://example.com', paths);
       const validationResult = XMLValidator.validate(resultXml);
       expect(validationResult).toBe(true);
     });
@@ -331,7 +331,7 @@ describe('sitemap.ts', () => {
         '/optionals/to-exclude',
 
         // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-        ".*\\[page=integer\\].*",
+        '.*\\[page=integer\\].*',
       ];
 
       // Provide data for parameterized routes
@@ -365,7 +365,13 @@ describe('sitemap.ts', () => {
         default: 'en',
         alternates: ['zh'],
       };
-      const resultPaths = sitemap.generatePaths(excludeRoutePatterns, paramValues, langConfig, undefined, undefined);
+      const resultPaths = sitemap.generatePaths({
+        excludeRoutePatterns,
+        paramValues,
+        lang: langConfig,
+        defaultChangefreq: undefined,
+        defaultPriority: undefined,
+      });
       const expectedPaths = [
         // prettier-ignore
         {
@@ -775,7 +781,7 @@ describe('sitemap.ts', () => {
         '(authenticated)',
 
         // Exclude all routes that contain [page=integer], e.g. `/blog/2`
-        ".*\\[page\\=integer\\].*",
+        '.*\\[page\\=integer\\].*',
       ];
 
       const expectedResult = [
@@ -802,93 +808,93 @@ describe('sitemap.ts', () => {
     });
   });
 
-describe("generatePathsWithParamValues()", () => {
-  const routes = [
-    "/",
-    "/about",
-    "/pricing",
-    "/blog",
-    "/blog/[slug]",
-    "/blog/tag/[tag]",
-    "/campsites/[country]/[state]",
-    "/optionals/[[optional]]",
-  ];
-  const paramValues = {
-    "/optionals/[[optional]]": ["optional-1", "optional-2"],
-
-    // 1D array
-    "/blog/[slug]": ["hello-world", "another-post"],
-    // 2D with only 1 element each
-    "/blog/tag/[tag]": [["red"], ["blue"], ["green"]],
-    // 2D array
-    "/campsites/[country]/[state]": [
-      ["usa", "new-york"],
-      ["usa", "california"],
-      ["canada", "toronto"],
-    ],
-  };
-
-  it("should build parameterized paths and remove the original tokenized route(s)", () => {
-    const expectedPathsWithoutLang = [
-      { path: "/" },
-      { path: "/about" },
-      { path: "/pricing" },
-      { path: "/blog" },
-      { path: "/optionals/optional-1" },
-      { path: "/optionals/optional-2" },
-      { path: "/blog/hello-world" },
-      { path: "/blog/another-post" },
-      { path: "/blog/tag/red" },
-      { path: "/blog/tag/blue" },
-      { path: "/blog/tag/green" },
-      { path: "/campsites/usa/new-york" },
-      { path: "/campsites/usa/california" },
-      { path: "/campsites/canada/toronto" },
+  describe('generatePathsWithParamValues()', () => {
+    const routes = [
+      '/',
+      '/about',
+      '/pricing',
+      '/blog',
+      '/blog/[slug]',
+      '/blog/tag/[tag]',
+      '/campsites/[country]/[state]',
+      '/optionals/[[optional]]',
     ];
+    const paramValues = {
+      '/optionals/[[optional]]': ['optional-1', 'optional-2'],
 
-    const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
-      routes,
-      paramValues,
-      undefined,
-      undefined
-    );
-    expect(pathsWithoutLang).toEqual(expectedPathsWithoutLang);
-    expect(pathsWithLang).toEqual([]);
-  });
-
-  it("should return routes unchanged, when no tokenized routes exist & given no paramValues", () => {
-    const routes = ["/", "/about", "/pricing", "/blog"];
-    const paramValues = {};
-
-    const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
-      routes,
-      paramValues,
-      undefined,
-      undefined
-    );
-    expect(pathsWithLang).toEqual([]);
-    expect(pathsWithoutLang).toEqual(routes.map((path) => ({ path })));
-  });
-
-  it("should throw error, when paramValues contains data for a route that no longer exists", () => {
-    const routes = ["/", "/about", "/pricing", "/blog"];
-
-    const result = () => {
-      sitemap.generatePathsWithParamValues(routes, paramValues, undefined, undefined);
+      // 1D array
+      '/blog/[slug]': ['hello-world', 'another-post'],
+      // 2D with only 1 element each
+      '/blog/tag/[tag]': [['red'], ['blue'], ['green']],
+      // 2D array
+      '/campsites/[country]/[state]': [
+        ['usa', 'new-york'],
+        ['usa', 'california'],
+        ['canada', 'toronto'],
+      ],
     };
-    expect(result).toThrow(Error);
-  });
 
-  it("should throw error, when tokenized routes exist that are not given data via paramValues", () => {
-    const routes = ["/", "/about", "/blog", "/products/[product]"];
-    const paramValues = {};
+    it('should build parameterized paths and remove the original tokenized route(s)', () => {
+      const expectedPathsWithoutLang = [
+        { path: '/' },
+        { path: '/about' },
+        { path: '/pricing' },
+        { path: '/blog' },
+        { path: '/optionals/optional-1' },
+        { path: '/optionals/optional-2' },
+        { path: '/blog/hello-world' },
+        { path: '/blog/another-post' },
+        { path: '/blog/tag/red' },
+        { path: '/blog/tag/blue' },
+        { path: '/blog/tag/green' },
+        { path: '/campsites/usa/new-york' },
+        { path: '/campsites/usa/california' },
+        { path: '/campsites/canada/toronto' },
+      ];
 
-    const result = () => {
-      sitemap.generatePathsWithParamValues(routes, paramValues, undefined, undefined);
-    };
-    expect(result).toThrow(Error);
+      const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues,
+        undefined,
+        undefined
+      );
+      expect(pathsWithoutLang).toEqual(expectedPathsWithoutLang);
+      expect(pathsWithLang).toEqual([]);
+    });
+
+    it('should return routes unchanged, when no tokenized routes exist & given no paramValues', () => {
+      const routes = ['/', '/about', '/pricing', '/blog'];
+      const paramValues = {};
+
+      const { pathsWithLang, pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues,
+        undefined,
+        undefined
+      );
+      expect(pathsWithLang).toEqual([]);
+      expect(pathsWithoutLang).toEqual(routes.map((path) => ({ path })));
+    });
+
+    it('should throw error, when paramValues contains data for a route that no longer exists', () => {
+      const routes = ['/', '/about', '/pricing', '/blog'];
+
+      const result = () => {
+        sitemap.generatePathsWithParamValues(routes, paramValues, undefined, undefined);
+      };
+      expect(result).toThrow(Error);
+    });
+
+    it('should throw error, when tokenized routes exist that are not given data via paramValues', () => {
+      const routes = ['/', '/about', '/blog', '/products/[product]'];
+      const paramValues = {};
+
+      const result = () => {
+        sitemap.generatePathsWithParamValues(routes, paramValues, undefined, undefined);
+      };
+      expect(result).toThrow(Error);
+    });
   });
-});
 
   describe('generateSitemapIndex()', () => {
     it('should generate sitemap index with correct number of pages', () => {
@@ -1061,7 +1067,7 @@ describe("generatePathsWithParamValues()", () => {
     const paths = [
       { path: '/[[lang]]' },
       { path: '/[[lang]]/about' },
-      { path: '/[[lang]]/foo/something' }
+      { path: '/[[lang]]/foo/something' },
     ];
     const langConfig: LangConfig = {
       default: 'en',
@@ -1214,15 +1220,17 @@ describe("generatePathsWithParamValues()", () => {
     it('should normalize additionalPaths to ensure each starts with a forward slash', () => {
       const additionalPaths = ['/foo', 'bar', '/baz'];
       const expected = [
-        { path: "/foo", lastmod: undefined, changefreq: 'monthly', priority: 0.6 },
-        { path: "/bar", lastmod: undefined, changefreq: 'monthly', priority: 0.6 },
-        { path: "/baz", lastmod: undefined, changefreq: 'monthly', priority: 0.6 }
+        { path: '/foo', lastmod: undefined, changefreq: 'monthly', priority: 0.6 },
+        { path: '/bar', lastmod: undefined, changefreq: 'monthly', priority: 0.6 },
+        { path: '/baz', lastmod: undefined, changefreq: 'monthly', priority: 0.6 },
       ];
-      expect(sitemap.generateAdditionalPaths({
-        additionalPaths,
-        defaultChangefreq: 'monthly',
-        defaultPriority: 0.6,
-      })).toEqual(expected);
+      expect(
+        sitemap.generateAdditionalPaths({
+          additionalPaths,
+          defaultChangefreq: 'monthly',
+          defaultPriority: 0.6,
+        })
+      ).toEqual(expected);
     });
   });
 });
