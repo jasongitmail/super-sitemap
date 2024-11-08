@@ -46,26 +46,17 @@
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L142):
-  `sitemap.response({ headers: {'cache-control: 'max-age=0, s-maxage=60'}, ...})`.
+  `sitemap.response({ headers: {'cache-control: 'max-age=0, s-maxage=60'} })`.
 - 💡 Google, and other modern search engines, [ignore `priority` and
   `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
   and use their own heuristics to determine when to crawl pages on your site. As
   such, these properties are not included by default to minimize KB size and
   enable faster crawling. Optionally, you can enable them like so:
-  `sitemap.response({ changefreq:'daily', priority: 0.7, ...})`.
+  `sitemap.response({ changefreq: 'daily', priority: 0.7 })`.
 - 🗺️ [Sitemap indexes](#sitemap-index)
 - 🌎 [i18n](#i18n)
 - 🧪 Well tested.
 - 🫶 Built with TypeScript.
-
-## Limitations
-
-- Excludes `lastmod` from each item, but a future version could include it for
-  parameterized data items. Obviously, `lastmod` would be indeterminate for
-  non-parameterized routes, such as `/about`. Due to this, Google would likely
-  ignore `lastmod` anyway since they only respect if it's ["consistently and
-  verifiably
-  accurate"](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#additional-notes-about-xml-sitemaps).
 
 ## Installation
 
@@ -148,6 +139,20 @@ export const GET = async () => {
         ['usa', 'california'],
         ['canada', 'toronto'],
       ],
+      '/athlete-rankings/[country]/[state]': [
+        {
+          values: ['usa', 'new-york'], // required
+          lastmod: '2025-01-01', // optional
+          changefreq: 'daily',   // optional
+          priority: 0.5,         // optional
+        },
+        {
+          values: ['usa', 'california'],
+          lastmod: '2025-01-01',
+          changefreq: 'daily',
+          priority: 0.5,
+        },
+      ],
     },
     headers: {
       'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
@@ -200,6 +205,20 @@ export const GET: RequestHandler = async () => {
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto'],
+      ],
+      '/athlete-rankings/[country]/[state]': [
+        {
+          values: ['usa', 'new-york'], // required
+          lastmod: '2025-01-01', // optional
+          changefreq: 'daily',   // optional
+          priority: 0.5,         // optional
+        },
+        {
+          values: ['usa', 'california'],
+          lastmod: '2025-01-01',
+          changefreq: 'daily',
+          priority: 0.5,
+        },
       ],
     },
     headers: {
@@ -283,6 +302,42 @@ paginated URLs automatically.
 </sitemapindex>
 ```
 
+## Params Values
+
+When specifying values for the params of your parameterized routes,
+you can use any of the following types:
+`string[]`, `string[][]`, or `ParamValue[]`.
+
+Example:
+
+  ```ts
+  paramValues: {
+    '/blog/[slug]': ['hello-world', 'another-post']
+    '/campsites/[country]/[state]': [
+      ['usa', 'colorado'],
+      ['canada', 'toronto']
+    ],
+    '/athlete-rankings/[country]/[state]': [
+      {
+        values: ['usa', 'new-york'], // required
+        lastmod: '2025-01-01', // optional
+        changefreq: 'daily', // optional
+        priority: 0.5, // optional
+      },
+      {
+        values: ['usa', 'california'], // required
+        lastmod: '2025-01-01', // optional
+        changefreq: 'daily', // optional
+        priority: 0.5, // optional
+      },
+    ],
+  },
+  ```
+
+If any of the optional properties of `ParamValue` are not provided, the sitemap will use the default
+value. If a default value is not defined, the property will be excluded from that sitemap entry.
+
+
 ## Optional Params
 
 SvelteKit allows you to create a route with one or more optional parameters like this:
@@ -337,7 +392,6 @@ The `processPaths()` callback is powerful, but rarely needed.
 It allows you to arbitrarily process the path objects for your site before they become XML, with the
 only requirement that your callback function must return the expected type of
 [`PathObj[]`](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L34).
-
 
 This can be useful to do something bespoke that would not otherwise be possible. For example:
 
@@ -829,6 +883,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `0.15.1` - Adds support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` where each `ParamValueObj` contains `values` (required) and optionally `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).
 - `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.

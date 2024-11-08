@@ -1,29 +1,27 @@
 export type Changefreq = 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly';
+
+/* eslint-disable perfectionist/sort-object-types */
+export type ParamValue = {
+  values: string[];
+  lastmod?: string;
+  priority?: Priority;
+  changefreq?: Changefreq;
+};
+
+/* eslint-disable perfectionist/sort-object-types */
 export type ParamValues = Record<
   string,
   | never
   | string[]
   | string[][]
-  | {
-      values: string[];
-      lastmod?: string;
-      changefreq?: Changefreq;
-      priority?: Priority;
-    }[]
+  | ParamValue[]
 >;
+
 export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 
 /* eslint-disable perfectionist/sort-object-types */
 export type SitemapConfig = {
   additionalPaths?: [] | string[];
-
-  /**
-   * Optional. Default changefreq, when not specified within a route's `paramValues` objects.
-   * Omitting from sitemap config will omit changefreq from all sitemap entries except
-   * those where you set `changefreq` property with a route's `paramValues` objects.
-   */
-  changefreq?: Changefreq;
-
   excludeRoutePatterns?: [] | string[];
   headers?: Record<string, string>;
   lang?: {
@@ -38,8 +36,16 @@ export type SitemapConfig = {
    * Parameter values for dynamic routes, where the values can be:
    * - `string[]`
    * - `string[][]`
+   * - `ParamValueObj[]`
    */
   paramValues?: ParamValues;
+
+  /**
+   * Optional. Default changefreq, when not specified within a route's `paramValues` objects.
+   * Omitting from sitemap config will omit changefreq from all sitemap entries except
+   * those where you set `changefreq` property with a route's `paramValues` objects.
+   */
+  changefreq?: Changefreq;
 
   /**
    * Optional. Default priority, when not specified within a route's `paramValues` objects.
@@ -64,7 +70,7 @@ export type Alternate = {
 
 export type PathObj = {
   path: string;
-  lastmod?: string;
+  lastmod?: string; // ISO 8601 datetime
   changefreq?: Changefreq;
   priority?: Priority;
   alternates?: Alternate[];
@@ -108,7 +114,21 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  *       ['usa', 'new-york'],
  *       ['usa', 'california'],
  *       ['canada', 'toronto']
- *     ]
+ *     ],
+ *     '/athlete-rankings/[country]/[state]': [
+ *       {
+ *         values: ['usa', 'new-york'],
+ *         lastmod: '2025-01-01',
+ *         changefreq: 'daily',
+ *         priority: 0.5,
+ *       },
+ *       {
+ *         values: ['usa', 'california'],
+ *         lastmod: '2025-01-01',
+ *         changefreq: 'daily',
+ *         priority: 0.5,
+ *       },
+ *     ],
  *   },
  *   additionalPaths: ['/foo.pdf'],
  *   headers: {
@@ -140,8 +160,12 @@ export async function response({
   }
 
   let paths = [
-    ...generatePaths(excludeRoutePatterns, paramValues, lang),
-    ...normalizeAdditionalPaths(additionalPaths),
+    ...generatePaths(excludeRoutePatterns, paramValues, lang, changefreq, priority),
+    ...generateAdditionalPaths({
+      additionalPaths,
+      defaultChangefreq: changefreq,
+      defaultPriority: priority,
+    }),
   ];
 
   if (processPaths) {
@@ -160,7 +184,7 @@ export async function response({
   if (!page) {
     // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without page.
     if (paths.length <= maxPerPage) {
-      body = generateBody(origin, paths, changefreq, priority);
+      body = generateBody(origin, paths);
     } else {
       body = generateSitemapIndex(origin, totalPages);
     }
@@ -210,37 +234,31 @@ export async function response({
  *                 because "/" is the index page.
  * @param pathObjs - Array of path objects to include in the sitemap. Each path within it should
  *                 start with a '/'; but if not, it will be added.
- * @param defaultChangefreq - The sitemap wide default changefreq value. Optional.
- * @param defaultPriority - The sitemap wide default priority value. Optional.
  * @returns The generated XML sitemap.
  */
 export function generateBody(
   origin: string,
-  pathObjs: PathObj[],
-  defaultChangefreq: SitemapConfig['changefreq'],
-  defaultPriority: SitemapConfig['priority']
+  pathObjs: PathObj[]
 ): string {
   const urlElements = pathObjs
     .map((pathObj) => {
-      // Set to 1.) value within this pathObj if it exists, 2.) default value if that exists or
-      // undefined. A sitemap-wide default does not & should not exist for `lastmod`.
-      const changefreq = pathObj.changefreq || defaultChangefreq;
-      const lastmod = pathObj.lastmod;
-      const priority = pathObj.priority || defaultPriority;
+      const { path, lastmod, changefreq, priority, alternates } = pathObj;
 
       let url = '\n  <url>\n';
-      url += `    <loc>${origin}${pathObj.path}</loc>\n`;
-      if (changefreq) url += `    <changefreq>${changefreq}</changefreq>\n`;
-      if (lastmod) url += `    <lastmod>${lastmod}</lastmod>\n`;
-      if (priority) url += `    <priority>${priority}</priority>\n`;
-      if (pathObj.alternates) {
-        url += pathObj.alternates
+      url += `    <loc>${origin}${path}</loc>\n`;
+      url += lastmod    ? `    <lastmod>${lastmod}</lastmod>\n` : '';
+      url += changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '';
+      url += priority   ? `    <priority>${priority}</priority>\n` : '';
+
+      if (alternates) {
+        url += alternates
           .map(
             ({ lang, path }) =>
               `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />\n`
           )
           .join('');
       }
+
       url += '  </url>';
 
       return url;
@@ -294,7 +312,9 @@ export function generateSitemapIndex(origin: string, pages: number): string {
 export function generatePaths(
   excludeRoutePatterns: string[] = [],
   paramValues: ParamValues = {},
-  lang: LangConfig = { alternates: [], default: '' }
+  lang: LangConfig = { alternates: [], default: '' },
+  defaultChangefreq: SitemapConfig['changefreq'],
+  defaultPriority: SitemapConfig['priority']
 ): PathObj[] {
   // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
   // - See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
@@ -303,15 +323,14 @@ export function generatePaths(
   const svelteRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
   const mdRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.md'));
   const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
-  let routes = [...svelteRoutes, ...mdRoutes, ...svxRoutes];
+  const allRoutes = [...svelteRoutes, ...mdRoutes, ...svxRoutes];
 
   // Validation: if dev has one or more routes that contain a lang parameter,
   // optional or required, require that they have defined the `lang.default` and
   // `lang.alternates` in their config or throw an error to cause a 500 error
   // for visibility.
   let routesContainLangParam = false;
-
-  for (const route of routes) {
+  for (const route of allRoutes) {
     if (route.match(langRegex)?.length) {
       routesContainLangParam = true;
       break;
@@ -325,15 +344,21 @@ export function generatePaths(
 
   // Notice this means devs MUST include `[[lang]]/` within any route strings
   // used within `excludeRoutePatterns` if that's part of their route.
-  routes = filterRoutes(routes, excludeRoutePatterns);
+  const filteredRoutes = filterRoutes(allRoutes, excludeRoutePatterns);
+  const processedRoutes = processRoutesForOptionalParams(filteredRoutes);
 
-  routes = processRoutesForOptionalParams(routes);
+  const { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(
+    processedRoutes,
+    paramValues,
+    defaultChangefreq,
+    defaultPriority
+  );
 
-  const { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(routes, paramValues);
+  const pathsWithLangAlternates = processPathsWithLang(pathsWithLang, lang);
 
   return [
-    ...pathsWithoutLang.map((path) => ({ path } as PathObj)),
-    ...(pathsWithLang.length ? generatePathsWithLang(pathsWithLang, lang) : []),
+    ...pathsWithoutLang,
+    ...pathsWithLangAlternates
   ];
 }
 
@@ -402,8 +427,23 @@ export function filterRoutes(routes: string[], excludeRoutePatterns: string[]): 
  *                          ['usa','miami'],
  *                          ['usa','new-york'],
  *                          ['canada','toronto']
+ *                        ],
+ *                        '/athlete-rankings/[country]/[state]':[
+ *                          {
+ *                            params: ['usa', 'new-york'],
+ *                            lastmod: '2024-01-01',
+ *                            changefreq: 'daily',
+ *                            priority: 0.5,
+ *                          },
+ *                          {
+ *                            params: ['usa', 'california'],
+ *                            lastmod: '2024-01-01',
+ *                            changefreq: 'daily',
+ *                            priority: 0.5,
+ *                          },
  *                        ]
  *                      }
+ *
  *
  * @returns A tuple where the first element is an array of routes and the second
  *          element is an array of generated parameterized paths.
@@ -415,77 +455,107 @@ export function filterRoutes(routes: string[], excludeRoutePatterns: string[]): 
  */
 export function generatePathsWithParamValues(
   routes: string[],
-  paramValues: ParamValues
-): { pathsWithLang: string[]; pathsWithoutLang: string[] } {
-  // check for superfluous paramValues
+  paramValues: ParamValues,
+  defaultChangefreq: SitemapConfig['changefreq'],
+  defaultPriority: SitemapConfig['priority']
+): { pathsWithLang: PathObj[]; pathsWithoutLang: PathObj[] } {
+  // Throw if paramValues contains keys that don't exist within src/routes/.
   for (const paramValueKey in paramValues) {
     if (!routes.includes(paramValueKey)) {
       throw new Error(
-        `Sitemap: paramValues were provided for a route that does not exists within src/routes/: '${paramValueKey}'. Remove this property from your paramValues.`
+        `Sitemap: paramValues were provided for a route that does not exist within src/routes/: '${paramValueKey}'. Remove this property from your paramValues.`
       );
     }
   }
 
-  let pathsWithLang = [];
-  let pathsWithoutLang = [];
+  // const defaults: Partial<Pick<PathObj, "changefreq" | "priority">> = {};
+  // if (defaultChangefreq) defaults.changefreq = defaultChangefreq;
+  // if (defaultPriority) defaults.priority = defaultPriority;
+  const defaults = {
+    changefreq: defaultChangefreq,
+    priority: defaultPriority,
+    lastmod: undefined,
+  };
+
+  let pathsWithLang: PathObj[] = [];
+  let pathsWithoutLang: PathObj[] = [];
 
   for (const paramValuesKey in paramValues) {
     const hasLang = langRegex.exec(paramValuesKey);
     const routeSansLang = paramValuesKey.replace(langRegex, '');
+    const paramValue = paramValues[paramValuesKey];
 
-    const paths = [];
+    let pathObjs: PathObj[] = [];
 
-    if (Array.isArray(paramValues[paramValuesKey][0])) {
-      // First, determine if this is a 1D array, which we allow as a user convenience.
-      // If the first item is an array, then it's a 2D array.
-      // 2D array of one or more elements each.
-      // - e.g. [['usa','miami'], ['usa','new-york'], ['canada, toronto']]
-      // - e.g. [['hello-world'], ['another-post'], ['post3']] (also valid to offer flexibility)
-      paths.push(
-        // Given all data for this route, loop over and generate a path for each.
-        // `paramValues[route]` is all data for all paths for this route.
-        ...paramValues[paramValuesKey].map((data) => {
+    // Handle when paramValue contains ParamValueObj[]
+    if (typeof paramValue[0] === 'object' && !Array.isArray(paramValue[0])) {
+      const objArray = paramValue as ParamValue[];
+
+      pathObjs.push(
+        ...objArray.map((item) => {
           let i = 0;
-          // Replace every [[foo]] or [foo] with a value from the array.
-          return routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || '');
+
+          // `changefreq`, `lastmod`, & `priority` will be undefined intentionally if user does not
+          // specify them in pathObj or default in the sitemap config.
+          return {
+            path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => item.values[i++] || ''),
+            lastmod: item.lastmod,
+            changefreq: item.changefreq ?? defaults.changefreq,
+            priority: item.priority ?? defaults.priority,
+          };
         })
       );
-    } else {
-      // 1D array of one or more elements.
-      // - e.g. ['hello-world', 'another-post', 'post3']
-      // Generate paths using data from paramValues–e.g. `/blog/hello-world`
-      paths.push(
-        // @ts-expect-error for map, we know this is a 1D array
-        ...paramValues[paramValuesKey].map((value: string) =>
-          routeSansLang.replace(/\[.*\]/, value)
-        )
-      );
+    }
+    else if (Array.isArray(paramValue[0])) {
+      // Handle when paramValue contains a 2D array of strings (e.g. [['usa', 'new-york'], ['usa',
+      // 'california']])
+      // - `replace()` replaces every [[foo]] or [foo] with a value from the array.
+      const array2D = paramValue as string[][];
+      pathObjs = array2D.map((data) => {
+        let i = 0;
+        return {
+          ...defaults,
+          path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || ''),
+        };
+      });
+    }
+    else {
+      // Handle 1D array of strings (e.g. ['hello-world', 'another-post', 'foo-post']) to generate
+      // paths using these param values.
+      const array1D = paramValue as string[];
+      pathObjs = array1D.map((paramValue) => ({
+        ...defaults,
+        path: routeSansLang.replace(/\[.*\]/, paramValue),
+      }));
     }
 
+    // Process path objects to add lang onto each path, when applicable.
     if (hasLang) {
       const lang = hasLang?.[0];
       pathsWithLang.push(
-        ...paths.map((path) => path.slice(0, hasLang?.index) + lang + path.slice(hasLang?.index))
+        ...pathObjs.map((pathObj) => ({
+          ...pathObj,
+          path: pathObj.path.slice(0, hasLang?.index) + lang + pathObj.path.slice(hasLang?.index),
+        }))
       );
     } else {
-      pathsWithoutLang.push(...paths);
+      pathsWithoutLang.push(...pathObjs);
     }
 
     // Remove this from routes
     routes.splice(routes.indexOf(paramValuesKey), 1);
   }
 
-  // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). Will not have any
-  // parameters other than exactly [[lang]].
-  const staticWithLang = [];
-  const staticWithoutLang = [];
+  // Handle "static" routes (i.e. /foo, /[[lang]]/bar, etc). These will not have any parameters
+  // other than exactly `[[lang]]`.
+  const staticWithLang: PathObj[] = [];
+  const staticWithoutLang: PathObj[] = [];
   for (const route of routes) {
     const hasLang = route.match(langRegex);
     if (hasLang) {
-      // "or" needed because otherwise root becomes empty string
-      staticWithLang.push(route);
+      staticWithLang.push({ ...defaults, path: route });
     } else {
-      staticWithoutLang.push(route);
+      staticWithoutLang.push({ ...defaults, path: route });
     }
   }
 
@@ -512,7 +582,7 @@ export function generatePathsWithParamValues(
 
 /**
  * Given all routes, return a new array of routes that includes all versions of
- * any route that contains one or more optional params. Only process routes that
+ * each route that contains one or more optional params. Only process routes that
  * contain an optional param _other than_ `[[lang]]`.
  *
  * @private
@@ -521,13 +591,13 @@ export function generatePathsWithParamValues(
  * params.
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
-  routes = routes.flatMap((route) => {
+  const processedRoutes = routes.flatMap((route) => {
     const routeWithoutLangIfAny = route.replace(langRegex, '');
     return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
   });
 
   // Ensure no duplicates exist after processing
-  return Array.from(new Set(routes));
+  return Array.from(new Set(processedRoutes));
 }
 
 /**
@@ -541,13 +611,10 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
  * @param route - Route to process. E.g. `/foo/[[paramA]]`
  * @returns An array of routes. E.g. [`/foo`, `/foo/[[paramA]]`]
  */
-export function processOptionalParams(route: string): string[] {
+export function processOptionalParams(originalRoute: string): string[] {
   // Remove lang to simplify
-  const hasLang = langRegex.exec(route);
-
-  if (hasLang) {
-    route = route.replace(langRegex, '');
-  }
+  const hasLang = langRegex.exec(originalRoute);
+  const route = hasLang ? originalRoute.replace(langRegex, '') : originalRoute;
 
   let results: string[] = [];
 
@@ -566,7 +633,7 @@ export function processOptionalParams(route: string): string[] {
     // start a new potential result
     if (!results[j]) results[j] = results[j - 1];
 
-    results[j] += '/' + segment;
+    results[j] = `${results[j]}/${segment}`;
 
     if (segment.startsWith('[[')) {
       j++;
@@ -577,7 +644,7 @@ export function processOptionalParams(route: string): string[] {
   if (hasLang) {
     const lang = hasLang?.[0];
     results = results.map(
-      (result) => result.slice(0, hasLang?.index) + lang + result.slice(hasLang?.index)
+      (result) => `${result.slice(0, hasLang?.index)}${lang}${result.slice(hasLang?.index)}`
     );
   }
 
@@ -589,15 +656,16 @@ export function processOptionalParams(route: string): string[] {
 }
 
 /**
- * Generate path objects with language variations.
- * @param paths - An array of paths.
- * @param langConfig - The language configuration.
- * @returns An array of path objects.
+ * Processes path objects that contain `[[lang]]` or `[lang]` to 1.) generate one PathObj for each
+ * language in the lang config, and 2.) to add an `alternates` property to each such PathObj.
  */
-export function generatePathsWithLang(paths: string[], langConfig: LangConfig): PathObj[] {
-  const allPathObjs = [];
+export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig): PathObj[] {
+  if (!pathObjs.length) return [];
 
-  for (const path of paths) {
+  const processedPathObjs = [];
+
+  for (const pathObj of pathObjs) {
+    const path = pathObj.path;
     // The Sitemap standard specifies for hreflang elements to include 1.) the
     // current path itself, and 2.) all of its alternates. So all versions of
     // this path will be given the same "variations" array that will be used to
@@ -610,10 +678,10 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
     //   not contain the language in the path but all other variations will.
     const hasLangRequired = /\/?\[lang(=[a-z]+)?\](?!\])/.exec(path);
     const _path = hasLangRequired
-      ? path.replace(langRegex, '/' + langConfig.default)
+      ? path.replace(langRegex, `/${langConfig.default}`)
       : path.replace(langRegex, '') || '/';
 
-    // Add the default path (e.g. '/about', or `/es/about` if lang is required).
+    // Add the default path (e.g. '/about', or `/es/about` when lang is required).
     const variations = [
       {
         lang: langConfig.default,
@@ -629,33 +697,27 @@ export function generatePathsWithLang(paths: string[], langConfig: LangConfig): 
       });
     }
 
-    // Generate all path objects. I.e. an array containing 1.) default path +
-    // the alternates array, 2.) every other path variation + the alternates
-    // array.
+    // Generate a PathObj for each variation.
     const pathObjs = [];
     for (const x of variations) {
       pathObjs.push({
-        alternates: variations,
+        ...pathObj, // keep original pathObj properties
         path: x.path,
+        alternates: variations,
       });
     }
 
-    allPathObjs.push(...pathObjs);
+    processedPathObjs.push(...pathObjs);
   }
 
-  return allPathObjs;
+  return processedPathObjs;
 }
 
 /**
- * Removes duplicate paths from an array of PathObj, keeping the last occurrence
- * of any duplicates.
+ * Removes duplicate paths from an array of PathObj, keeping the last occurrence of any duplicates.
  *
- * Duplicate pathObjs could occur due to a developer using additionalPaths or
- * processPaths() and not properly excluding a pre-existing path.
- *
- * @param pathObjs - An array of PathObj to deduplicate.
- * @returns A new array of PathObj with duplicates removed, retaining the last
- * occurrence of any duplicates.
+ * - Duplicate pathObjs could occur due to a developer using additionalPaths or processPaths() and
+ *   not properly excluding a pre-existing path.
  */
 export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
   const uniquePaths = new Map<string, PathObj>();
@@ -668,17 +730,29 @@ export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
 }
 
 /**
- * Normalizes the user-provided `additionalPaths` to ensure each starts with a
- * forward slash and then returns a `PathObj[]` type.
+ * Converts the user-provided `additionalPaths` into `PathObj[]` type, ensuring each path starts
+ * with a forward slash and each PathObj contains default changefreq and priority.
  *
- * Note: `additionalPaths` are never translated based on the lang config because
- * they could be something like a PDF within the user's static dir.
- *
- * @param additionalPaths - An array of string paths to be normalized
- * @returns An array of PathObj
+ * - `additionalPaths` are never translated based on the lang config because they could be something
+ *   like a PDF within the user's static dir.
  */
-export function normalizeAdditionalPaths(additionalPaths: string[]): PathObj[] {
+export function generateAdditionalPaths({
+  additionalPaths,
+  defaultChangefreq,
+  defaultPriority,
+}: {
+  additionalPaths: string[];
+  defaultChangefreq: SitemapConfig['changefreq'];
+  defaultPriority: SitemapConfig['priority'];
+}): PathObj[] {
+  const defaults = {
+    changefreq: defaultChangefreq,
+    priority: defaultPriority,
+    lastmod: undefined,
+  };
+
   return additionalPaths.map((path) => ({
-    path: path.startsWith('/') ? path : `/${path}`,
+    ...defaults,
+    path: path.startsWith("/") ? path : `/${path}`,
   }));
 }
