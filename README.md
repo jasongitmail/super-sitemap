@@ -14,6 +14,8 @@
   </a>
 </div>
 
+**<h3>v1.0 is released! 🎉🚀</h3> The only breaking changes from v0.15.0 are to 1.) rename `priority` to `defaultPriority` and 2.) rename `changefreq` to `defaultChangefreq` in your sitemap config. See [changelog](#changelog).**
+
 ## Table of Contents
 
 - [Features](#features)
@@ -899,7 +901,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
-- `0.15.1` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-route specification of `lastmod`, `changefreq`, and `priority`.
+- `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-route specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).
 - `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.
