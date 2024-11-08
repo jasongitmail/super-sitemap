@@ -340,10 +340,10 @@ paramValues: {
       priority: 0.5, // optional
     },
     {
-      values: ['usa', 'california'], // required
-      lastmod: '2025-01-01T01:16:52Z', // optional
-      changefreq: 'daily', // optional
-      priority: 0.5, // optional
+      values: ['usa', 'california'],
+      lastmod: '2025-01-01T01:16:52Z',
+      changefreq: 'daily',
+      priority: 0.5,
     },
   ],
 },
