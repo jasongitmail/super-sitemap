@@ -3,7 +3,7 @@ import { sampledPaths, sampledUrls } from '$lib/sampled'; // Import from 'super-
 export async function load() {
   const meta = {
     description: `About this site`,
-    title: `About`
+    title: `About`,
   };
 
   console.log('sampledUrls', await sampledUrls('http://localhost:5173/sitemap.xml'));

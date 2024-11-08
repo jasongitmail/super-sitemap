@@ -1,7 +1,7 @@
 export async function load() {
   const meta = {
     description: `Campsites`,
-    title: `Campsites`
+    title: `Campsites`,
   };
 
   return { meta };

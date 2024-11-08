@@ -11,7 +11,7 @@ const sitemap3 = fs.readFileSync('./src/lib/fixtures/expected-sitemap-index-subp
 export const handlers = [
   http.get('http://localhost:4173/sitemap1.xml', () => new Response(sitemap1)),
   http.get('http://localhost:4173/sitemap2.xml', () => new Response(sitemap2)),
-  http.get('http://localhost:4173/sitemap3.xml', () => new Response(sitemap3))
+  http.get('http://localhost:4173/sitemap3.xml', () => new Response(sitemap3)),
 ];
 
 export const server = setupServer(...handlers);

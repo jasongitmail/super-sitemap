@@ -132,7 +132,7 @@ export const GET = async () => {
       '.*\\(authenticated\\).*', // i.e. routes within a group
     ],
     paramValues: {
-        // paramValues can be a 1D array of strings
+      // paramValues can be a 1D array of strings
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
       '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
 
@@ -146,10 +146,10 @@ export const GET = async () => {
       // Or an array of ParamValue objects
       '/athlete-rankings/[country]/[state]': [
         {
-          values: ['usa', 'new-york'],     // required
+          values: ['usa', 'new-york'], // required
           lastmod: '2025-01-01T00:00:00Z', // optional
-          changefreq: 'daily',             // optional
-          priority: 0.5,                   // optional
+          changefreq: 'daily', // optional
+          priority: 0.5, // optional
         },
         {
           values: ['usa', 'california'],
@@ -218,10 +218,10 @@ export const GET: RequestHandler = async () => {
       // Or an array of ParamValue objects
       '/athlete-rankings/[country]/[state]': [
         {
-          values: ['usa', 'new-york'],     // required
+          values: ['usa', 'new-york'], // required
           lastmod: '2025-01-01T00:00:00Z', // optional
-          changefreq: 'daily',             // optional
-          priority: 0.5,                   // optional
+          changefreq: 'daily', // optional
+          priority: 0.5, // optional
         },
         {
           values: ['usa', 'california'],
@@ -323,33 +323,32 @@ you can use any of the following types:
 
 Example:
 
-  ```ts
-  paramValues: {
-    '/blog/[slug]': ['hello-world', 'another-post']
-    '/campsites/[country]/[state]': [
-      ['usa', 'colorado'],
-      ['canada', 'toronto']
-    ],
-    '/athlete-rankings/[country]/[state]': [
-      {
-        values: ['usa', 'new-york'], // required
-        lastmod: '2025-01-01T00:00:00Z', // optional
-        changefreq: 'daily', // optional
-        priority: 0.5, // optional
-      },
-      {
-        values: ['usa', 'california'], // required
-        lastmod: '2025-01-01T01:16:52Z', // optional
-        changefreq: 'daily', // optional
-        priority: 0.5, // optional
-      },
-    ],
-  },
-  ```
+```ts
+paramValues: {
+  '/blog/[slug]': ['hello-world', 'another-post']
+  '/campsites/[country]/[state]': [
+    ['usa', 'colorado'],
+    ['canada', 'toronto']
+  ],
+  '/athlete-rankings/[country]/[state]': [
+    {
+      values: ['usa', 'new-york'], // required
+      lastmod: '2025-01-01T00:00:00Z', // optional
+      changefreq: 'daily', // optional
+      priority: 0.5, // optional
+    },
+    {
+      values: ['usa', 'california'], // required
+      lastmod: '2025-01-01T01:16:52Z', // optional
+      changefreq: 'daily', // optional
+      priority: 0.5, // optional
+    },
+  ],
+},
+```
 
 If any of the optional properties of `ParamValue` are not provided, the sitemap will use the default
 value. If a default value is not defined, the property will be excluded from that sitemap entry.
-
 
 ## Optional Params
 
