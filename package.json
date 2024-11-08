@@ -16,7 +16,8 @@
     "seo",
     "sitemap.xml",
     "sitemap generator",
-    "robots.txt"
+    "robots.txt",
+    "supersitemap"
   ],
   "scripts": {
     "dev": "vite dev",
