@@ -468,9 +468,9 @@ export function generatePathsWithParamValues(
     }
   }
 
-  // const defaults: Partial<Pick<PathObj, "changefreq" | "priority">> = {};
-  // if (defaultChangefreq) defaults.changefreq = defaultChangefreq;
-  // if (defaultPriority) defaults.priority = defaultPriority;
+  // `changefreq`, `lastmod`, & `priority` are intentionally left with undefined values (for
+  // consistency of property name within the `processPaths() callback, if used) when the dev does
+  // not specify them either in pathObj or as defaults in the sitemap config.
   const defaults = {
     changefreq: defaultChangefreq,
     priority: defaultPriority,
@@ -495,8 +495,6 @@ export function generatePathsWithParamValues(
         ...objArray.map((item) => {
           let i = 0;
 
-          // `changefreq`, `lastmod`, & `priority` will be undefined intentionally if user does not
-          // specify them in pathObj or default in the sitemap config.
           return {
             path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => item.values[i++] || ''),
             lastmod: item.lastmod,
@@ -581,14 +579,10 @@ export function generatePathsWithParamValues(
 }
 
 /**
- * Given all routes, return a new array of routes that includes all versions of
- * each route that contains one or more optional params. Only process routes that
- * contain an optional param _other than_ `[[lang]]`.
+ * Given an array of all routes, return a new array of routes that includes all versions of each
+ * route that contains one or more optional params _other than_ `[[lang]]`.
  *
  * @private
- * @param routes - Array of routes to process.
- * @returns Array of routes containing all version for those with optional
- * params.
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
   const processedRoutes = routes.flatMap((route) => {
@@ -601,11 +595,8 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
 }
 
 /**
- * Processes a route containing >=1 optional parameters, represented by double
- * square brackets. It generates all possible versions of this route that
- * SvelteKit considers valid. Notice we add `+/page.svelte`, that is so these
- * routes have a consistent pattern as others so that `filterRoutes()` will
- * apply consistently when called later.
+ * Processes a route containing >=1 optional parameters (i.e. those with double square brackets) to
+ * generate all possible versions of this route that SvelteKit considers valid.
  *
  * @private
  * @param route - Route to process. E.g. `/foo/[[paramA]]`
@@ -618,19 +609,19 @@ export function processOptionalParams(originalRoute: string): string[] {
 
   let results: string[] = [];
 
-  // Get path up _before_ the first optional param; use `i-1` to exclude
+  // Get path up to _before_ the first optional param; use `i-1` to exclude
   // trailing slash after this. This is our first result.
   results.push(route.slice(0, route.indexOf('[[') - 1));
 
-  // Get remainder of the string without the first result.
+  // Extract the portion of the route starting at the first optional parameter
   const remaining = route.slice(route.indexOf('[['));
 
-  // Split and filter to remove first empty item because str will start with a '/'.
+  // Split, then filter to remove empty items.
   const segments = remaining.split('/').filter(Boolean);
 
   let j = 1;
   for (const segment of segments) {
-    // start a new potential result
+    // Start a new potential result
     if (!results[j]) results[j] = results[j - 1];
 
     results[j] = `${results[j]}/${segment}`;
@@ -648,8 +639,9 @@ export function processOptionalParams(originalRoute: string): string[] {
     );
   }
 
-  // If first segment is optional param other than `/[[lang]]` (e.g. /[[foo]])),
-  // ensure we have '/' as the first result. Otherwise it'll be empty.
+  // When the first path segment is an optional parameter (except for [[lang]]), the first result
+  // will be an empty string. We set this to '/' b/c the root path is one of the valid paths
+  // combinations in such a scenario.
   if (!results[0].length) results[0] = '/';
 
   return results;
@@ -658,6 +650,8 @@ export function processOptionalParams(originalRoute: string): string[] {
 /**
  * Processes path objects that contain `[[lang]]` or `[lang]` to 1.) generate one PathObj for each
  * language in the lang config, and 2.) to add an `alternates` property to each such PathObj.
+ *
+ * @private
  */
 export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig): PathObj[] {
   if (!pathObjs.length) return [];
@@ -718,6 +712,8 @@ export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig
  *
  * - Duplicate pathObjs could occur due to a developer using additionalPaths or processPaths() and
  *   not properly excluding a pre-existing path.
+ *
+ * @private
  */
 export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
   const uniquePaths = new Map<string, PathObj>();
@@ -735,6 +731,8 @@ export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
  *
  * - `additionalPaths` are never translated based on the lang config because they could be something
  *   like a PDF within the user's static dir.
+ *
+ * @private
  */
 export function generateAdditionalPaths({
   additionalPaths,
