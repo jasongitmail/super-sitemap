@@ -49,14 +49,26 @@ export const GET: RequestHandler = async ({ params }) => {
       '/[[lang]]/blog/[slug]': slugs,
       '/[[lang]]/blog/tag/[tag]': tags,
       '/[[lang]]/campsites/[country]/[state]': [
-        ['usa', 'new-york'],
-        ['usa', 'california'],
-        ['canada', 'toronto'],
+        {
+          values: ['usa', 'new-york'],
+          lastmod: '2025-01-01T00:00:00Z',
+          changefreq: 'daily',
+          priority: 0.5,
+        },
+        {
+          values: ['usa', 'california'],
+          lastmod: '2025-01-05',
+          changefreq: 'daily',
+          priority: 0.4,
+        },
+        // {
+        //   values: ['canada', 'toronto']
+        // },
       ],
     },
 
-    priority: 0.7,
-    changefreq: 'daily',
+    defaultPriority: 0.7,
+    defaultChangefreq: 'daily',
     sort: 'alpha', // helps predictability of test data
     lang: {
       default: 'en',
@@ -68,12 +80,12 @@ export const GET: RequestHandler = async ({ params }) => {
       // items like `/foo.pdf`; this is merely intended to test the
       // `processPaths()` callback.)
       return paths.map(({ path, alternates, ...rest }) => {
-        const rtrn = { path: `${path}/`, ...rest };
+        const rtrn = { path: path === '/' ? path : `${path}/`, ...rest };
 
         if (alternates) {
           rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
             ...alternate,
-            path: `${alternate.path}/`,
+            path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
           }));
         }
 

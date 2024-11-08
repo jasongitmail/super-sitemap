@@ -45,14 +45,14 @@ export type SitemapConfig = {
    * Omitting from sitemap config will omit changefreq from all sitemap entries except
    * those where you set `changefreq` property with a route's `paramValues` objects.
    */
-  changefreq?: Changefreq;
+  defaultChangefreq?: Changefreq;
 
   /**
    * Optional. Default priority, when not specified within a route's `paramValues` objects.
    * Omitting from sitemap config will omit priority from all sitemap entries except
    * those where you set `priority` property with a route's `paramValues` objects.
    */
-  priority?: Priority;
+  defaultPriority?: Priority;
 
   processPaths?: (paths: PathObj[]) => PathObj[];
   sort?: 'alpha' | false;
@@ -91,8 +91,8 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  * @param config.paramValues - Optional. Object of parameter values. See format in example below.
  * @param config.additionalPaths - Optional. Array of paths to include manually. E.g. `/foo.pdf` in your `static` directory.
  * @param config.headers - Optional. Custom headers. Case insensitive.
- * @param config.changefreq - Optional. `changefreq` value to use for all paths. Default is `false` to exclude this property from each sitemap entry.
- * @param config.priority - Optional. `priority` value to use for all paths. Default is `false` to exclude this property from each sitemap entry.
+ * @param config.defaultChangefreq - Optional. Default `changefreq` value to use for all paths. Omit this property to not use a default value.
+ * @param config.defaultPriority - Optional. Default `priority` value to use for all paths. Omit this property to not use a default value.
  * @param config.processPaths - Optional. Callback function to arbitrarily process path objects.
  * @param config.sort - Optional. Default is `false` and groups paths as static paths (sorted), dynamic paths (unsorted), and then additional paths (unsorted). `alpha` sorts all paths alphabetically.
  * @param config.maxPerPage - Optional. Default is `50_000`, as specified in https://www.sitemaps.org/protocol.html If you have more than this, a sitemap index will be created automatically.
@@ -142,7 +142,8 @@ const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
  */
 export async function response({
   additionalPaths = [],
-  changefreq,
+  defaultChangefreq,
+  defaultPriority,
   excludeRoutePatterns,
   headers = {},
   lang,
@@ -150,7 +151,6 @@ export async function response({
   origin,
   page,
   paramValues,
-  priority,
   processPaths,
   sort = false,
 }: SitemapConfig): Promise<Response> {
@@ -160,11 +160,17 @@ export async function response({
   }
 
   let paths = [
-    ...generatePaths(excludeRoutePatterns, paramValues, lang, changefreq, priority),
+    ...generatePaths({
+      excludeRoutePatterns,
+      paramValues,
+      lang,
+      defaultChangefreq,
+      defaultPriority,
+    }),
     ...generateAdditionalPaths({
       additionalPaths,
-      defaultChangefreq: changefreq,
-      defaultPriority: priority,
+      defaultChangefreq,
+      defaultPriority,
     }),
   ];
 
@@ -203,7 +209,7 @@ export async function response({
     }
 
     const pathsOnThisPage = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
-    body = generateBody(origin, pathsOnThisPage, changefreq, priority);
+    body = generateBody(origin, pathsOnThisPage);
   }
 
   // Merge keys case-insensitive; custom headers take precedence over defaults.
@@ -309,13 +315,19 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  * @param lang - Optional. The language configuration.
  * @returns An array of strings, each representing a path for the sitemap.
  */
-export function generatePaths(
-  excludeRoutePatterns: string[] = [],
-  paramValues: ParamValues = {},
-  lang: LangConfig = { alternates: [], default: '' },
-  defaultChangefreq: SitemapConfig['changefreq'],
-  defaultPriority: SitemapConfig['priority']
-): PathObj[] {
+export function generatePaths({
+  excludeRoutePatterns = [],
+  paramValues = {},
+  lang,
+  defaultChangefreq,
+  defaultPriority
+}: {
+  excludeRoutePatterns?: string[];
+  paramValues?: ParamValues;
+  lang?: LangConfig;
+  defaultChangefreq: SitemapConfig['defaultChangefreq'];
+  defaultPriority: SitemapConfig['defaultPriority'];
+}): PathObj[] {
   // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
   // - See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
   // - The `.md` and `.svx` extensions are to support MDSveX, which is a common
@@ -456,8 +468,8 @@ export function filterRoutes(routes: string[], excludeRoutePatterns: string[]): 
 export function generatePathsWithParamValues(
   routes: string[],
   paramValues: ParamValues,
-  defaultChangefreq: SitemapConfig['changefreq'],
-  defaultPriority: SitemapConfig['priority']
+  defaultChangefreq: SitemapConfig['defaultChangefreq'],
+  defaultPriority: SitemapConfig['defaultPriority']
 ): { pathsWithLang: PathObj[]; pathsWithoutLang: PathObj[] } {
   // Throw if paramValues contains keys that don't exist within src/routes/.
   for (const paramValueKey in paramValues) {
@@ -740,8 +752,8 @@ export function generateAdditionalPaths({
   defaultPriority,
 }: {
   additionalPaths: string[];
-  defaultChangefreq: SitemapConfig['changefreq'];
-  defaultPriority: SitemapConfig['priority'];
+  defaultChangefreq: SitemapConfig['defaultChangefreq'];
+  defaultPriority: SitemapConfig['defaultPriority'];
 }): PathObj[] {
   const defaults = {
     changefreq: defaultChangefreq,

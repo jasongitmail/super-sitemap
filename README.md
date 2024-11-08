@@ -17,21 +17,21 @@
 ## Table of Contents
 
 - [Features](#features)
-- [Limitations](#limitations)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Basic example](#basic-example)
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
+  - [Param Values](#param-values)
   - [Optional Params](#optional-params)
-  - [processPaths() callback](#processpaths-callback)
+  - [`processPaths()` callback](#processpaths-callback)
   - [i18n](#i18n)
   - [Sampled URLs](#sampled-urls)
   - [Sampled Paths](#sampled-paths)
 - [Robots.txt](#robotstxt)
 - [Playwright test](#playwright-test)
-- [Querying your database for param values](#querying-your-database-for-param-values)
-- [Example output](#example-output)
+- [Tip: Querying your database for param values using SQL](#tip-querying-your-database-for-param-values-using-sql)
+- [Example sitemap output](#example-sitemap-output)
 - [Changelog](#changelog)
 
 ## Features
@@ -52,7 +52,7 @@
   and use their own heuristics to determine when to crawl pages on your site. As
   such, these properties are not included by default to minimize KB size and
   enable faster crawling. Optionally, you can enable them like so:
-  `sitemap.response({ changefreq: 'daily', priority: 0.7 })`.
+  `sitemap.response({ defaultChangefreq: 'daily', defaultPriority: 0.7 })`.
 - 🗺️ [Sitemap indexes](#sitemap-index)
 - 🌎 [i18n](#i18n)
 - 🧪 Well tested.
@@ -103,8 +103,8 @@ Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.x
 
 ## The "everything" example
 
-All aspects of the below example are optional, except for `origin` and
-`paramValues` to provide data for parameterized routes.
+_**All aspects of the below example are optional, except for `origin` and
+`paramValues` to provide data for parameterized routes.**_
 
 JavaScript:
 
@@ -132,23 +132,28 @@ export const GET = async () => {
       '.*\\(authenticated\\).*', // i.e. routes within a group
     ],
     paramValues: {
+        // paramValues can be a 1D array of strings
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
       '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
+
+      // Or a 2D array of strings
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto'],
       ],
+
+      // Or an array of ParamValue objects
       '/athlete-rankings/[country]/[state]': [
         {
-          values: ['usa', 'new-york'], // required
-          lastmod: '2025-01-01', // optional
-          changefreq: 'daily',   // optional
-          priority: 0.5,         // optional
+          values: ['usa', 'new-york'],     // required
+          lastmod: '2025-01-01T00:00:00Z', // optional
+          changefreq: 'daily',             // optional
+          priority: 0.5,                   // optional
         },
         {
           values: ['usa', 'california'],
-          lastmod: '2025-01-01',
+          lastmod: '2025-01-01T00:00:00Z',
           changefreq: 'daily',
           priority: 0.5,
         },
@@ -158,13 +163,13 @@ export const GET = async () => {
       'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
-      '/foo.pdf', // e.g. to a file in your static dir
+      '/foo.pdf', // for example, to a file in your static dir
     ],
-    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7, // excluded by default b/c ignored by modern search engines
+    defaultChangefreq: 'daily',
+    defaultPriority: 0.7,
     sort: 'alpha', // default is false; 'alpha' sorts all paths alphabetically.
     processPaths: (paths) => {
-      // A callback to allow arbitrary processing of your path objects. See the
+      // Optional callback to allow arbitrary processing of your path objects. See the
       // processPaths() section of the README.
       return paths;
     },
@@ -199,23 +204,28 @@ export const GET: RequestHandler = async () => {
       '.*\\(authenticated\\).*', // i.e. routes within a group
     ],
     paramValues: {
+      // paramValues can be a 1D array of strings
       '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
       '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
+
+      // Or a 2D array of strings
       '/campsites/[country]/[state]': [
         ['usa', 'new-york'],
         ['usa', 'california'],
         ['canada', 'toronto'],
       ],
+
+      // Or an array of ParamValue objects
       '/athlete-rankings/[country]/[state]': [
         {
-          values: ['usa', 'new-york'], // required
-          lastmod: '2025-01-01', // optional
-          changefreq: 'daily',   // optional
-          priority: 0.5,         // optional
+          values: ['usa', 'new-york'],     // required
+          lastmod: '2025-01-01T00:00:00Z', // optional
+          changefreq: 'daily',             // optional
+          priority: 0.5,                   // optional
         },
         {
           values: ['usa', 'california'],
-          lastmod: '2025-01-01',
+          lastmod: '2025-01-01T00:00:00Z',
           changefreq: 'daily',
           priority: 0.5,
         },
@@ -225,13 +235,13 @@ export const GET: RequestHandler = async () => {
       'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
     },
     additionalPaths: [
-      '/foo.pdf', // e.g. to a file in your static dir
+      '/foo.pdf', // for example, to a file in your static dir
     ],
-    changefreq: 'daily', // excluded by default b/c ignored by modern search engines
-    priority: 0.7, // excluded by default b/c ignored by modern search engines
+    defaultChangefreq: 'daily',
+    defaultPriority: 0.7,
     sort: 'alpha', // default is false; 'alpha' sorts all paths alphabetically.
     processPaths: (paths: sitemap.PathObj[]) => {
-      // A callback to allow arbitrary processing of your path objects. See the
+      // Optional callback to allow arbitrary processing of your path objects. See the
       // processPaths() section of the README.
       return paths;
     },
@@ -240,6 +250,9 @@ export const GET: RequestHandler = async () => {
 ```
 
 ## Sitemap Index
+
+_**You only need to enable or read this if you will have >=50,000 URLs in your sitemap, which is the number
+recommended by Google.**_
 
 You can enable sitemap index support with just two changes:
 
@@ -277,8 +290,8 @@ export const GET: RequestHandler = async ({ params }) => {
 };
 ```
 
-_**Feel free to always set up your sitemap in this manner given it will work optimally whether you
-have few or many URLs.**_
+**Feel free to always set up your sitemap as a sitemap index, given it will work optimally whether you
+have few or many URLs.**
 
 Your `sitemap.xml` route will now return a regular sitemap when your sitemap's total URLs is less than or equal
 to `maxPerPage` (defaults to 50,000 per the [sitemap
@@ -302,7 +315,7 @@ paginated URLs automatically.
 </sitemapindex>
 ```
 
-## Params Values
+## Param Values
 
 When specifying values for the params of your parameterized routes,
 you can use any of the following types:
@@ -320,13 +333,13 @@ Example:
     '/athlete-rankings/[country]/[state]': [
       {
         values: ['usa', 'new-york'], // required
-        lastmod: '2025-01-01', // optional
+        lastmod: '2025-01-01T00:00:00Z', // optional
         changefreq: 'daily', // optional
         priority: 0.5, // optional
       },
       {
         values: ['usa', 'california'], // required
-        lastmod: '2025-01-01', // optional
+        lastmod: '2025-01-01T01:16:52Z', // optional
         changefreq: 'daily', // optional
         priority: 0.5, // optional
       },
@@ -339,6 +352,8 @@ value. If a default value is not defined, the property will be excluded from tha
 
 
 ## Optional Params
+
+_**You only need to read this if you want to understand how super sitemap handles optional params and why.**_
 
 SvelteKit allows you to create a route with one or more optional parameters like this:
 
@@ -387,7 +402,7 @@ versions of that route.
 
 ## processPaths() callback
 
-The `processPaths()` callback is powerful, but rarely needed.
+_**The `processPaths()` callback is powerful, but rarely needed.**_
 
 It allows you to arbitrarily process the path objects for your site before they become XML, with the
 only requirement that your callback function must return the expected type of
@@ -445,12 +460,12 @@ return await sitemap.response({
     // preferable because it provides consistency among all possible paths,
     // even files like `/foo.pdf`.)
     return paths.map(({ path, alternates, ...rest }) => {
-      const rtrn = { path: `${path}/`, ...rest };
+      const rtrn = { path: path === '/' ? path : `${path}/`, ...rest };
 
       if (alternates) {
         rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
           ...alternate,
-          path: `${alternate.path}/`,
+          path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
         }));
       }
 
@@ -576,6 +591,8 @@ with a default language (e.g. `/about`) and lang slugs for alternate languages
   to build the sitemap. "Never say never", but there are no plans to support this.
 
 ## Sampled URLs
+
+_**`sampledUrls()` is an optional utility to be used in your Playwright tests. You do not need to read this if just getting started.**_
 
 Sampled URLs provides a utility to obtain a sample URL for each unique route on your site–i.e.:
 
@@ -739,7 +756,7 @@ test('/sitemap.xml is valid', async ({ page }) => {
 });
 ```
 
-## Querying your database for param values
+## Tip: Querying your database for param values using SQL
 
 As a helpful tip, below are a few examples demonstrating how to query an SQL
 database to obtain data to provide as `paramValues` for your routes:
@@ -778,8 +795,8 @@ in the database during comparison–e.g.:
 SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(state) = LOWER(params.state) LIMIT 10;
 ```
 
-<details id="example-output">
-  <summary><h2>Example output</h2></summary>
+<details id="example-sitemap-output">
+  <summary><h2>Example sitemap output</h2></summary>
 
 ```xml
   <urlset
@@ -883,7 +900,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
-- `0.15.1` - Adds support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` where each `ParamValueObj` contains `values` (required) and optionally `lastmod`, `changefreq`, and `priority`.
+- `0.15.1` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-route specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).
 - `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.
