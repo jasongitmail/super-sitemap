@@ -10,9 +10,13 @@
   "license": "MIT",
   "keywords": [
     "sitemap",
+    "svelte kit",
     "sveltekit",
     "svelte",
-    "seo"
+    "seo",
+    "sitemap.xml",
+    "sitemap generator",
+    "robots.txt"
   ],
   "scripts": {
     "dev": "vite dev",
