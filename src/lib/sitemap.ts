@@ -568,7 +568,7 @@ export function generatePathsWithParamValues(
     const routeSansLang = route.replace(langRegex, '') || '/';
     if (regex.test(routeSansLang)) {
       throw new Error(
-        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludedRoutePatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
+        `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludeRoutePatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
       );
     }
   }
