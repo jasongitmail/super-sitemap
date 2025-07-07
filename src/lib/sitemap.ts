@@ -480,6 +480,9 @@ export function generatePathsWithParamValues(
   let pathsWithLang: PathObj[] = [];
   let pathsWithoutLang: PathObj[] = [];
 
+  // Outside loop for performance
+  const PARAM_TOKEN_REGEX = /(\[\[.+?\]\]|\[.+?\])/g;
+
   for (const paramValuesKey in paramValues) {
     const hasLang = langRegex.exec(paramValuesKey);
     const routeSansLang = paramValuesKey.replace(langRegex, '');
@@ -491,18 +494,15 @@ export function generatePathsWithParamValues(
     if (typeof paramValue[0] === 'object' && !Array.isArray(paramValue[0])) {
       const objArray = paramValue as ParamValue[];
 
-      pathObjs.push(
-        ...objArray.map((item) => {
-          let i = 0;
-
-          return {
-            changefreq: item.changefreq ?? defaults.changefreq,
-            lastmod: item.lastmod,
-            path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => item.values[i++] || ''),
-            priority: item.priority ?? defaults.priority,
-          };
-        })
-      );
+      for (const item of objArray) {
+        let i = 0;
+        pathObjs.push({
+          changefreq: item.changefreq ?? defaults.changefreq,
+          lastmod: item.lastmod,
+          path: routeSansLang.replace(PARAM_TOKEN_REGEX, () => item.values[i++] || ''),
+          priority: item.priority ?? defaults.priority,
+        });
+      }
     } else if (Array.isArray(paramValue[0])) {
       // Handle when paramValue contains a 2D array of strings (e.g. [['usa', 'new-york'], ['usa',
       // 'california']])
@@ -512,7 +512,7 @@ export function generatePathsWithParamValues(
         let i = 0;
         return {
           ...defaults,
-          path: routeSansLang.replace(/(\[\[.+?\]\]|\[.+?\])/g, () => data[i++] || ''),
+          path: routeSansLang.replace(PARAM_TOKEN_REGEX, () => data[i++] || ''),
         };
       });
     } else {
@@ -528,12 +528,12 @@ export function generatePathsWithParamValues(
     // Process path objects to add lang onto each path, when applicable.
     if (hasLang) {
       const lang = hasLang?.[0];
-      pathsWithLang.push(
-        ...pathObjs.map((pathObj) => ({
+      for (const pathObj of pathObjs) {
+        pathsWithLang.push({
           ...pathObj,
           path: pathObj.path.slice(0, hasLang?.index) + lang + pathObj.path.slice(hasLang?.index),
-        }))
-      );
+        });
+      }
     } else {
       pathsWithoutLang.push(...pathObjs);
     }
