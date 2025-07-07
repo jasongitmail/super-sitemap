@@ -301,16 +301,16 @@ export function generateSitemapIndex(origin: string, pages: number): string {
  * @public
  *
  * @param excludeRoutePatterns - Optional. An array of patterns for routes to be excluded.
+ * @param lang - Optional. The language configuration.
  * @param paramValues - Optional. An object mapping each parameterized route to
  *                      an array of param values for that route.
- * @param lang - Optional. The language configuration.
  * @returns An array of strings, each representing a path for the sitemap.
  */
 export function generatePaths({
   defaultChangefreq,
   defaultPriority,
   excludeRoutePatterns = [],
-  lang,
+  lang = { default: "en", alternates: [] },
   paramValues = {},
 }: {
   excludeRoutePatterns?: string[];
