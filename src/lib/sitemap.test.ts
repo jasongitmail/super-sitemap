@@ -1233,4 +1233,62 @@ describe('sitemap.ts', () => {
       ).toEqual(expected);
     });
   });
+
+  describe('large dataset handling', () => {
+    it('should handle large paramValues arrays without stack overflow', () => {
+      // Create a large array that would previously cause "Maximum call stack size exceeded"
+      // Testing with 100k items which is manageable for CI but demonstrates the fix
+      const largeArray = Array.from({ length: 100000 }, (_, i) => `item-${i}`);
+
+      // Use an existing route pattern and add it to the routes array
+      const routePattern = '/[[lang]]/blog/[slug]';
+      const routes = [routePattern];
+      const paramValues = {
+        [routePattern]: largeArray
+      };
+
+      // This should not throw "RangeError: Maximum call stack size exceeded"
+      expect(() => {
+        const routesCopy = [...routes]; // Make a copy since the function modifies the routes array
+        sitemap.generatePathsWithParamValues(routesCopy, paramValues, 'daily', 0.7);
+      }).not.toThrow();
+
+      const routesCopy = [...routes];
+      const result = sitemap.generatePathsWithParamValues(routesCopy, paramValues, 'daily', 0.7);
+
+      // Verify the result contains the expected number of paths
+      expect(result.pathsWithLang).toHaveLength(100000);
+      expect(result.pathsWithLang[0].path).toBe('/[[lang]]/blog/item-0');
+      expect(result.pathsWithLang[99999].path).toBe('/[[lang]]/blog/item-99999');
+    });
+
+    it('should handle large ParamValue arrays without stack overflow', () => {
+      // Test with ParamValue objects that include metadata
+      const largeParamValueArray = Array.from({ length: 50000 }, (_, i) => ({
+        values: [`param-${i}`],
+        lastmod: '2023-01-01T00:00:00Z',
+        changefreq: 'weekly' as const,
+        priority: 0.8 as const,
+      }));
+
+      const routePattern = '/[[lang]]/test/[id]';
+      const routes = [routePattern];
+      const paramValues = {
+        [routePattern]: largeParamValueArray
+      };
+
+      expect(() => {
+        const routesCopy = [...routes];
+        sitemap.generatePathsWithParamValues(routesCopy, paramValues, 'daily', 0.7);
+      }).not.toThrow();
+
+      const routesCopy = [...routes];
+      const result = sitemap.generatePathsWithParamValues(routesCopy, paramValues, 'daily', 0.7);
+      
+      expect(result.pathsWithLang).toHaveLength(50000);
+      expect(result.pathsWithLang[0].path).toBe('/[[lang]]/test/param-0');
+      expect(result.pathsWithLang[0].changefreq).toBe('weekly');
+      expect(result.pathsWithLang[0].priority).toBe(0.8);
+    });
+  });
 });

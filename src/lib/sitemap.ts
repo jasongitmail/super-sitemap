@@ -326,7 +326,7 @@ export function generatePaths({
   const svelteRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
   const mdRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.md'));
   const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
-  const allRoutes = [...svelteRoutes, ...mdRoutes, ...svxRoutes];
+  const allRoutes = svelteRoutes.concat(mdRoutes, svxRoutes);
 
   // Validation: if dev has one or more routes that contain a lang parameter,
   // optional or required, require that they have defined the `lang.default` and
@@ -359,7 +359,7 @@ export function generatePaths({
 
   const pathsWithLangAlternates = processPathsWithLang(pathsWithLang, lang);
 
-  return [...pathsWithoutLang, ...pathsWithLangAlternates];
+  return pathsWithoutLang.concat(pathsWithLangAlternates);
 }
 
 /**
@@ -528,14 +528,16 @@ export function generatePathsWithParamValues(
     // Process path objects to add lang onto each path, when applicable.
     if (hasLang) {
       const lang = hasLang?.[0];
+      const langPaths: PathObj[] = [];
       for (const pathObj of pathObjs) {
-        pathsWithLang.push({
+        langPaths.push({
           ...pathObj,
           path: pathObj.path.slice(0, hasLang?.index) + lang + pathObj.path.slice(hasLang?.index),
         });
       }
+      pathsWithLang = pathsWithLang.concat(langPaths);
     } else {
-      pathsWithoutLang.push(...pathObjs);
+      pathsWithoutLang = pathsWithoutLang.concat(pathObjs);
     }
 
     // Remove this from routes
@@ -556,8 +558,8 @@ export function generatePathsWithParamValues(
   }
 
   // This just keeps static paths first, which I prefer.
-  pathsWithLang = [...staticWithLang, ...pathsWithLang];
-  pathsWithoutLang = [...staticWithoutLang, ...pathsWithoutLang];
+  pathsWithLang = staticWithLang.concat(pathsWithLang);
+  pathsWithoutLang = staticWithoutLang.concat(pathsWithoutLang);
 
   // Check for missing paramValues.
   // Throw error if app contains any parameterized routes NOT handled in the
@@ -654,7 +656,7 @@ export function processOptionalParams(originalRoute: string): string[] {
 export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig): PathObj[] {
   if (!pathObjs.length) return [];
 
-  const processedPathObjs = [];
+  let processedPathObjs: PathObj[] = [];
 
   for (const pathObj of pathObjs) {
     const path = pathObj.path;
@@ -699,7 +701,7 @@ export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig
       });
     }
 
-    processedPathObjs.push(...pathObjs);
+    processedPathObjs = processedPathObjs.concat(pathObjs);
   }
 
   return processedPathObjs;
