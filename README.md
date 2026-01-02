@@ -304,7 +304,7 @@ The sitemap index will contain links to `sitemap1.xml`, `sitemap2.xml`, etc, whi
 paginated URLs automatically.
 
 ```xml
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemapindex xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://example.com/sitemap1.xml</loc>
   </sitemap>
@@ -801,7 +801,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ```xml
   <urlset
-    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
   >
     <url>
@@ -901,7 +901,6 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
-- `1.0.4` - Fix: Support for very large `paramValues` arrays >65,536 elements each.
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).

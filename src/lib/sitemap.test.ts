@@ -220,7 +220,7 @@ describe('sitemap.ts', () => {
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
   <url>
@@ -267,7 +267,7 @@ describe('sitemap.ts', () => {
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
   <url>
@@ -901,7 +901,7 @@ describe('sitemap.ts', () => {
       const origin = 'https://example.com';
       const pages = 3;
       const expectedSitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemapindex xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://example.com/sitemap1.xml</loc>
   </sitemap>
@@ -1284,7 +1284,7 @@ describe('sitemap.ts', () => {
 
       const routesCopy = [...routes];
       const result = sitemap.generatePathsWithParamValues(routesCopy, paramValues, 'daily', 0.7);
-      
+
       expect(result.pathsWithLang).toHaveLength(50000);
       expect(result.pathsWithLang[0].path).toBe('/[[lang]]/test/param-0');
       expect(result.pathsWithLang[0].changefreq).toBe('weekly');
