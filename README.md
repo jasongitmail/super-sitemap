@@ -14,8 +14,6 @@
   </a>
 </div>
 
-**<h3>v1.0 is released! 🎉🚀</h3> The only breaking changes from v0.15.0 are to 1.) rename `priority` to `defaultPriority` and 2.) rename `changefreq` to `defaultChangefreq` in your sitemap config. See [changelog](#changelog).**
-
 ## Table of Contents
 
 - [Features](#features)
