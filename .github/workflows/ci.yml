@@ -1,7 +1,7 @@
 name: ci.yml
 env:
   CI: true
-  NODE_VERSION: 18
+  NODE_VERSION: 22
 
 on:
   push:
@@ -17,7 +17,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -37,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm install
