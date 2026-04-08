@@ -1,4 +1,6 @@
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { server } from './fixtures/mocks.js';
@@ -111,6 +113,30 @@ describe('sample.ts', () => {
       expect(result).toEqual(
         new Set(['https://example.com/blog/hello-world', 'https://example.com/blog/tag/red'])
       );
+    });
+  });
+
+  describe('listFilePathsRecursively()', () => {
+    it('should return the full path of each file in nested directories', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'super-sitemap-'));
+      const nestedDir = path.join(tmpDir, 'nested', 'deeper');
+
+      try {
+        // Set up dirs and files
+        fs.mkdirSync(nestedDir, { recursive: true });
+        const rootFile = path.join(tmpDir, '+page.svelte');
+        const nestedFile = path.join(tmpDir, 'nested', '+page@.svelte');
+        const deepFile = path.join(nestedDir, '+page.md');
+
+        fs.writeFileSync(rootFile, '');
+        fs.writeFileSync(nestedFile, '');
+        fs.writeFileSync(deepFile, '');
+
+        const result = sitemap.listFilePathsRecursively(tmpDir).sort();
+        expect(result).toEqual([deepFile, nestedFile, rootFile].sort());
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
     });
   });
 });

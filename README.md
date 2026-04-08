@@ -56,6 +56,7 @@
 - 🗺️ [Sitemap indexes](#sitemap-index)
 - 🌎 [i18n](#i18n)
 - 🧪 Well tested.
+- ✨ Zero runtime dependencies.
 - 🫶 Built with TypeScript.
 
 ## Installation
@@ -899,6 +900,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).

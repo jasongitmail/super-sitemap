@@ -70,9 +70,6 @@
     "vite": "^4.5.0",
     "vitest": "^0.34.6"
   },
-  "dependencies": {
-    "directory-tree": "^3.5.1"
-  },
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module"

@@ -1,4 +1,5 @@
-import dirTree from 'directory-tree';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { filterRoutes } from './sitemap.js';
 import { parseSitemapXml } from './xml.js';
@@ -130,8 +131,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
       projDir += '/';
     }
 
-    const dirTreeRes = dirTree(projDir + 'src/routes');
-    routes = extractPaths(dirTreeRes);
+    routes = listFilePathsRecursively(projDir + 'src/routes');
     // Match +page.svelte or +page@.svelte (used to break out of a layout).
     //https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
     routes = routes.filter((route) => route.match(/\+page.*\.svelte$/));
@@ -270,25 +270,24 @@ export function findFirstMatches(regexPatterns: Set<string>, haystack: string[])
 }
 
 /**
- * Extracts the paths from a dirTree response and returns an array of strings
- * representing full disk paths to each route and directory.
- * - This needs to be filtered to remove items that do not end in `+page.svelte`
- *   in order to represent routes; we do that outside of this function given
- *   this is recursive.
+ * Recursively reads a directory and returns the full disk path of each file.
  *
- * @param obj - The dirTree response object. https://www.npmjs.com/package/directory-tree
- * @param paths - Array of existing paths to append to (leave unspecified; used
- * for recursion)
- * @returns An array of strings representing disk paths to each route.
+ * @param dirPath - The directory to traverse.
+ * @returns An array of strings representing full disk file paths.
  */
-export function extractPaths(obj: dirTree.DirectoryTree, paths: string[] = []): string[] {
-  if (obj.path) {
-    paths.push(obj.path);
-  }
+export function listFilePathsRecursively(dirPath: string): string[] {
+  const paths: string[] = [];
 
-  if (Array.isArray(obj.children)) {
-    for (const child of obj.children) {
-      extractPaths(child, paths);
+  for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
+    const entryPath = path.join(dirPath, entry.name);
+
+    if (entry.isDirectory()) {
+      paths.push(...listFilePathsRecursively(entryPath));
+      continue;
+    }
+
+    if (entry.isFile()) {
+      paths.push(entryPath);
     }
   }
 
