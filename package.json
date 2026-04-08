@@ -1,11 +1,11 @@
 {
   "name": "super-sitemap",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/jasongitmail/super-sitemap.git"
+    "url": "git+https://github.com/jasongitmail/super-sitemap.git"
   },
   "license": "MIT",
   "keywords": [
@@ -24,7 +24,7 @@
     "build": "vite build && npm run package",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
-    "prepublishOnly": "npm run package",
+    "prepublishOnly": "rm -rf dist && npm run package && npm test -- --run",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",
