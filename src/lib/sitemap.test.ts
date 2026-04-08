@@ -220,7 +220,7 @@ describe('sitemap.ts', () => {
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
-  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
   <url>
@@ -267,7 +267,7 @@ describe('sitemap.ts', () => {
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
 <urlset
-  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
   <url>
@@ -303,6 +303,18 @@ describe('sitemap.ts', () => {
       const resultXml = sitemap.generateBody('https://example.com', paths);
       const validationResult = XMLValidator.validate(resultXml);
       expect(validationResult).toBe(true);
+    });
+
+    it('should use the sitemap protocol namespace with http, not https', () => {
+      const sitemapBody = sitemap.generateBody('https://example.com', [{ path: '/about' }]);
+      const sitemapIndex = sitemap.generateSitemapIndex('https://example.com', 1);
+      const sitemapNamespace = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+      const invalidSitemapNamespace = 'xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"';
+
+      expect(sitemapBody).toContain(sitemapNamespace);
+      expect(sitemapBody).not.toContain(invalidSitemapNamespace);
+      expect(sitemapIndex).toContain(sitemapNamespace);
+      expect(sitemapIndex).not.toContain(invalidSitemapNamespace);
     });
   });
 
@@ -901,7 +913,7 @@ describe('sitemap.ts', () => {
       const origin = 'https://example.com';
       const pages = 3;
       const expectedSitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://example.com/sitemap1.xml</loc>
   </sitemap>

@@ -302,7 +302,7 @@ The sitemap index will contain links to `sitemap1.xml`, `sitemap2.xml`, etc, whi
 paginated URLs automatically.
 
 ```xml
-<sitemapindex xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://example.com/sitemap1.xml</loc>
   </sitemap>
@@ -799,7 +799,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ```xml
   <urlset
-    xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
   >
     <url>
