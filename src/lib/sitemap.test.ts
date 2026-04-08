@@ -1,9 +1,9 @@
-import { XMLValidator } from 'fast-xml-parser';
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import type { LangConfig, PathObj, SitemapConfig } from './sitemap.js';
 
+import { hasValidXmlStructure } from './xml.js';
 import * as sitemap from './sitemap.js';
 
 describe('sitemap.ts', () => {
@@ -301,7 +301,7 @@ describe('sitemap.ts', () => {
         },
       ];
       const resultXml = sitemap.generateBody('https://example.com', paths);
-      const validationResult = XMLValidator.validate(resultXml);
+      const validationResult = hasValidXmlStructure(resultXml);
       expect(validationResult).toBe(true);
     });
 
