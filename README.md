@@ -574,13 +574,15 @@ language versions of your pages.
 
 ### Note on i18n
 
-Super Sitemap handles creation of URLs within your sitemap, but it is
+- Super Sitemap handles creation of URLs within your sitemap, but it is
 _not_ an i18n library.
 
 You need a separate i18n library to translate strings within your app. Just
 ensure the library you choose allows a similar URL pattern as described here,
 with a default language (e.g. `/about`) and lang slugs for alternate languages
 (e.g. `/zh/about`, `/de/about`).
+
+- Using [Paraglide](https://github.com/opral/paraglide-js)? See the [example code here](https://github.com/jasongitmail/super-sitemap/issues/24#issuecomment-2813870191) if you use Paraglide to localize path names on your site.
 
 ### Q&A on i18n
 
