@@ -1,9 +1,11 @@
 import fs from 'fs';
+import { http } from 'msw';
 import os from 'os';
 import path from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { server } from './fixtures/mocks.js';
+import { sampledPaths, sampledUrls } from './index.js';
 import * as sitemap from './sampled.js';
 
 beforeAll(() => server.listen());
@@ -33,6 +35,14 @@ describe('sample.ts', () => {
       it('should return expected urls', async () => {
         const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
         const result = await sitemap._sampledUrls(xml);
+        expect(result).toEqual(expectedSampledUrls);
+      });
+
+      it('root-exported sampledUrls() should fetch a sitemap and return expected urls', async () => {
+        const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
+        server.use(http.get('https://example.com/sitemap.xml', () => new Response(xml)));
+
+        const result = await sampledUrls('https://example.com/sitemap.xml');
         expect(result).toEqual(expectedSampledUrls);
       });
     });
@@ -71,6 +81,14 @@ describe('sample.ts', () => {
         const result = await sitemap._sampledPaths(xml);
         expect(result).toEqual(expectedSampledPaths);
         expect(result).not.toEqual(['/dashboard', '/dashboard/settings']);
+      });
+
+      it('root-exported sampledPaths() should fetch a sitemap and return expected paths', async () => {
+        const xml = await fs.promises.readFile('./src/lib/fixtures/expected-sitemap.xml', 'utf-8');
+        server.use(http.get('https://example.com/sitemap.xml', () => new Response(xml)));
+
+        const result = await sampledPaths('https://example.com/sitemap.xml');
+        expect(result).toEqual(expectedSampledPaths);
       });
     });
 
@@ -135,7 +153,7 @@ describe('sample.ts', () => {
         const result = sitemap.listFilePathsRecursively(tmpDir).sort();
         expect(result).toEqual([deepFile, nestedFile, rootFile].sort());
       } finally {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
+        fs.rmSync(tmpDir, { force: true, recursive: true });
       }
     });
   });

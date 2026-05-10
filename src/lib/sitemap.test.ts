@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { LangConfig, PathObj, SitemapConfig } from './sitemap.js';
 
-import { hasValidXmlStructure } from './xml.js';
 import * as sitemap from './sitemap.js';
+import { hasValidXmlStructure } from './xml.js';
 
 describe('sitemap.ts', () => {
   describe('response()', async () => {
@@ -85,6 +85,21 @@ describe('sitemap.ts', () => {
       expect(res.headers.get('custom-header')).toEqual('mars');
     });
 
+    it('should include default response headers and let custom headers override case-insensitively', async () => {
+      const defaultRes = await sitemap.response(config);
+      expect(defaultRes.headers.get('content-type')).toEqual('application/xml');
+      expect(defaultRes.headers.get('cache-control')).toEqual('max-age=0, s-maxage=3600');
+
+      const newConfig = JSON.parse(JSON.stringify(config));
+      newConfig.headers = {
+        'Cache-Control': 'max-age=0, s-maxage=60',
+        'Content-Type': 'text/custom+xml',
+      };
+      const customRes = await sitemap.response(newConfig);
+      expect(customRes.headers.get('content-type')).toEqual('text/custom+xml');
+      expect(customRes.headers.get('cache-control')).toEqual('max-age=0, s-maxage=60');
+    });
+
     it('when config.origin is not provided, should throw error', async () => {
       const newConfig = JSON.parse(JSON.stringify(config));
       delete newConfig.origin;
@@ -118,6 +133,55 @@ describe('sitemap.ts', () => {
       expect(resultXml).toContain('<loc>https://example.com/process-paths-was-here</loc>');
     });
 
+    it('processPaths() should receive generated and additional paths before dedupe and alpha sorting', async () => {
+      const newConfig: SitemapConfig = {
+        additionalPaths: ['/about'],
+        excludeRoutePatterns: [
+          '.*/dashboard.*',
+          '(secret-group)',
+          '(authenticated)',
+          '/optionals',
+          '.*\\[page=integer\\].*',
+          '/\\[\\[lang\\]\\]/\\[foo\\]',
+          '/\\[\\[lang\\]\\]/blog/\\[slug\\]',
+          '/\\[\\[lang\\]\\]/blog/tag/\\[tag\\]',
+          '/\\[\\[lang\\]\\]/campsites/\\[country\\]/\\[state\\]',
+        ],
+        lang: {
+          default: 'en',
+          alternates: ['zh'],
+        },
+        origin: 'https://example.com',
+        processPaths: (paths) => {
+          expect(paths.at(-1)).toMatchObject({ path: '/about' });
+          expect(paths.filter(({ path }) => path === '/about')).toHaveLength(2);
+          return [
+            ...paths,
+            {
+              changefreq: 'weekly',
+              path: '/about',
+            },
+            {
+              path: '/zzzz-process-paths-sort-marker',
+            },
+          ];
+        },
+        sort: 'alpha',
+      };
+
+      const res = await sitemap.response(newConfig);
+      const resultXml = await res.text();
+      const locs = Array.from(resultXml.matchAll(/<loc>https:\/\/example\.com([^<]+)<\/loc>/g)).map(
+        ([, path]) => path
+      );
+
+      expect(locs.at(-1)).toBe('/zzzz-process-paths-sort-marker');
+      expect(locs.filter((path) => path === '/about')).toHaveLength(1);
+      expect(resultXml).toContain(
+        '<loc>https://example.com/about</loc>\n    <changefreq>weekly</changefreq>'
+      );
+    });
+
     it('should deduplicate paths objects based on value of path', async () => {
       const newConfig = JSON.parse(JSON.stringify(config));
       newConfig.processPaths = (paths: PathObj[]) => {
@@ -130,17 +194,14 @@ describe('sitemap.ts', () => {
       ).toBeLessThanOrEqual(1);
     });
 
-    it.todo(
-      'when param values are not provided for a parameterized route, should throw error',
-      async () => {
-        const newConfig = JSON.parse(JSON.stringify(config));
-        delete newConfig.paramValues['/campsites/[country]/[state]'];
-        const fn = () => sitemap.response(newConfig);
-        expect(fn()).rejects.toThrow(
-          "Sitemap: paramValues not provided for: '/campsites/[country]/[state]'"
-        );
-      }
-    );
+    it('when param values are not provided for a parameterized route, should throw error', async () => {
+      const newConfig = JSON.parse(JSON.stringify(config));
+      delete newConfig.paramValues['/[[lang]]/campsites/[country]/[state]'];
+      const fn = () => sitemap.response(newConfig);
+      await expect(fn()).rejects.toThrow(
+        "Sitemap: paramValues not provided for: '/[[lang]]/campsites/[country]/[state]'"
+      );
+    });
 
     it('when param values are provided for route that does not exist, should throw error', async () => {
       const newConfig = JSON.parse(JSON.stringify(config));
@@ -163,16 +224,17 @@ describe('sitemap.ts', () => {
         expect(resultXml).toEqual(expectedSitemapXml.trim());
       });
 
-      it.skip.each([
+      it.each([
         ['1', './src/lib/fixtures/expected-sitemap-index-subpage1.xml'],
         ['2', './src/lib/fixtures/expected-sitemap-index-subpage2.xml'],
         ['3', './src/lib/fixtures/expected-sitemap-index-subpage3.xml'],
       ])(
         'subpage (e.g. sitemap%s.xml) should return a sitemap with expected URL subset',
         async (page, expectedFile) => {
-          config.maxPerPage = 20;
-          config.page = page;
-          const res = await sitemap.response(config);
+          const newConfig = JSON.parse(JSON.stringify(config));
+          newConfig.maxPerPage = 20;
+          newConfig.page = page;
+          const res = await sitemap.response(newConfig);
           const resultXml = await res.text();
           const expectedSitemapXml = await fs.promises.readFile(expectedFile, 'utf-8');
           expect(resultXml).toEqual(expectedSitemapXml.trim());
@@ -262,7 +324,7 @@ describe('sitemap.ts', () => {
           ],
         },
       ];
-      const resultXml = sitemap.generateBody('https://example.com', pathObjs, undefined, undefined);
+      const resultXml = sitemap.generateBody('https://example.com', pathObjs);
 
       const expected = `
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -326,7 +388,12 @@ describe('sitemap.ts', () => {
       const excludeRoutePatterns: string[] = [];
       const paramValues = {};
       const fn = () => {
-        sitemap.generatePaths(excludeRoutePatterns, paramValues, undefined, undefined, undefined);
+        sitemap.generatePaths({
+          excludeRoutePatterns,
+          paramValues,
+          defaultChangefreq: undefined,
+          defaultPriority: undefined,
+        });
       };
       expect(fn).toThrowError();
     });
@@ -874,6 +941,79 @@ describe('sitemap.ts', () => {
       expect(pathsWithLang).toEqual([]);
     });
 
+    it('should preserve default ordering as static routes, dynamic generated routes, then additional paths', () => {
+      const routes = ['/', '/about', '/blog/[slug]', '/tags/[tag]'];
+      const paramValues = {
+        '/blog/[slug]': ['hello-world', 'another-post'],
+        '/tags/[tag]': ['blue', 'red'],
+      };
+
+      const { pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues,
+        undefined,
+        undefined
+      );
+      const paths = [
+        ...pathsWithoutLang,
+        ...sitemap.generateAdditionalPaths({
+          additionalPaths: ['/manual-a', '/manual-b'],
+          defaultChangefreq: undefined,
+          defaultPriority: undefined,
+        }),
+      ];
+
+      expect(paths.map(({ path }) => path)).toEqual([
+        '/',
+        '/about',
+        '/blog/hello-world',
+        '/blog/another-post',
+        '/tags/blue',
+        '/tags/red',
+        '/manual-a',
+        '/manual-b',
+      ]);
+    });
+
+    it('should carry ParamValue metadata and fill omitted fields from defaults', () => {
+      const routes = ['/athlete-rankings/[country]/[state]'];
+      const paramValues = {
+        '/athlete-rankings/[country]/[state]': [
+          {
+            values: ['usa', 'new-york'],
+            lastmod: '2025-01-01T00:00:00Z',
+            changefreq: 'weekly' as const,
+            priority: 0.8 as const,
+          },
+          {
+            values: ['canada', 'toronto'],
+          },
+        ],
+      };
+
+      const { pathsWithoutLang } = sitemap.generatePathsWithParamValues(
+        routes,
+        paramValues,
+        'daily',
+        0.7
+      );
+
+      expect(pathsWithoutLang).toEqual([
+        {
+          changefreq: 'weekly',
+          lastmod: '2025-01-01T00:00:00Z',
+          path: '/athlete-rankings/usa/new-york',
+          priority: 0.8,
+        },
+        {
+          changefreq: 'daily',
+          lastmod: undefined,
+          path: '/athlete-rankings/canada/toronto',
+          priority: 0.7,
+        },
+      ]);
+    });
+
     it('should return routes unchanged, when no tokenized routes exist & given no paramValues', () => {
       const routes = ['/', '/about', '/pricing', '/blog'];
       const paramValues = {};
@@ -1226,6 +1366,23 @@ describe('sitemap.ts', () => {
       const expected = [{ path: '/path1' }, { path: '/path2' }, { path: '/path3' }];
       expect(sitemap.deduplicatePaths(paths)).toEqual(expected);
     });
+
+    it('should keep the first duplicate position while replacing metadata with the last duplicate object', () => {
+      const paths: PathObj[] = [
+        { path: '/first', changefreq: 'daily' },
+        { path: '/duplicate', changefreq: 'weekly', priority: 0.4 },
+        { path: '/middle' },
+        { path: '/duplicate', changefreq: 'monthly', priority: 0.9 },
+        { path: '/last' },
+      ];
+
+      expect(sitemap.deduplicatePaths(paths)).toEqual([
+        { path: '/first', changefreq: 'daily' },
+        { path: '/duplicate', changefreq: 'monthly', priority: 0.9 },
+        { path: '/middle' },
+        { path: '/last' },
+      ]);
+    });
   });
 
   describe('generateAdditionalPaths()', () => {
@@ -1256,7 +1413,7 @@ describe('sitemap.ts', () => {
       const routePattern = '/[[lang]]/blog/[slug]';
       const routes = [routePattern];
       const paramValues = {
-        [routePattern]: largeArray
+        [routePattern]: largeArray,
       };
 
       // This should not throw "RangeError: Maximum call stack size exceeded"
@@ -1286,7 +1443,7 @@ describe('sitemap.ts', () => {
       const routePattern = '/[[lang]]/test/[id]';
       const routes = [routePattern];
       const paramValues = {
-        [routePattern]: largeParamValueArray
+        [routePattern]: largeParamValueArray,
       };
 
       expect(() => {

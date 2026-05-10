@@ -1,7 +1,7 @@
-import * as sitemap from '$lib/sitemap'; // Import from 'super-sitemap' in your app
+import * as sitemap from '$lib/sitemap.js'; // Import from 'super-sitemap' in your app
 import type { RequestHandler } from '@sveltejs/kit';
 
-import * as blog from '$lib/data/blog';
+import * as blog from '$lib/data/blog.js';
 import { error } from '@sveltejs/kit';
 
 // - Use prerender if you only have static routes or the data for your
@@ -80,7 +80,7 @@ export const GET: RequestHandler = async ({ params }) => {
       // items like `/foo.pdf`; this is merely intended to test the
       // `processPaths()` callback.)
       return paths.map(({ path, alternates, ...rest }) => {
-        const rtrn = { path: path === '/' ? path : `${path}/`, ...rest };
+        const rtrn: sitemap.PathObj = { path: path === '/' ? path : `${path}/`, ...rest };
 
         if (alternates) {
           rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({

@@ -1,4 +1,4 @@
-import { sampledPaths, sampledUrls } from '$lib/sampled'; // Import from 'super-sitemap' in your app
+import { sampledPaths, sampledUrls } from '$lib/sampled.js'; // Import from 'super-sitemap' in your app
 
 export async function load() {
   const meta = {
