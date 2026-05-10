@@ -19,6 +19,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Architecture and package entrypoints](#architecture-and-package-entrypoints)
   - [Basic example](#basic-example)
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
@@ -70,6 +71,30 @@ or
 Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#playwright-test) sections.
 
 ## Usage
+
+## Architecture and package entrypoints
+
+For SvelteKit apps, keep using the package root:
+
+```ts
+import * as sitemap from 'super-sitemap';
+```
+
+The root API remains the recommended SvelteKit integration. It discovers your
+`src/routes` page routes, applies SvelteKit route conventions such as route
+groups, matchers, optional params, and `[[lang]]`, then returns a ready-to-send
+XML `Response`.
+
+Internally, Super Sitemap is split into:
+
+- a framework-agnostic core that renders sitemap paths, pagination, and XML from
+  normalized route templates, exported from `super-sitemap/core` for advanced
+  integrations; and
+- a SvelteKit adapter that converts SvelteKit route files into those normalized
+  templates, exported from `super-sitemap/adapters/sveltekit`.
+
+These subpath exports are lower-level APIs. Existing SvelteKit users do not need
+them and do not need to change any setup shown below.
 
 ## Basic example
 

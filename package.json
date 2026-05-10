@@ -23,7 +23,7 @@
     "dev": "vite dev",
     "build": "vite build && npm run package",
     "preview": "vite preview",
-    "package": "svelte-kit sync && svelte-package && publint",
+    "package": "rm -rf dist core adapters && rm -f src/core/*.d.ts src/adapters/sveltekit/*.d.ts && svelte-kit sync && svelte-package && svelte-package -i src/core -o core && svelte-package -i src/adapters -o adapters && rm -f src/core/*.d.ts src/adapters/sveltekit/*.d.ts && publint",
     "prepublishOnly": "rm -rf dist && npm run package && npm test -- --run",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -37,10 +37,24 @@
       "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./adapters/sveltekit": {
+      "types": "./adapters/sveltekit/index.d.ts",
+      "default": "./adapters/sveltekit/index.js"
+    },
+    "./core": {
+      "types": "./core/index.d.ts",
+      "default": "./core/index.js"
     }
   },
   "files": [
+    "adapters",
+    "core",
     "dist",
+    "!adapters/**/*.test.*",
+    "!adapters/**/*.spec.*",
+    "!core/**/*.test.*",
+    "!core/**/*.spec.*",
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*"
   ],
