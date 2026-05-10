@@ -265,6 +265,7 @@ describe('TanStack Start adapter route sources', () => {
   it('matches equivalent manifest records and route tree output', () => {
     const manifestTemplates = createTanStackStartRouteTemplates({
       routes: [
+        { fullPath: '/_app', id: '/_app' },
         { fullPath: '/dashboard', id: '/_app/dashboard' },
         { fullPath: '/blog/$slug', id: '/blog/$slug' },
         { fullPath: '/about', id: '/about' },
@@ -276,6 +277,21 @@ describe('TanStack Start adapter route sources', () => {
     const routeTreeTemplates = createTanStackStartRouteTemplates({ routeTree });
 
     expect(routeTreeTemplates).toEqual(manifestTemplates);
+  });
+
+  it('does not emit false root routes from manifest layout-only records', () => {
+    const templates = createTanStackStartRouteTemplates({
+      routes: [
+        { fullPath: '/_app', id: '/_app' },
+        { fullPath: '/(marketing)', id: '/(marketing)' },
+        { fullPath: '/_app/dashboard', id: '/_app/dashboard' },
+      ],
+    });
+
+    expect(templates.map((template) => template.source.compatibilityKey)).toEqual(['/dashboard']);
+    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
+      '/dashboard',
+    ]);
   });
 
   it('supports minimum route record source fields and returns deterministic order', () => {

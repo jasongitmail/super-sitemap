@@ -200,7 +200,7 @@ function getExplicitRouteSource({
 
   if (routes) {
     validateRouteRecords(routes);
-    return routes;
+    return routes.filter(isEmittableRouteRecord);
   }
 
   return routeTree ? getTanStackStartRouteRecordsFromRouteTree(routeTree) : [];
@@ -224,7 +224,7 @@ function visitRouteTreeNode(
   if (visited.has(routeNode)) return;
   visited.add(routeNode);
 
-  if (isEmittableRouteTreeRecord(routeNode)) {
+  if (isEmittableRouteRecord(routeNode)) {
     routes.push({
       filePath: routeNode.filePath,
       fullPath: routeNode.fullPath,
@@ -258,7 +258,7 @@ function routeChildrenToArray(
   );
 }
 
-function isEmittableRouteTreeRecord(route: TanStackStartRouteRecord): boolean {
+function isEmittableRouteRecord(route: TanStackStartRouteRecord): boolean {
   if (route.id === '__root__') return false;
   if (!hasRoutePathField(route)) return false;
 
