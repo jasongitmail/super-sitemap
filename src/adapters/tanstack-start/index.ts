@@ -1,9 +1,22 @@
 import type {
+  PathObj,
   RouteLocaleSlot,
   RouteParam,
   RouteSegment,
   RouteSource,
   RouteTemplate,
+  SitemapConfig,
+} from '../../core/index.js';
+
+import {
+  deduplicatePaths,
+  generateAdditionalPaths,
+  generatePathsFromRouteTemplates,
+  getTotalPages,
+  paginatePaths,
+  renderSitemapIndexXml,
+  renderSitemapXml,
+  sortPaths,
 } from '../../core/index.js';
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
@@ -48,6 +61,9 @@ export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTe
   routeTree?: TanStackStartRouteTree;
   routes?: TanStackStartRouteRecord[];
 };
+
+export type TanStackStartSitemapConfig = Omit<SitemapConfig, 'excludeRoutePatterns'> &
+  CreateTanStackStartRouteTemplatesOptions;
 
 type ParsedSegment =
   | {
@@ -99,6 +115,208 @@ export function createTanStackStartRouteTemplates({
   return [...templatesByCompatibilityKey.values()].sort((a, b) =>
     a.source.compatibilityKey.localeCompare(b.source.compatibilityKey)
   );
+}
+
+export function buildTanStackStartSitemap({
+  maxPerPage = 50_000,
+  origin,
+  page,
+  ...config
+}: TanStackStartSitemapConfig): string {
+  if (!origin) {
+    throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
+  }
+
+  const paths = prepareTanStackStartSitemapPaths(config);
+  const totalPages = getTotalPages(paths, maxPerPage);
+
+  if (!page) {
+    if (paths.length <= maxPerPage) {
+      return renderSitemapXml(origin, paths);
+    }
+
+    return renderSitemapIndexXml(origin, totalPages);
+  }
+
+  const paginatedPaths = paginatePaths({ maxPerPage, page, paths });
+  if (paginatedPaths.kind === 'invalid-page') {
+    return 'Invalid page param';
+  }
+  if (paginatedPaths.kind === 'not-found') {
+    return 'Page does not exist';
+  }
+
+  return renderSitemapXml(origin, paginatedPaths.paths);
+}
+
+export function generateTanStackStartPaths({
+  defaultChangefreq,
+  defaultPriority,
+  excludeRoutePatterns,
+  lang,
+  locale,
+  paramValues,
+  routeTree,
+  routes,
+}: Pick<
+  TanStackStartSitemapConfig,
+  | 'defaultChangefreq'
+  | 'defaultPriority'
+  | 'excludeRoutePatterns'
+  | 'lang'
+  | 'locale'
+  | 'paramValues'
+  | 'routeTree'
+  | 'routes'
+>): PathObj[] {
+  const templates = createTanStackStartRouteTemplates({
+    excludeRoutePatterns,
+    locale,
+    routeTree,
+    routes,
+  });
+
+  try {
+    return generatePathsFromRouteTemplates({
+      defaultChangefreq,
+      defaultPriority,
+      lang,
+      paramValues,
+      templates,
+    }).map(stripUndefinedPathMetadata);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.startsWith('Core: paramValues not provided for route: ')) {
+        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+        throw new Error(
+          `TanStack Start sitemap: paramValues not provided for route: '${route}'. Update excludeRoutePatterns to exclude this route or add data for this route's params to paramValues.`
+        );
+      }
+
+      if (
+        error.message.startsWith(
+          'Core: paramValues were provided for a route that does not exist: '
+        )
+      ) {
+        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+        throw new Error(
+          `TanStack Start sitemap: paramValues were provided for a route that does not exist: '${route}'. Remove this property from paramValues or update your TanStack route source.`
+        );
+      }
+    }
+
+    throw error;
+  }
+}
+
+export async function response({
+  additionalPaths = [],
+  defaultChangefreq,
+  defaultPriority,
+  excludeRoutePatterns,
+  headers = {},
+  lang,
+  locale,
+  maxPerPage = 50_000,
+  origin,
+  page,
+  paramValues,
+  processPaths,
+  routeTree,
+  routes,
+  sort = false,
+}: TanStackStartSitemapConfig): Promise<Response> {
+  if (!origin) {
+    throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
+  }
+
+  const paths = prepareTanStackStartSitemapPaths({
+    additionalPaths,
+    defaultChangefreq,
+    defaultPriority,
+    excludeRoutePatterns,
+    lang,
+    locale,
+    paramValues,
+    processPaths,
+    routeTree,
+    routes,
+    sort,
+  });
+
+  const totalPages = getTotalPages(paths, maxPerPage);
+
+  let body: string;
+  if (!page) {
+    body =
+      paths.length <= maxPerPage
+        ? renderSitemapXml(origin, paths)
+        : renderSitemapIndexXml(origin, totalPages);
+  } else {
+    const paginatedPaths = paginatePaths({ maxPerPage, page, paths });
+    if (paginatedPaths.kind === 'invalid-page') {
+      return new Response('Invalid page param', { status: 400 });
+    }
+    if (paginatedPaths.kind === 'not-found') {
+      return new Response('Page does not exist', { status: 404 });
+    }
+
+    body = renderSitemapXml(origin, paginatedPaths.paths);
+  }
+
+  const newHeaders = {
+    'cache-control': 'max-age=0, s-maxage=3600',
+    'content-type': 'application/xml',
+    ...Object.fromEntries(
+      Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])
+    ),
+  };
+
+  return new Response(body, { headers: newHeaders });
+}
+
+function prepareTanStackStartSitemapPaths({
+  additionalPaths = [],
+  defaultChangefreq,
+  defaultPriority,
+  excludeRoutePatterns,
+  lang,
+  locale,
+  paramValues,
+  processPaths,
+  routeTree,
+  routes,
+  sort = false,
+}: Omit<TanStackStartSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>): PathObj[] {
+  let paths = [
+    ...generateTanStackStartPaths({
+      defaultChangefreq,
+      defaultPriority,
+      excludeRoutePatterns,
+      lang,
+      locale,
+      paramValues,
+      routeTree,
+      routes,
+    }),
+    ...generateAdditionalPaths({
+      additionalPaths,
+      defaultChangefreq,
+      defaultPriority,
+    }),
+  ];
+
+  if (processPaths) {
+    paths = processPaths(paths);
+  }
+
+  return sortPaths(deduplicatePaths(paths), sort);
+}
+
+function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
+  return Object.fromEntries(
+    Object.entries(pathObj).filter(([, value]) => value !== undefined)
+  ) as PathObj;
 }
 
 export function getTanStackStartRouteRecordsFromRouteTree(
