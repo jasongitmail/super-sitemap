@@ -5,6 +5,8 @@ import {
   buildTanStackStartSitemap,
   createTanStackStartRouteTemplates,
   generateTanStackStartPaths,
+  getBody,
+  getHeaders,
   getTanStackStartRouteRecordsFromRouteTree,
   parseTanStackStartRouteTemplates,
   response,
@@ -410,6 +412,28 @@ describe('TanStack Start adapter response wrapper', () => {
     expect(res.headers.get('cache-control')).toBe('max-age=0, s-maxage=3600');
     expect(xml).toContain('<urlset');
     expect(locsFromXml(xml)).toEqual(['/', '/about']);
+  });
+
+  it('exports body and header helpers for framework-specific response wrappers', () => {
+    const xml = getBody({
+      origin: 'https://example.com',
+      routes: [{ fullPath: '/' }, { fullPath: '/about' }],
+    });
+    const headers = getHeaders({
+      customHeaders: {
+        'cache-control': 'max-age=0, s-maxage=86400',
+        'x-custom': 'yes',
+      },
+    });
+
+    expect(xml).toContain('<urlset');
+    expect(xml).toContain('<loc>https://example.com/</loc>');
+    expect(xml).toContain('<loc>https://example.com/about</loc>');
+    expect(headers).toEqual({
+      'cache-control': 'max-age=0, s-maxage=86400',
+      'content-type': 'application/xml',
+      'x-custom': 'yes',
+    });
   });
 
   it('interpolates dynamic, multi-param, splat, metadata, and defaults without TanStack syntax', async () => {

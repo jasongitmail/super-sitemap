@@ -46,6 +46,10 @@
       "types": "./adapters/tanstack-start/index.d.ts",
       "default": "./adapters/tanstack-start/index.js"
     },
+    "./tanstack-start": {
+      "types": "./adapters/tanstack-start/index.d.ts",
+      "default": "./adapters/tanstack-start/index.js"
+    },
     "./core": {
       "types": "./core/index.d.ts",
       "default": "./core/index.js"

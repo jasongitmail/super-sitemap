@@ -95,7 +95,7 @@ Internally, Super Sitemap is split into:
   templates, exported from `super-sitemap/adapters/sveltekit`.
 - a TanStack Start adapter that converts app-provided generated route tree or
   route-record data into the same normalized templates, exported from
-  `super-sitemap/adapters/tanstack-start`.
+  `super-sitemap/tanstack-start`.
 
 These subpath exports are lower-level APIs. Existing SvelteKit users do not need
 them and do not need to change any setup shown below.
@@ -139,7 +139,7 @@ dynamically import or execute your `routeTree.gen.ts` file.
 
 ```ts
 // /src/routes/sitemap.xml.ts
-import { response } from 'super-sitemap/adapters/tanstack-start';
+import { response } from 'super-sitemap/tanstack-start';
 import { routeTree } from '../routeTree.gen';
 
 export function GET() {
@@ -158,16 +158,23 @@ export function GET() {
 }
 ```
 
-For build-time or prerender-style usage, `buildTanStackStartSitemap()` returns
-the XML string instead of a `Response`:
+For build-time, prerender-style, or custom response-wrapper usage, `getBody()`
+returns the XML string and `getHeaders()` returns the default sitemap headers
+merged with your overrides:
 
 ```ts
-import { buildTanStackStartSitemap } from 'super-sitemap/adapters/tanstack-start';
+import { getBody, getHeaders } from 'super-sitemap/tanstack-start';
 import { routeTree } from '../routeTree.gen';
 
-const xml = buildTanStackStartSitemap({
+const body = getBody({
   origin: 'https://example.com',
   routeTree,
+});
+
+const headers = getHeaders({
+  customHeaders: {
+    'cache-control': 'max-age=0, s-maxage=86400',
+  },
 });
 ```
 
@@ -175,7 +182,7 @@ You can also pass generated route records directly. This is useful if your
 build tooling already has a side-effect-free manifest of TanStack routes:
 
 ```ts
-import { response } from 'super-sitemap/adapters/tanstack-start';
+import { response } from 'super-sitemap/tanstack-start';
 
 export function GET() {
   return response({

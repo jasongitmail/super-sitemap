@@ -21,6 +21,8 @@ import {
   buildTanStackStartSitemap,
   createTanStackStartRouteTemplates,
   generateTanStackStartPaths,
+  getBody as getTanStackStartBody,
+  getHeaders as getTanStackStartHeaders,
   parseTanStackStartRouteTemplates,
   response as tanStackStartResponse,
 } from '../adapters/tanstack-start/index.js';
@@ -75,10 +77,16 @@ describe('TanStack Start package API', () => {
       default: './adapters/tanstack-start/index.js',
       types: './adapters/tanstack-start/index.d.ts',
     });
+    expect(packageJson.exports['./tanstack-start']).toEqual({
+      default: './adapters/tanstack-start/index.js',
+      types: './adapters/tanstack-start/index.d.ts',
+    });
   });
 
   it('exports TanStack Start adapter APIs and types for consumer-style usage', async () => {
     expect(tanStackStartResponse).toBeTypeOf('function');
+    expect(getTanStackStartBody).toBeTypeOf('function');
+    expect(getTanStackStartHeaders).toBeTypeOf('function');
     expect(buildTanStackStartSitemap).toBeTypeOf('function');
     expect(createTanStackStartRouteTemplates).toBeTypeOf('function');
     expect(generateTanStackStartPaths).toBeTypeOf('function');
@@ -94,6 +102,17 @@ describe('TanStack Start package API', () => {
     const res = await tanStackStartResponse(config);
 
     expect(templates[0]?.source.compatibilityKey).toBe('/blog/$slug');
+    expect(getTanStackStartBody(config)).toContain(
+      '<loc>https://example.com/blog/hello-world</loc>'
+    );
+    expect(
+      getTanStackStartHeaders({
+        customHeaders: { 'cache-control': 'max-age=0, s-maxage=86400' },
+      })
+    ).toEqual({
+      'cache-control': 'max-age=0, s-maxage=86400',
+      'content-type': 'application/xml',
+    });
     expect(await res.text()).toContain('<loc>https://example.com/blog/hello-world</loc>');
   });
 });

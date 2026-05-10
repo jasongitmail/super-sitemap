@@ -65,6 +65,10 @@ export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTe
 export type TanStackStartSitemapConfig = Omit<SitemapConfig, 'excludeRoutePatterns'> &
   CreateTanStackStartRouteTemplatesOptions;
 
+export type GetTanStackStartHeadersOptions = {
+  customHeaders?: Record<string, string>;
+};
+
 type ParsedSegment =
   | {
       kind: 'omit';
@@ -123,6 +127,15 @@ export function buildTanStackStartSitemap({
   page,
   ...config
 }: TanStackStartSitemapConfig): string {
+  return getBody({ maxPerPage, origin, page, ...config });
+}
+
+export function getBody({
+  maxPerPage = 50_000,
+  origin,
+  page,
+  ...config
+}: TanStackStartSitemapConfig): string {
   if (!origin) {
     throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
   }
@@ -147,6 +160,19 @@ export function buildTanStackStartSitemap({
   }
 
   return renderSitemapXml(origin, paginatedPaths.paths);
+}
+
+export function getHeaders({ customHeaders = {} }: GetTanStackStartHeadersOptions = {}): Record<
+  string,
+  string
+> {
+  return {
+    'cache-control': 'max-age=0, s-maxage=3600',
+    'content-type': 'application/xml',
+    ...Object.fromEntries(
+      Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value])
+    ),
+  };
 }
 
 export function generateTanStackStartPaths({
@@ -264,15 +290,7 @@ export async function response({
     body = renderSitemapXml(origin, paginatedPaths.paths);
   }
 
-  const newHeaders = {
-    'cache-control': 'max-age=0, s-maxage=3600',
-    'content-type': 'application/xml',
-    ...Object.fromEntries(
-      Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])
-    ),
-  };
-
-  return new Response(body, { headers: newHeaders });
+  return new Response(body, { headers: getHeaders({ customHeaders: headers }) });
 }
 
 function prepareTanStackStartSitemapPaths({
