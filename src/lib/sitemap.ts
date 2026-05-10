@@ -1,74 +1,32 @@
-export type Changefreq = 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly';
+import type { LangConfig, ParamValue, ParamValues, PathObj, SitemapConfig } from '../core/index.js';
 
-/* eslint-disable perfectionist/sort-object-types */
-export type ParamValue = {
-  values: string[];
-  lastmod?: string;
-  priority?: Priority;
-  changefreq?: Changefreq;
-};
+import {
+  deduplicatePaths,
+  generateAdditionalPaths,
+  getTotalPages,
+  paginatePaths,
+  renderSitemapIndexXml,
+  renderSitemapXml,
+  sortPaths,
+} from '../core/index.js';
 
-/* eslint-disable perfectionist/sort-object-types */
-export type ParamValues = Record<string, ParamValue[] | never | string[] | string[][]>;
+export type {
+  Alternate,
+  Changefreq,
+  LangConfig,
+  ParamValue,
+  ParamValues,
+  PathObj,
+  Priority,
+  SitemapConfig,
+} from '../core/index.js';
 
-export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
-
-/* eslint-disable perfectionist/sort-object-types */
-export type SitemapConfig = {
-  additionalPaths?: string[];
-  excludeRoutePatterns?: string[];
-  headers?: Record<string, string>;
-  lang?: {
-    default: string;
-    alternates: string[];
-  };
-  maxPerPage?: number;
-  origin: string;
-  page?: string;
-
-  /**
-   * Parameter values for dynamic routes, where the values can be:
-   * - `string[]`
-   * - `string[][]`
-   * - `ParamValueObj[]`
-   */
-  paramValues?: ParamValues;
-
-  /**
-   * Optional. Default changefreq, when not specified within a route's `paramValues` objects.
-   * Omitting from sitemap config will omit changefreq from all sitemap entries except
-   * those where you set `changefreq` property with a route's `paramValues` objects.
-   */
-  defaultChangefreq?: Changefreq;
-
-  /**
-   * Optional. Default priority, when not specified within a route's `paramValues` objects.
-   * Omitting from sitemap config will omit priority from all sitemap entries except
-   * those where you set `priority` property with a route's `paramValues` objects.
-   */
-  defaultPriority?: Priority;
-
-  processPaths?: (paths: PathObj[]) => PathObj[];
-  sort?: 'alpha' | false;
-};
-
-export type LangConfig = {
-  default: string;
-  alternates: string[];
-};
-
-export type Alternate = {
-  lang: string;
-  path: string;
-};
-
-export type PathObj = {
-  path: string;
-  lastmod?: string; // ISO 8601 datetime
-  changefreq?: Changefreq;
-  priority?: Priority;
-  alternates?: Alternate[];
-};
+export {
+  deduplicatePaths,
+  generateAdditionalPaths,
+  renderSitemapIndexXml as generateSitemapIndex,
+  renderSitemapXml as generateBody,
+} from '../core/index.js';
 
 const langRegex = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
@@ -172,38 +130,30 @@ export async function response({
     paths = processPaths(paths);
   }
 
-  paths = deduplicatePaths(paths);
+  paths = sortPaths(deduplicatePaths(paths), sort);
 
-  if (sort === 'alpha') {
-    paths.sort((a, b) => a.path.localeCompare(b.path));
-  }
-
-  const totalPages = Math.ceil(paths.length / maxPerPage);
+  const totalPages = getTotalPages(paths, maxPerPage);
 
   let body: string;
   if (!page) {
     // User is visiting `/sitemap.xml` or `/sitemap[[page]].xml` without page.
     if (paths.length <= maxPerPage) {
-      body = generateBody(origin, paths);
+      body = renderSitemapXml(origin, paths);
     } else {
-      body = generateSitemapIndex(origin, totalPages);
+      body = renderSitemapIndexXml(origin, totalPages);
     }
   } else {
     // User is visiting a sitemap index's subpage–e.g. `sitemap[[page]].xml`.
 
-    // Ensure `page` param is numeric. We do it this way to avoid needing to
-    // instruct devs to create a route matcher, to ease set up for best DX.
-    if (!/^[1-9]\d*$/.test(page)) {
+    const paginatedPaths = paginatePaths({ maxPerPage, page, paths });
+    if (paginatedPaths.kind === 'invalid-page') {
       return new Response('Invalid page param', { status: 400 });
     }
-
-    const pageInt = Number(page);
-    if (pageInt > totalPages) {
+    if (paginatedPaths.kind === 'not-found') {
       return new Response('Page does not exist', { status: 404 });
     }
 
-    const pathsOnThisPage = paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage);
-    body = generateBody(origin, pathsOnThisPage);
+    body = renderSitemapXml(origin, paginatedPaths.paths);
   }
 
   // Merge keys case-insensitive; custom headers take precedence over defaults.
@@ -216,82 +166,6 @@ export async function response({
   };
 
   return new Response(body, { headers: newHeaders });
-}
-
-/**
- * Generates an XML response body based on the provided paths, using sitemap
- * structure from https://kit.svelte.dev/docs/seo#manual-setup-sitemaps.
- *
- * @private
- * @remarks
- * - Based on https://kit.svelte.dev/docs/seo#manual-setup-sitemaps
- * - Google ignores changefreq and priority, but we support these optionally.
- * - TODO We could consider adding `<lastmod>` with an ISO 8601 datetime, but
- *   not worrying about this for now.
- *   https://developers.google.com/search/blog/2014/10/best-practices-for-xml-sitemaps-rssatom
- *
- * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash
- *                 because "/" is the index page.
- * @param pathObjs - Array of path objects to include in the sitemap. Each path within it should
- *                 start with a '/'; but if not, it will be added.
- * @returns The generated XML sitemap.
- */
-export function generateBody(origin: string, pathObjs: PathObj[]): string {
-  const urlElements = pathObjs
-    .map((pathObj) => {
-      const { alternates, changefreq, lastmod, path, priority } = pathObj;
-
-      let url = '\n  <url>\n';
-      url += `    <loc>${origin}${path}</loc>\n`;
-      url += lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : '';
-      url += changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '';
-      url += priority ? `    <priority>${priority}</priority>\n` : '';
-
-      if (alternates) {
-        url += alternates
-          .map(
-            ({ lang, path }) =>
-              `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />\n`
-          )
-          .join('');
-      }
-
-      url += '  </url>';
-
-      return url;
-    })
-    .join('');
-
-  return `<?xml version="1.0" encoding="UTF-8" ?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:xhtml="http://www.w3.org/1999/xhtml"
->${urlElements}
-</urlset>`;
-}
-
-/**
- * Generates a sitemap index XML string.
- *
- * @private
- * @param origin - The origin URL. E.g. `https://example.com`. No trailing slash.
- * @param pages - The number of sitemap pages to include in the index.
- * @returns The generated XML sitemap index.
- */
-export function generateSitemapIndex(origin: string, pages: number): string {
-  let str = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-
-  for (let i = 1; i <= pages; i++) {
-    str += `
-  <sitemap>
-    <loc>${origin}/sitemap${i}.xml</loc>
-  </sitemap>`;
-  }
-  str += `
-</sitemapindex>`;
-
-  return str;
 }
 
 /**
@@ -313,11 +187,11 @@ export function generatePaths({
   lang = { alternates: [], default: 'en' },
   paramValues = {},
 }: {
-  excludeRoutePatterns?: string[];
-  paramValues?: ParamValues;
-  lang?: LangConfig;
   defaultChangefreq: SitemapConfig['defaultChangefreq'];
   defaultPriority: SitemapConfig['defaultPriority'];
+  excludeRoutePatterns?: string[];
+  lang?: LangConfig;
+  paramValues?: ParamValues;
 }): PathObj[] {
   // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
   // - See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
@@ -705,52 +579,4 @@ export function processPathsWithLang(pathObjs: PathObj[], langConfig: LangConfig
   }
 
   return processedPathObjs;
-}
-
-/**
- * Removes duplicate paths from an array of PathObj, keeping the last occurrence of any duplicates.
- *
- * - Duplicate pathObjs could occur due to a developer using additionalPaths or processPaths() and
- *   not properly excluding a pre-existing path.
- *
- * @private
- */
-export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
-  const uniquePaths = new Map<string, PathObj>();
-
-  for (const pathObj of pathObjs) {
-    uniquePaths.set(pathObj.path, pathObj);
-  }
-
-  return Array.from(uniquePaths.values());
-}
-
-/**
- * Converts the user-provided `additionalPaths` into `PathObj[]` type, ensuring each path starts
- * with a forward slash and each PathObj contains default changefreq and priority.
- *
- * - `additionalPaths` are never translated based on the lang config because they could be something
- *   like a PDF within the user's static dir.
- *
- * @private
- */
-export function generateAdditionalPaths({
-  additionalPaths,
-  defaultChangefreq,
-  defaultPriority,
-}: {
-  additionalPaths: string[];
-  defaultChangefreq: SitemapConfig['defaultChangefreq'];
-  defaultPriority: SitemapConfig['defaultPriority'];
-}): PathObj[] {
-  const defaults = {
-    changefreq: defaultChangefreq,
-    lastmod: undefined,
-    priority: defaultPriority,
-  };
-
-  return additionalPaths.map((path) => ({
-    ...defaults,
-    path: path.startsWith('/') ? path : `/${path}`,
-  }));
 }
