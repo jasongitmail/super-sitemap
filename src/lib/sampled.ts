@@ -2,7 +2,9 @@ import path from 'node:path';
 
 import {
   discoverSvelteKitPageRouteFilesFromDirectory,
+  expandSvelteKitOptionalRoutes,
   filterSvelteKitRoutes,
+  parseSvelteKitRouteTemplate,
 } from '../adapters/sveltekit/index.js';
 import { parseSitemapXml } from './xml.js';
 
@@ -148,6 +150,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   routes = routes.map((route) => {
     return route.replace(/\/?\[\[lang(=[a-z]+)?\]\]/, '') || '/';
   });
+  routes = expandSvelteKitOptionalRoutes(routes);
 
   // Separate static and dynamic routes. Remember these are _routes_ from disk
   // and consequently have not had any exclusion patterns applied against them,
@@ -196,7 +199,7 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
   //   an overlapping subset may still be found from the end.
   const regexPatterns = new Set(
     nonExcludedDynamicRoutes.map((path) => {
-      const regexPattern = path.replace(/\[[^\]]+\]/g, '[^/]+');
+      const regexPattern = svelteKitRouteToRegexPattern(path);
       return ORIGIN + regexPattern + '$';
     })
   );
@@ -257,4 +260,26 @@ export function findFirstMatches(regexPatterns: Set<string>, haystack: string[])
   }
 
   return firstMatches;
+}
+
+function svelteKitRouteToRegexPattern(route: string): string {
+  const template = parseSvelteKitRouteTemplate({ route });
+
+  if (template.segments.length === 0) {
+    return '/';
+  }
+
+  return template.segments
+    .map((segment) => {
+      if (segment.kind === 'static') {
+        return `/${escapeRegex(segment.value)}`;
+      }
+
+      return '/[^/]+';
+    })
+    .join('');
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

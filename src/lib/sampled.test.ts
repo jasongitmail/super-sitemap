@@ -23,6 +23,8 @@ describe('sample.ts', () => {
       'https://example.com/login',
       'https://example.com/markdown-md',
       'https://example.com/markdown-svx',
+      'https://example.com/optionals',
+      'https://example.com/optionals/many',
       'https://example.com/pricing',
       'https://example.com/privacy',
       'https://example.com/signup',
@@ -32,6 +34,10 @@ describe('sample.ts', () => {
       'https://example.com/blog/tag/blue',
       'https://example.com/campsites/canada/toronto',
       'https://example.com/foo-path-1',
+      'https://example.com/optionals/many/data-a1',
+      'https://example.com/optionals/many/data-a1/data-b1',
+      'https://example.com/optionals/many/data-a1/data-b1/foo',
+      'https://example.com/optionals/optional-1',
     ];
 
     describe('sitemap', () => {
@@ -70,6 +76,8 @@ describe('sample.ts', () => {
       '/login',
       '/markdown-md',
       '/markdown-svx',
+      '/optionals',
+      '/optionals/many',
       '/pricing',
       '/privacy',
       '/signup',
@@ -78,6 +86,10 @@ describe('sample.ts', () => {
       '/blog/tag/blue',
       '/campsites/canada/toronto',
       '/foo-path-1',
+      '/optionals/many/data-a1',
+      '/optionals/many/data-a1/data-b1',
+      '/optionals/many/data-a1/data-b1/foo',
+      '/optionals/optional-1',
     ];
 
     describe('sitemap', () => {
