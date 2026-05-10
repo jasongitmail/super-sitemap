@@ -31,6 +31,55 @@ export type PathObj = {
   alternates?: Alternate[];
 };
 
+export type RouteSegment =
+  | {
+      kind: 'locale';
+      name: string;
+      matcher?: string;
+    }
+  | {
+      kind: 'param';
+      name: string;
+      matcher?: string;
+      rest?: boolean;
+    }
+  | {
+      kind: 'static';
+      value: string;
+    };
+
+/* eslint-disable perfectionist/sort-object-types */
+export type RouteParam = {
+  name: string;
+  matcher?: string;
+  rest?: boolean;
+  segmentIndex: number;
+};
+
+/* eslint-disable perfectionist/sort-object-types */
+export type RouteLocaleSlot = {
+  paramName: string;
+  mode: 'optional' | 'required';
+  matcher?: string;
+  segmentIndex: number;
+};
+
+/* eslint-disable perfectionist/sort-object-types */
+export type RouteSource = {
+  adapter: string;
+  compatibilityKey: string;
+  filePath?: string;
+};
+
+/* eslint-disable perfectionist/sort-object-types */
+export type RouteTemplate = {
+  id: string;
+  segments: RouteSegment[];
+  params?: RouteParam[];
+  locale?: RouteLocaleSlot;
+  source: RouteSource;
+};
+
 /* eslint-disable perfectionist/sort-object-types */
 export type SitemapConfig = {
   additionalPaths?: string[];
