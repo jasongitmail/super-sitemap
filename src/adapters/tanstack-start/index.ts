@@ -16,6 +16,12 @@ export type TanStackStartRouteRecord = {
   to?: string;
 };
 
+export type TanStackStartRouteTree = TanStackStartRouteRecord & {
+  _children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
+  children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
+  childrenById?: Record<string, TanStackStartRouteTree>;
+};
+
 export type TanStackStartLocaleMapping = {
   matcher?: string;
   mode: RouteLocaleSlot['mode'];
@@ -39,7 +45,8 @@ export type ParseTanStackStartRouteTemplatesOptions = {
 
 export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTemplatesOptions & {
   excludeRoutePatterns?: string[];
-  routes: TanStackStartRouteRecord[];
+  routeTree?: TanStackStartRouteTree;
+  routes?: TanStackStartRouteRecord[];
 };
 
 type ParsedSegment =
@@ -68,11 +75,13 @@ type SegmentVariant = {
 export function createTanStackStartRouteTemplates({
   excludeRoutePatterns = [],
   locale,
+  routeTree,
   routes,
 }: CreateTanStackStartRouteTemplatesOptions): TanStackStartRouteTemplate[] {
+  const routeRecords = getExplicitRouteSource({ routeTree, routes });
   const templatesByCompatibilityKey = new Map<string, TanStackStartRouteTemplate>();
 
-  for (const route of routes) {
+  for (const route of routeRecords) {
     const templates = parseTanStackStartRouteTemplates(route, { locale }).filter(
       (template) =>
         !excludeRoutePatterns.some((pattern) =>
@@ -90,6 +99,17 @@ export function createTanStackStartRouteTemplates({
   return [...templatesByCompatibilityKey.values()].sort((a, b) =>
     a.source.compatibilityKey.localeCompare(b.source.compatibilityKey)
   );
+}
+
+export function getTanStackStartRouteRecordsFromRouteTree(
+  routeTree: TanStackStartRouteTree
+): TanStackStartRouteRecord[] {
+  const routes: TanStackStartRouteRecord[] = [];
+  const visited = new WeakSet<object>();
+
+  visitRouteTreeNode(routeTree, routes, visited);
+
+  return routes.sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
 }
 
 export function parseTanStackStartRouteTemplates(
@@ -161,6 +181,100 @@ function createRouteTemplate({
       to: routeRecord.to,
     },
   };
+}
+
+function getExplicitRouteSource({
+  routeTree,
+  routes,
+}: {
+  routeTree?: TanStackStartRouteTree;
+  routes?: TanStackStartRouteRecord[];
+}): TanStackStartRouteRecord[] {
+  const routeSourceCount = Number(Boolean(routeTree)) + Number(Boolean(routes));
+
+  if (routeSourceCount !== 1) {
+    throw new Error(
+      'TanStack Start adapter: provide exactly one route source: `routeTree` or `routes`.'
+    );
+  }
+
+  if (routes) {
+    validateRouteRecords(routes);
+    return routes;
+  }
+
+  return routeTree ? getTanStackStartRouteRecordsFromRouteTree(routeTree) : [];
+}
+
+function validateRouteRecords(routes: TanStackStartRouteRecord[]): void {
+  for (const route of routes) {
+    if (!hasRoutePathField(route)) {
+      throw new Error(
+        'TanStack Start adapter: route records must include at least one path field: `fullPath`, `to`, `path`, or `id`.'
+      );
+    }
+  }
+}
+
+function visitRouteTreeNode(
+  routeNode: TanStackStartRouteTree,
+  routes: TanStackStartRouteRecord[],
+  visited: WeakSet<object>
+): void {
+  if (visited.has(routeNode)) return;
+  visited.add(routeNode);
+
+  if (isEmittableRouteTreeRecord(routeNode)) {
+    routes.push({
+      filePath: routeNode.filePath,
+      fullPath: routeNode.fullPath,
+      id: routeNode.id,
+      path: routeNode.path,
+      to: routeNode.to,
+    });
+  }
+
+  for (const child of getRouteTreeChildren(routeNode)) {
+    visitRouteTreeNode(child, routes, visited);
+  }
+}
+
+function getRouteTreeChildren(routeNode: TanStackStartRouteTree): TanStackStartRouteTree[] {
+  return [
+    ...routeChildrenToArray(routeNode.children),
+    ...routeChildrenToArray(routeNode.childrenById),
+    ...routeChildrenToArray(routeNode._children),
+  ];
+}
+
+function routeChildrenToArray(
+  children: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[] | undefined
+): TanStackStartRouteTree[] {
+  if (!children) return [];
+  if (Array.isArray(children)) return children;
+
+  return Object.values(children).sort((a, b) =>
+    getCompatibilityPath(a).localeCompare(getCompatibilityPath(b))
+  );
+}
+
+function isEmittableRouteTreeRecord(route: TanStackStartRouteRecord): boolean {
+  if (route.id === '__root__') return false;
+  if (!hasRoutePathField(route)) return false;
+
+  const sourcePath = getCompatibilityPath(route);
+  if (sourcePath === '/') return true;
+
+  return splitPath(sourcePath).some((segment) => !isPathlessSegment(segment));
+}
+
+function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
+  return (
+    typeof route.fullPath === 'string' ||
+    typeof route.to === 'string' ||
+    typeof route.path === 'string' ||
+    typeof route.id === 'string'
+  );
 }
 
 function expandSegmentVariants(

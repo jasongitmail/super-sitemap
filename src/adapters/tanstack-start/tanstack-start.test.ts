@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { generatePathsFromRouteTemplates } from '../../core/index.js';
-import { createTanStackStartRouteTemplates, parseTanStackStartRouteTemplates } from './index.js';
+import {
+  createTanStackStartRouteTemplates,
+  getTanStackStartRouteRecordsFromRouteTree,
+  parseTanStackStartRouteTemplates,
+} from './index.js';
 
 describe('TanStack Start adapter route parser', () => {
   it('normalizes static, root, and index routes into syntax-free templates', () => {
@@ -201,5 +205,148 @@ describe('TanStack Start adapter route parser', () => {
         expect.objectContaining({ name: expect.stringMatching(/\$|\{|\}/) })
       );
     }
+  });
+});
+
+describe('TanStack Start adapter route sources', () => {
+  const routeTree = {
+    children: {
+      aboutRoute: {
+        children: [
+          { fullPath: '/about/team', id: '/about/team' },
+          { fullPath: '/about/company', id: '/about/company' },
+        ],
+        fullPath: '/about',
+        id: '/about',
+      },
+      appLayoutRoute: {
+        children: {
+          dashboardRoute: { fullPath: '/dashboard', id: '/_app/dashboard' },
+        },
+        fullPath: '/_app',
+        id: '/_app',
+      },
+      blogRoute: {
+        children: {
+          postRoute: { fullPath: '/blog/$slug', id: '/blog/$slug' },
+        },
+        fullPath: '/blog',
+        id: '/blog',
+      },
+    },
+    fullPath: '/',
+    id: '__root__',
+  };
+
+  it('recursively discovers routes from route tree object-map and array child shapes', () => {
+    const templates = createTanStackStartRouteTemplates({ routeTree });
+
+    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
+      '/about',
+      '/about/company',
+      '/about/team',
+      '/blog',
+      '/blog/$slug',
+      '/dashboard',
+    ]);
+  });
+
+  it('produces route records from route tree input without emitting layout-only nodes', () => {
+    expect(getTanStackStartRouteRecordsFromRouteTree(routeTree)).toEqual([
+      { fullPath: '/about', id: '/about' },
+      { fullPath: '/about/company', id: '/about/company' },
+      { fullPath: '/about/team', id: '/about/team' },
+      { fullPath: '/blog', id: '/blog' },
+      { fullPath: '/blog/$slug', id: '/blog/$slug' },
+      { fullPath: '/dashboard', id: '/_app/dashboard' },
+    ]);
+  });
+
+  it('matches equivalent manifest records and route tree output', () => {
+    const manifestTemplates = createTanStackStartRouteTemplates({
+      routes: [
+        { fullPath: '/dashboard', id: '/_app/dashboard' },
+        { fullPath: '/blog/$slug', id: '/blog/$slug' },
+        { fullPath: '/about', id: '/about' },
+        { fullPath: '/blog', id: '/blog' },
+        { fullPath: '/about/team', id: '/about/team' },
+        { fullPath: '/about/company', id: '/about/company' },
+      ],
+    });
+    const routeTreeTemplates = createTanStackStartRouteTemplates({ routeTree });
+
+    expect(routeTreeTemplates).toEqual(manifestTemplates);
+  });
+
+  it('supports minimum route record source fields and returns deterministic order', () => {
+    const templates = createTanStackStartRouteTemplates({
+      routes: [
+        { id: '/id-only' },
+        { path: '/path-only' },
+        { to: '/to-only/$id' },
+        { fullPath: '/full-path' },
+      ],
+    });
+
+    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
+      '/full-path',
+      '/id-only',
+      '/path-only',
+      '/to-only/$id',
+    ]);
+  });
+
+  it('collapses duplicate route tree and manifest records deterministically', () => {
+    const templates = createTanStackStartRouteTemplates({
+      routes: [
+        { filePath: 'b.tsx', fullPath: '/duplicate' },
+        { filePath: 'a.tsx', fullPath: '/duplicate' },
+        { fullPath: '/alpha' },
+      ],
+    });
+
+    expect(templates.map((template) => template.source)).toEqual([
+      { adapter: 'tanstack-start', compatibilityKey: '/alpha', fullPath: '/alpha' },
+      {
+        adapter: 'tanstack-start',
+        compatibilityKey: '/duplicate',
+        filePath: 'b.tsx',
+        fullPath: '/duplicate',
+      },
+    ]);
+  });
+
+  it('applies exclusions before emitting templates and before requiring param values', () => {
+    const templates = createTanStackStartRouteTemplates({
+      excludeRoutePatterns: ['/blog/\\$slug'],
+      routeTree,
+    });
+
+    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
+      '/about',
+      '/about/company',
+      '/about/team',
+      '/blog',
+      '/dashboard',
+    ]);
+    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
+      '/about',
+      '/about/company',
+      '/about/team',
+      '/blog',
+      '/dashboard',
+    ]);
+  });
+
+  it('rejects missing and ambiguous route sources explicitly', () => {
+    expect(() => createTanStackStartRouteTemplates({})).toThrow(
+      'TanStack Start adapter: provide exactly one route source: `routeTree` or `routes`.'
+    );
+    expect(() =>
+      createTanStackStartRouteTemplates({ routeTree, routes: [{ fullPath: '/about' }] })
+    ).toThrow('TanStack Start adapter: provide exactly one route source: `routeTree` or `routes`.');
+    expect(() => createTanStackStartRouteTemplates({ routes: [{}] })).toThrow(
+      'TanStack Start adapter: route records must include at least one path field: `fullPath`, `to`, `path`, or `id`.'
+    );
   });
 });
