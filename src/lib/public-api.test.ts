@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CreateSvelteKitRouteTemplatesOptions } from '../adapters/sveltekit/index.js';
 import type {
   TanStackStartRouteRecord,
   TanStackStartRouteTemplate,
@@ -17,6 +18,11 @@ import type {
 } from './index.js';
 
 import packageJson from '../../package.json';
+import {
+  createSvelteKitRouteTemplates,
+  filterSvelteKitRoutes,
+  parseSvelteKitRouteTemplate,
+} from '../adapters/sveltekit/index.js';
 import {
   buildTanStackStartSitemap,
   createTanStackStartRouteTemplates,
@@ -68,6 +74,35 @@ describe('public package root API', () => {
 
     expect(config.paramValues).toBe(paramValues);
     expect(config.processPaths?.([])).toEqual([pathObj]);
+  });
+});
+
+describe('SvelteKit package API', () => {
+  it('declares only the public SvelteKit package export path', () => {
+    expect(packageJson.exports).not.toHaveProperty('./adapters/sveltekit');
+    expect(packageJson.exports['./sveltekit']).toEqual({
+      default: './adapters/sveltekit/index.js',
+      types: './adapters/sveltekit/index.d.ts',
+    });
+  });
+
+  it('exports SvelteKit adapter APIs and types for consumer-style usage', () => {
+    expect(createSvelteKitRouteTemplates).toBeTypeOf('function');
+    expect(filterSvelteKitRoutes).toBeTypeOf('function');
+    expect(parseSvelteKitRouteTemplate).toBeTypeOf('function');
+
+    const options: CreateSvelteKitRouteTemplatesOptions = {
+      routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
+    };
+    const templates = createSvelteKitRouteTemplates(options);
+
+    expect(templates[0]?.source.compatibilityKey).toBe('/blog/[slug]');
+    expect(filterSvelteKitRoutes(['/src/routes/(public)/about/+page.svelte'], [])).toEqual([
+      '/about',
+    ]);
+    expect(parseSvelteKitRouteTemplate({ route: '/blog/[slug]' }).params).toEqual([
+      { matcher: undefined, name: 'slug', rest: false, segmentIndex: 1 },
+    ]);
   });
 });
 

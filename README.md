@@ -92,7 +92,7 @@ Internally, Super Sitemap is split into:
   normalized route templates, exported from `super-sitemap/core` for advanced
   integrations; and
 - a SvelteKit adapter that converts SvelteKit route files into those normalized
-  templates, exported from `super-sitemap/adapters/sveltekit`.
+  templates, exported from `super-sitemap/sveltekit`.
 - a TanStack Start adapter that converts app-provided generated route tree or
   route-record data into the same normalized templates, exported from
   `super-sitemap/tanstack-start`.

@@ -38,7 +38,7 @@
       "svelte": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./adapters/sveltekit": {
+    "./sveltekit": {
       "types": "./adapters/sveltekit/index.d.ts",
       "default": "./adapters/sveltekit/index.js"
     },
