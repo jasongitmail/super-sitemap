@@ -310,7 +310,7 @@ export function generatePaths({
   defaultChangefreq,
   defaultPriority,
   excludeRoutePatterns = [],
-  lang = { default: "en", alternates: [] },
+  lang = { alternates: [], default: 'en' },
   paramValues = {},
 }: {
   excludeRoutePatterns?: string[];

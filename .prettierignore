@@ -1,8 +1,14 @@
 .DS_Store
 node_modules
 /build
+/dist
 /.svelte-kit
 /package
+/docs
+/misc
+.claude/settings.local.json
+.serena
+CLAUDE.md
 .env
 .env.*
 !.env.example
