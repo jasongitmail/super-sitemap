@@ -9,7 +9,12 @@ import {
 } from './route-files.js';
 import { findSvelteKitLangToken, parseSvelteKitRouteTemplate } from './route-template.js';
 
-export { discoverSvelteKitPageRouteFiles } from './discovery.js';
+export {
+  discoverSvelteKitPageRouteFiles,
+  discoverSvelteKitPageRouteFilesFromDirectory,
+  isSvelteKitPageRouteFile,
+  listFilePathsRecursively,
+} from './discovery.js';
 export { expandSvelteKitOptionalRoute, expandSvelteKitOptionalRoutes } from './optional-routes.js';
 export {
   normalizeSvelteKitRouteFile,
