@@ -42,10 +42,6 @@
       "types": "./adapters/sveltekit/index.d.ts",
       "default": "./adapters/sveltekit/index.js"
     },
-    "./adapters/tanstack-start": {
-      "types": "./adapters/tanstack-start/index.d.ts",
-      "default": "./adapters/tanstack-start/index.js"
-    },
     "./tanstack-start": {
       "types": "./adapters/tanstack-start/index.d.ts",
       "default": "./adapters/tanstack-start/index.js"

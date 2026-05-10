@@ -72,11 +72,8 @@ describe('public package root API', () => {
 });
 
 describe('TanStack Start package API', () => {
-  it('declares a runtime and type package export for the TanStack Start adapter', () => {
-    expect(packageJson.exports['./adapters/tanstack-start']).toEqual({
-      default: './adapters/tanstack-start/index.js',
-      types: './adapters/tanstack-start/index.d.ts',
-    });
+  it('declares only the public TanStack Start package export path', () => {
+    expect(packageJson.exports).not.toHaveProperty('./adapters/tanstack-start');
     expect(packageJson.exports['./tanstack-start']).toEqual({
       default: './adapters/tanstack-start/index.js',
       types: './adapters/tanstack-start/index.d.ts',
