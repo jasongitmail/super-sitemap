@@ -21,6 +21,7 @@
 - [Usage](#usage)
   - [Architecture and package entrypoints](#architecture-and-package-entrypoints)
   - [Basic example](#basic-example)
+  - [TanStack Start example](#tanstack-start-example)
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
   - [Param Values](#param-values)
@@ -92,6 +93,9 @@ Internally, Super Sitemap is split into:
   integrations; and
 - a SvelteKit adapter that converts SvelteKit route files into those normalized
   templates, exported from `super-sitemap/adapters/sveltekit`.
+- a TanStack Start adapter that converts app-provided generated route tree or
+  route-record data into the same normalized templates, exported from
+  `super-sitemap/adapters/tanstack-start`.
 
 These subpath exports are lower-level APIs. Existing SvelteKit users do not need
 them and do not need to change any setup shown below.
@@ -126,6 +130,68 @@ export const GET: RequestHandler = async () => {
 ```
 
 Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.xml`. This ensures your web server always sends the correct `application/xml` content type even if you decide to prerender your sitemap to static files.
+
+## TanStack Start example
+
+TanStack Start apps can use the TanStack adapter subpath and pass the generated
+route tree from the app. The app owns this import so Super Sitemap does not
+dynamically import or execute your `routeTree.gen.ts` file.
+
+```ts
+// /src/routes/sitemap.xml.ts
+import { response } from 'super-sitemap/adapters/tanstack-start';
+import { routeTree } from '../routeTree.gen';
+
+export function GET() {
+  return response({
+    origin: 'https://example.com',
+    routeTree,
+    paramValues: {
+      '/blog/$slug': ['hello-world', 'another-post'],
+      '/campsites/$country/$state': [
+        ['usa', 'new-york'],
+        ['canada', 'ontario'],
+      ],
+    },
+    excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
+  });
+}
+```
+
+For build-time or prerender-style usage, `buildTanStackStartSitemap()` returns
+the XML string instead of a `Response`:
+
+```ts
+import { buildTanStackStartSitemap } from 'super-sitemap/adapters/tanstack-start';
+import { routeTree } from '../routeTree.gen';
+
+const xml = buildTanStackStartSitemap({
+  origin: 'https://example.com',
+  routeTree,
+});
+```
+
+You can also pass generated route records directly. This is useful if your
+build tooling already has a side-effect-free manifest of TanStack routes:
+
+```ts
+import { response } from 'super-sitemap/adapters/tanstack-start';
+
+export function GET() {
+  return response({
+    origin: 'https://example.com',
+    routes: [{ fullPath: '/' }, { fullPath: '/about' }, { fullPath: '/blog/$slug' }],
+    paramValues: {
+      '/blog/$slug': ['hello-world'],
+    },
+  });
+}
+```
+
+Use TanStack compatibility keys such as `/blog/$slug`, `/docs/$`, and
+`/blog/{-$category}` in `paramValues` and `excludeRoutePatterns`. The generated
+sitemap URLs are public paths like `/blog/hello-world`; TanStack syntax is not
+emitted into the XML.
 
 ## The "everything" example
 

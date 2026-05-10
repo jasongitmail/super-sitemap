@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
+  TanStackStartRouteRecord,
+  TanStackStartRouteTemplate,
+  TanStackStartSitemapConfig,
+} from '../adapters/tanstack-start/index.js';
+import type {
   Alternate,
   Changefreq,
   LangConfig,
@@ -11,6 +16,14 @@ import type {
   SitemapConfig,
 } from './index.js';
 
+import packageJson from '../../package.json';
+import {
+  buildTanStackStartSitemap,
+  createTanStackStartRouteTemplates,
+  generateTanStackStartPaths,
+  parseTanStackStartRouteTemplates,
+  response as tanStackStartResponse,
+} from '../adapters/tanstack-start/index.js';
 import { response, sampledPaths, sampledUrls } from './index.js';
 
 describe('public package root API', () => {
@@ -53,5 +66,34 @@ describe('public package root API', () => {
 
     expect(config.paramValues).toBe(paramValues);
     expect(config.processPaths?.([])).toEqual([pathObj]);
+  });
+});
+
+describe('TanStack Start package API', () => {
+  it('declares a runtime and type package export for the TanStack Start adapter', () => {
+    expect(packageJson.exports['./adapters/tanstack-start']).toEqual({
+      default: './adapters/tanstack-start/index.js',
+      types: './adapters/tanstack-start/index.d.ts',
+    });
+  });
+
+  it('exports TanStack Start adapter APIs and types for consumer-style usage', async () => {
+    expect(tanStackStartResponse).toBeTypeOf('function');
+    expect(buildTanStackStartSitemap).toBeTypeOf('function');
+    expect(createTanStackStartRouteTemplates).toBeTypeOf('function');
+    expect(generateTanStackStartPaths).toBeTypeOf('function');
+    expect(parseTanStackStartRouteTemplates).toBeTypeOf('function');
+
+    const routes: TanStackStartRouteRecord[] = [{ fullPath: '/blog/$slug' }];
+    const templates: TanStackStartRouteTemplate[] = createTanStackStartRouteTemplates({ routes });
+    const config: TanStackStartSitemapConfig = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/$slug': ['hello-world'] },
+      routes,
+    };
+    const res = await tanStackStartResponse(config);
+
+    expect(templates[0]?.source.compatibilityKey).toBe('/blog/$slug');
+    expect(await res.text()).toContain('<loc>https://example.com/blog/hello-world</loc>');
   });
 });
