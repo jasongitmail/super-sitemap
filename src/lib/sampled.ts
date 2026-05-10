@@ -113,9 +113,6 @@ export async function _sampledUrls(sitemapXml: string): Promise<string[]> {
     urls = sitemap.locs;
   }
 
-  // Can't use this because Playwright doesn't use Vite.
-  // let routes = Object.keys(import.meta.glob('/src/routes/**/+page.svelte'));
-
   // Read /src/routes to build 'routes'.
   let routes: string[] = [];
   try {

@@ -1,8 +1,16 @@
 import type { LangConfig, ParamValue, ParamValues, PathObj, SitemapConfig } from '../core/index.js';
 
 import {
+  createSvelteKitRouteTemplates,
+  expandSvelteKitOptionalRoute,
+  expandSvelteKitOptionalRoutes,
+  filterSvelteKitRoutes,
+  orderSvelteKitTemplatesForCompatibility,
+} from '../adapters/sveltekit/index.js';
+import {
   deduplicatePaths,
   generateAdditionalPaths,
+  generatePathsFromRouteTemplates,
   getTotalPages,
   paginatePaths,
   renderSitemapIndexXml,
@@ -193,47 +201,48 @@ export function generatePaths({
   lang?: LangConfig;
   paramValues?: ParamValues;
 }): PathObj[] {
-  // Match +page.svelte, +page@.svelte, +page@foo.svelte, +page@[id].svelte, and +page@(id).svelte
-  // - See: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts
-  // - The `.md` and `.svx` extensions are to support MDSveX, which is a common
-  //   markdown preprocessor for SvelteKit.
-  const svelteRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svelte'));
-  const mdRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.md'));
-  const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
-  const allRoutes = svelteRoutes.concat(mdRoutes, svxRoutes);
-
-  // Validation: if dev has one or more routes that contain a lang parameter,
-  // optional or required, require that they have defined the `lang.default` and
-  // `lang.alternates` in their config or throw an error to cause a 500 error
-  // for visibility.
-  let routesContainLangParam = false;
-  for (const route of allRoutes) {
-    if (route.match(langRegex)?.length) {
-      routesContainLangParam = true;
-      break;
-    }
-  }
-  if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
-    throw Error(
-      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]].'
-    );
-  }
-
-  // Notice this means devs MUST include `[[lang]]/` within any route strings
-  // used within `excludeRoutePatterns` if that's part of their route.
-  const filteredRoutes = filterRoutes(allRoutes, excludeRoutePatterns);
-  const processedRoutes = processRoutesForOptionalParams(filteredRoutes);
-
-  const { pathsWithLang, pathsWithoutLang } = generatePathsWithParamValues(
-    processedRoutes,
+  const templates = orderSvelteKitTemplatesForCompatibility({
     paramValues,
-    defaultChangefreq,
-    defaultPriority
-  );
+    templates: createSvelteKitRouteTemplates({ excludeRoutePatterns, lang }),
+  });
 
-  const pathsWithLangAlternates = processPathsWithLang(pathsWithLang, lang);
+  try {
+    return generatePathsFromRouteTemplates({
+      defaultChangefreq,
+      defaultPriority,
+      lang,
+      paramValues,
+      templates,
+    }).map(stripUndefinedPathMetadata);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.startsWith('Core: paramValues not provided for route: ')) {
+        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+        throw new Error(
+          `Sitemap: paramValues not provided for: '${route}'\nUpdate your sitemap's excludeRoutePatterns to exclude this route OR add data for this route's param(s) to the paramValues object of your sitemap config.`
+        );
+      }
 
-  return pathsWithoutLang.concat(pathsWithLangAlternates);
+      if (
+        error.message.startsWith(
+          'Core: paramValues were provided for a route that does not exist: '
+        )
+      ) {
+        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+        throw new Error(
+          `Sitemap: paramValues were provided for a route that does not exist within src/routes/: '${route}'. Remove this property from your paramValues.`
+        );
+      }
+    }
+
+    throw error;
+  }
+}
+
+function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
+  return Object.fromEntries(
+    Object.entries(pathObj).filter(([, value]) => value !== undefined)
+  ) as PathObj;
 }
 
 /**
@@ -255,33 +264,7 @@ export function generatePaths({
  *   trailing slash https://kit.svelte.dev/docs/page-options#trailingslash
  */
 export function filterRoutes(routes: string[], excludeRoutePatterns: string[]): string[] {
-  return (
-    routes
-      // Remove `/src/routes` prefix, `+page.svelte suffix` or any variation
-      // like `+page@.svelte`, and trailing slash except on homepage. Trailing
-      // slash must be removed before excludeRoutePatterns so `$` termination of a
-      // regex pattern will work as expected.
-      .map((x) => {
-        // Don't trim initial '/' yet, b/c a developer's excludeRoutePatterns may start with it.
-        x = x.substring(11);
-        x = x.replace(/\/\+page.*\.(svelte|md|svx)$/, '');
-        return !x ? '/' : x;
-      })
-
-      // Remove any routes that match an exclude pattern
-      .filter((x) => !excludeRoutePatterns.some((pattern) => new RegExp(pattern).test(x)))
-
-      // Remove initial `/` now and any `/(groups)`, because decorative only.
-      // Must follow excludeRoutePatterns. Ensure index page is '/' in case it was
-      // part of a group. The pattern to match the group is from
-      // https://github.com/sveltejs/kit/blob/99cddbfdb2332111d348043476462f5356a23660/packages/kit/src/utils/routing.js#L119
-      .map((x) => {
-        x = x.replaceAll(/\/\([^)]+\)/g, '');
-        return !x ? '/' : x;
-      })
-
-      .sort()
-  );
+  return filterSvelteKitRoutes(routes, excludeRoutePatterns);
 }
 
 /**
@@ -459,13 +442,7 @@ export function generatePathsWithParamValues(
  * @private
  */
 export function processRoutesForOptionalParams(routes: string[]): string[] {
-  const processedRoutes = routes.flatMap((route) => {
-    const routeWithoutLangIfAny = route.replace(langRegex, '');
-    return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? processOptionalParams(route) : route;
-  });
-
-  // Ensure no duplicates exist after processing
-  return Array.from(new Set(processedRoutes));
+  return expandSvelteKitOptionalRoutes(routes);
 }
 
 /**
@@ -477,48 +454,7 @@ export function processRoutesForOptionalParams(routes: string[]): string[] {
  * @returns An array of routes. E.g. [`/foo`, `/foo/[[paramA]]`]
  */
 export function processOptionalParams(originalRoute: string): string[] {
-  // Remove lang to simplify
-  const hasLang = langRegex.exec(originalRoute);
-  const route = hasLang ? originalRoute.replace(langRegex, '') : originalRoute;
-
-  let results: string[] = [];
-
-  // Get path up to _before_ the first optional param; use `i-1` to exclude
-  // trailing slash after this. This is our first result.
-  results.push(route.slice(0, route.indexOf('[[') - 1));
-
-  // Extract the portion of the route starting at the first optional parameter
-  const remaining = route.slice(route.indexOf('[['));
-
-  // Split, then filter to remove empty items.
-  const segments = remaining.split('/').filter(Boolean);
-
-  let j = 1;
-  for (const segment of segments) {
-    // Start a new potential result
-    if (!results[j]) results[j] = results[j - 1];
-
-    results[j] = `${results[j]}/${segment}`;
-
-    if (segment.startsWith('[[')) {
-      j++;
-    }
-  }
-
-  // Re-add lang to all results.
-  if (hasLang) {
-    const lang = hasLang?.[0];
-    results = results.map(
-      (result) => `${result.slice(0, hasLang?.index)}${lang}${result.slice(hasLang?.index)}`
-    );
-  }
-
-  // When the first path segment is an optional parameter (except for [[lang]]), the first result
-  // will be an empty string. We set this to '/' b/c the root path is one of the valid paths
-  // combinations in such a scenario.
-  if (!results[0].length) results[0] = '/';
-
-  return results;
+  return expandSvelteKitOptionalRoute(originalRoute);
 }
 
 /**
