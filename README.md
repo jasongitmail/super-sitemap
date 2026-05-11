@@ -93,8 +93,8 @@ Internally, Super Sitemap is split into:
   integrations; and
 - a SvelteKit adapter that converts SvelteKit route files into those normalized
   templates, exported from `super-sitemap/sveltekit`.
-- a TanStack Start adapter that converts an app-provided generated route tree
-  into the same normalized templates, exported from
+- a TanStack Start adapter that converts an app-provided TanStack router's
+  resolved `routesByPath` route map into the same normalized templates, exported from
   `super-sitemap/tanstack-start`.
 
 These subpath exports are lower-level APIs. Existing SvelteKit users do not need
@@ -133,19 +133,22 @@ Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.x
 
 ## TanStack Start example
 
-TanStack Start apps can use the TanStack adapter subpath and pass the generated
-route tree from the app. The app owns this import so Super Sitemap does not
-dynamically import or execute your `routeTree.gen.ts` file.
+TanStack Start apps can use the TanStack adapter subpath and pass the app's
+TanStack router. Super Sitemap reads the router's resolved `routesByPath` map,
+which contains public routable URL templates after TanStack has processed the
+generated route tree.
 
 ```ts
 // /src/routes/sitemap.xml.ts
 import { response } from 'super-sitemap/tanstack-start';
-import { routeTree } from '../routeTree.gen';
+import { getRouter } from '../router';
 
 export function GET() {
+  const router = getRouter();
+
   return response({
     origin: 'https://example.com',
-    routeTree,
+    router,
     paramValues: {
       '/blog/$slug': ['hello-world', 'another-post'],
       '/campsites/$country/$state': [
@@ -164,11 +167,11 @@ merged with your overrides:
 
 ```ts
 import { getBody, getHeaders } from 'super-sitemap/tanstack-start';
-import { routeTree } from '../routeTree.gen';
+import { getRouter } from '../router';
 
 const body = getBody({
   origin: 'https://example.com',
-  routeTree,
+  router: getRouter(),
 });
 
 const headers = getHeaders({

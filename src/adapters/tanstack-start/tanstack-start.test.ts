@@ -11,7 +11,6 @@ import {
 } from './index.js';
 
 type TestRouteRecord = {
-  children?: Record<string, TestRouteRecord> | TestRouteRecord[];
   filePath?: string;
   fullPath?: string;
   id?: string;
@@ -19,22 +18,18 @@ type TestRouteRecord = {
   to?: string;
 };
 
-function routeTreeFromRoutes(routes: TestRouteRecord[]) {
+function routerFromRoutes(routes: TestRouteRecord[]) {
   return {
-    children: Object.fromEntries(routes.map((route, index) => [`route${index}`, route])),
-    fullPath: '/',
-    id: '__root__',
+    routesByPath: Object.fromEntries(
+      routes.map((route) => [route.fullPath ?? route.to ?? route.path ?? route.id ?? '/', route])
+    ),
   };
 }
 
 describe('TanStack Start adapter route parser', () => {
   it('normalizes static, root, and index routes into syntax-free templates', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
-        { fullPath: '/' },
-        { fullPath: '' },
-        { fullPath: '/about/team' },
-      ]),
+      router: routerFromRoutes([{ fullPath: '/' }, { fullPath: '' }, { fullPath: '/about/team' }]),
     });
 
     expect(templates).toHaveLength(2);
@@ -53,13 +48,13 @@ describe('TanStack Start adapter route parser', () => {
 
   it('normalizes dynamic params, preserves multi-param order, and handles splat rest params', () => {
     const [blog] = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/blog/$slug' }]),
+      router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
     });
     const [campsite] = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/campsites/$country/$state' }]),
+      router: routerFromRoutes([{ fullPath: '/campsites/$country/$state' }]),
     });
     const [docs] = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/docs/$' }]),
+      router: routerFromRoutes([{ fullPath: '/docs/$' }]),
     });
 
     expect(blog).toMatchObject({
@@ -96,10 +91,10 @@ describe('TanStack Start adapter route parser', () => {
 
   it('expands optional params to base and dynamic variants without implicit locale inference', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/blog/{-$category}' }]),
+      router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
     const langTemplates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/{-$lang}/about' }]),
+      router: routerFromRoutes([{ fullPath: '/{-$lang}/about' }]),
     });
 
     expect(templates).toMatchObject([
@@ -126,7 +121,7 @@ describe('TanStack Start adapter route parser', () => {
 
   it('omits pathless and group-like segments and respects canonical fullPath over path', () => {
     const [template] = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
+      router: routerFromRoutes([
         {
           fullPath: '/app/$postId',
           id: '/_layout/(marketing)/app/$postId',
@@ -135,7 +130,7 @@ describe('TanStack Start adapter route parser', () => {
       ]),
     });
     const [pathlessTemplate] = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/_layout/(marketing)/pricing' }]),
+      router: routerFromRoutes([{ fullPath: '/_layout/(marketing)/pricing' }]),
     });
 
     expect(template).toMatchObject({
@@ -155,11 +150,11 @@ describe('TanStack Start adapter route parser', () => {
 
   it('retains source metadata and collapses duplicate canonical records deterministically', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
-        { filePath: '/src/routes/duplicate-a.tsx', fullPath: '/duplicate' },
-        { filePath: '/src/routes/duplicate-b.tsx', fullPath: '/duplicate' },
-        { filePath: '/src/routes/about.tsx', fullPath: '/about' },
-      ]),
+      routesByPath: {
+        '/about': { filePath: '/src/routes/about.tsx', fullPath: '/about' },
+        '/duplicate-a': { filePath: '/src/routes/duplicate-a.tsx', fullPath: '/duplicate' },
+        '/duplicate-b': { filePath: '/src/routes/duplicate-b.tsx', fullPath: '/duplicate' },
+      },
     });
 
     expect(templates).toHaveLength(2);
@@ -181,7 +176,7 @@ describe('TanStack Start adapter route parser', () => {
 
   it('uses TanStack compatibility keys for core safety errors', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([{ fullPath: '/blog/$slug' }]),
+      router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
     });
 
     expect(() => generatePathsFromRouteTemplates({ templates })).toThrow(
@@ -198,7 +193,7 @@ describe('TanStack Start adapter route parser', () => {
   it('allows optional route variants to be excluded explicitly', () => {
     const templates = createTanStackStartRouteTemplates({
       excludeRoutePatterns: ['/blog/\\{\\-\\$category\\}'],
-      routeTree: routeTreeFromRoutes([{ fullPath: '/blog/{-$category}' }]),
+      router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
 
     expect(templates.map((template) => template.source.compatibilityKey)).toEqual(['/blog']);
@@ -210,11 +205,11 @@ describe('TanStack Start adapter route parser', () => {
   it('supports explicit locale mapping without leaking TanStack syntax into normalized IR', () => {
     const [optionalLocale] = createTanStackStartRouteTemplates({
       locale: { mode: 'optional', paramName: 'locale' },
-      routeTree: routeTreeFromRoutes([{ fullPath: '/{-$locale}/about' }]),
+      router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
     const [requiredLocale] = createTanStackStartRouteTemplates({
       locale: { mode: 'required', paramName: 'locale' },
-      routeTree: routeTreeFromRoutes([{ fullPath: '/$locale/docs/$slug' }]),
+      router: routerFromRoutes([{ fullPath: '/$locale/docs/$slug' }]),
     });
 
     expect(optionalLocale).toMatchObject({
@@ -247,37 +242,24 @@ describe('TanStack Start adapter route parser', () => {
 });
 
 describe('TanStack Start adapter route sources', () => {
-  const routeTree = {
-    children: {
-      aboutRoute: {
-        children: [
-          { fullPath: '/about/team', id: '/about/team' },
-          { fullPath: '/about/company', id: '/about/company' },
-        ],
-        fullPath: '/about',
-        id: '/about',
-      },
-      appLayoutRoute: {
-        children: {
-          dashboardRoute: { fullPath: '/dashboard', id: '/_app/dashboard' },
-        },
-        fullPath: '/_app',
-        id: '/_app',
-      },
-      blogRoute: {
-        children: {
-          postRoute: { fullPath: '/blog/$slug', id: '/blog/$slug' },
-        },
-        fullPath: '/blog',
-        id: '/blog',
-      },
+  const router = {
+    routesById: {
+      '/_app': { fullPath: '/_app', id: '/_app' },
+      '/_app/dashboard': { fullPath: '/dashboard', id: '/_app/dashboard' },
+      '/_pathlessLayout': { fullPath: '/_pathlessLayout', id: '/_pathlessLayout' },
     },
-    fullPath: '/',
-    id: '__root__',
+    routesByPath: {
+      '/about': { fullPath: '/about', id: '/about' },
+      '/about/company': { fullPath: '/about/company', id: '/about/company' },
+      '/about/team': { fullPath: '/about/team', id: '/about/team' },
+      '/blog': { fullPath: '/blog', id: '/blog' },
+      '/blog/$slug': { fullPath: '/blog/$slug', id: '/blog/$slug' },
+      '/dashboard': { fullPath: '/dashboard', id: '/_app/dashboard' },
+    },
   };
 
-  it('recursively discovers routes from route tree object-map and array child shapes', () => {
-    const templates = createTanStackStartRouteTemplates({ routeTree });
+  it('discovers resolved public routes from router.routesByPath', () => {
+    const templates = createTanStackStartRouteTemplates({ router });
 
     expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
       '/about',
@@ -289,29 +271,34 @@ describe('TanStack Start adapter route sources', () => {
     ]);
   });
 
-  it('does not emit false root routes from layout-only route tree nodes', () => {
-    const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
-        {
-          children: {
-            dashboardRoute: { fullPath: '/_app/dashboard', id: '/_app/dashboard' },
-          },
-          fullPath: '/_app',
-          id: '/_app',
-        },
-        { fullPath: '/(marketing)', id: '/(marketing)' },
-      ]),
+  it('accepts routesByPath directly and uses map keys as route templates', () => {
+    const paths = generateTanStackStartPaths({
+      paramValues: {
+        '/blog/$slug': ['hello-world'],
+      },
+      routesByPath: {
+        '/blog/$slug': { id: '/_layout/blog/$slug' },
+      },
     });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual(['/dashboard']);
-    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
-      '/dashboard',
-    ]);
+    expect(paths.map(({ path }) => path)).toEqual(['/blog/hello-world']);
+  });
+
+  it('does not use routesById or emit noisy pathless route ids', () => {
+    const templates = createTanStackStartRouteTemplates({
+      router,
+    });
+
+    expect(templates.map((template) => template.source.compatibilityKey)).not.toContain('/_app');
+    expect(templates.map((template) => template.source.compatibilityKey)).not.toContain(
+      '/_pathlessLayout'
+    );
+    expect(templates.map((template) => template.source.compatibilityKey)).toContain('/dashboard');
   });
 
   it('supports minimum route record source fields and returns deterministic order', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
+      router: routerFromRoutes([
         { id: '/id-only' },
         { path: '/path-only' },
         { to: '/to-only/$id' },
@@ -327,13 +314,13 @@ describe('TanStack Start adapter route sources', () => {
     ]);
   });
 
-  it('collapses duplicate route tree records deterministically', () => {
+  it('collapses duplicate route records deterministically', () => {
     const templates = createTanStackStartRouteTemplates({
-      routeTree: routeTreeFromRoutes([
-        { filePath: 'b.tsx', fullPath: '/duplicate' },
-        { filePath: 'a.tsx', fullPath: '/duplicate' },
-        { fullPath: '/alpha' },
-      ]),
+      routesByPath: {
+        '/alpha': { fullPath: '/alpha' },
+        '/duplicate-a': { filePath: 'a.tsx', fullPath: '/duplicate' },
+        '/duplicate-b': { filePath: 'b.tsx', fullPath: '/duplicate' },
+      },
     });
 
     expect(templates.map((template) => template.source)).toEqual([
@@ -341,7 +328,7 @@ describe('TanStack Start adapter route sources', () => {
       {
         adapter: 'tanstack-start',
         compatibilityKey: '/duplicate',
-        filePath: 'b.tsx',
+        filePath: 'a.tsx',
         fullPath: '/duplicate',
       },
     ]);
@@ -350,7 +337,7 @@ describe('TanStack Start adapter route sources', () => {
   it('applies exclusions before emitting templates and before requiring param values', () => {
     const templates = createTanStackStartRouteTemplates({
       excludeRoutePatterns: ['/blog/\\$slug'],
-      routeTree,
+      router,
     });
 
     expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
@@ -369,11 +356,11 @@ describe('TanStack Start adapter route sources', () => {
     ]);
   });
 
-  it('rejects route trees without emittable route nodes through param validation', () => {
+  it('rejects empty route sources through param validation', () => {
     expect(() =>
       generateTanStackStartPaths({
         paramValues: { '/missing/$slug': ['hello-world'] },
-        routeTree: routeTreeFromRoutes([{ id: '__root__' }]),
+        router: routerFromRoutes([{ id: '__root__' }]),
       })
     ).toThrow(
       "TanStack Start sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
@@ -382,21 +369,17 @@ describe('TanStack Start adapter route sources', () => {
 });
 
 describe('TanStack Start adapter response wrapper', () => {
-  const routeTree = {
-    children: {
-      aboutRoute: { fullPath: '/about', id: '/about' },
-      blogRoute: {
-        children: {
-          postRoute: { fullPath: '/blog/$slug', id: '/blog/$slug' },
-        },
-        fullPath: '/blog',
-        id: '/blog',
+  const router = {
+    routesByPath: {
+      '/about': { fullPath: '/about', id: '/about' },
+      '/blog': { fullPath: '/blog', id: '/blog' },
+      '/blog/$slug': { fullPath: '/blog/$slug', id: '/blog/$slug' },
+      '/docs/$': { fullPath: '/docs/$', id: '/docs/$' },
+      '/rankings/$country/$state': {
+        fullPath: '/rankings/$country/$state',
+        id: '/rankings/$country/$state',
       },
-      docsRoute: { fullPath: '/docs/$', id: '/docs/$' },
-      rankingRoute: { fullPath: '/rankings/$country/$state', id: '/rankings/$country/$state' },
     },
-    fullPath: '/',
-    id: '__root__',
   };
 
   const locsFromXml = (xml: string) =>
@@ -407,13 +390,13 @@ describe('TanStack Start adapter response wrapper', () => {
       response({
         // @ts-expect-error - runtime validation covers JavaScript callers.
         origin: undefined,
-        routeTree: routeTreeFromRoutes([{ fullPath: '/about' }]),
+        router: routerFromRoutes([{ fullPath: '/about' }]),
       })
     ).rejects.toThrow('TanStack Start sitemap: `origin` property is required in sitemap config.');
 
     const res = await response({
       origin: 'https://example.com',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/' }, { fullPath: '/about' }]),
+      router: routerFromRoutes([{ fullPath: '/' }, { fullPath: '/about' }]),
     });
     const xml = await res.text();
 
@@ -426,7 +409,7 @@ describe('TanStack Start adapter response wrapper', () => {
   it('exports body and header helpers for framework-specific response wrappers', () => {
     const xml = getBody({
       origin: 'https://example.com',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/' }, { fullPath: '/about' }]),
+      router: routerFromRoutes([{ fullPath: '/' }, { fullPath: '/about' }]),
     });
     const headers = getHeaders({
       customHeaders: {
@@ -465,7 +448,7 @@ describe('TanStack Start adapter response wrapper', () => {
           },
         ],
       },
-      routeTree,
+      router,
       sort: 'alpha',
     });
     const xml = await res.text();
@@ -492,14 +475,14 @@ describe('TanStack Start adapter response wrapper', () => {
     await expect(
       response({
         origin: 'https://example.com',
-        routeTree: routeTreeFromRoutes([{ fullPath: '/blog/$slug' }]),
+        router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
       })
     ).rejects.toThrow("TanStack Start sitemap: paramValues not provided for route: '/blog/$slug'.");
     await expect(
       response({
         origin: 'https://example.com',
         paramValues: { '/missing/$slug': ['hello-world'] },
-        routeTree: routeTreeFromRoutes([{ fullPath: '/blog/$slug' }]),
+        router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
       })
     ).rejects.toThrow(
       "TanStack Start sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
@@ -525,7 +508,7 @@ describe('TanStack Start adapter response wrapper', () => {
           { path: '/zzzz-process-paths-sort-marker' },
         ];
       },
-      routeTree: routeTreeFromRoutes([{ fullPath: '/about' }]),
+      router: routerFromRoutes([{ fullPath: '/about' }]),
       sort: 'alpha',
     });
     const xml = await res.text();
@@ -543,7 +526,7 @@ describe('TanStack Start adapter response wrapper', () => {
       paramValues: {
         '/blog/$slug': ['hello-world', 'another-post'],
       },
-      routeTree: routeTreeFromRoutes([
+      router: routerFromRoutes([
         { fullPath: '/blog/$slug' },
         { fullPath: '/about' },
         { fullPath: '/' },
@@ -562,7 +545,7 @@ describe('TanStack Start adapter response wrapper', () => {
     const indexRes = await response({
       maxPerPage: 2,
       origin: 'https://example.com',
-      routeTree: routeTreeFromRoutes([
+      router: routerFromRoutes([
         { fullPath: '/' },
         { fullPath: '/about' },
         { fullPath: '/pricing' },
@@ -574,7 +557,7 @@ describe('TanStack Start adapter response wrapper', () => {
       maxPerPage: 2,
       origin: 'https://example.com',
       page: '2',
-      routeTree: routeTreeFromRoutes([
+      router: routerFromRoutes([
         { fullPath: '/' },
         { fullPath: '/about' },
         { fullPath: '/pricing' },
@@ -586,7 +569,7 @@ describe('TanStack Start adapter response wrapper', () => {
       maxPerPage: 2,
       origin: 'https://example.com',
       page: 'invalid',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/' }]),
+      router: routerFromRoutes([{ fullPath: '/' }]),
     });
     expect(invalidRes.status).toBe(400);
     expect(await invalidRes.text()).toBe('Invalid page param');
@@ -595,7 +578,7 @@ describe('TanStack Start adapter response wrapper', () => {
       maxPerPage: 2,
       origin: 'https://example.com',
       page: '99',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/' }]),
+      router: routerFromRoutes([{ fullPath: '/' }]),
     });
     expect(notFoundRes.status).toBe(404);
     expect(await notFoundRes.text()).toBe('Page does not exist');
@@ -606,13 +589,13 @@ describe('TanStack Start adapter response wrapper', () => {
       lang: { alternates: ['de'], default: 'en' },
       locale: { mode: 'optional', paramName: 'locale' },
       origin: 'https://example.com',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/{-$locale}/about' }]),
+      router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
     const requiredLocaleRes = await response({
       lang: { alternates: ['de'], default: 'en' },
       locale: { mode: 'required', paramName: 'locale' },
       origin: 'https://example.com',
-      routeTree: routeTreeFromRoutes([{ fullPath: '/$locale/docs' }]),
+      router: routerFromRoutes([{ fullPath: '/$locale/docs' }]),
     });
 
     expect(locsFromXml(await optionalLocaleRes.text())).toEqual(['/about', '/de/about']);
@@ -623,7 +606,7 @@ describe('TanStack Start adapter response wrapper', () => {
     expect(
       buildTanStackStartSitemap({
         origin: 'https://example.com',
-        routeTree: routeTreeFromRoutes([{ fullPath: '/about' }]),
+        router: routerFromRoutes([{ fullPath: '/about' }]),
       })
     ).toContain('<loc>https://example.com/about</loc>');
   });

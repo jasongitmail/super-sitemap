@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CreateSvelteKitRouteTemplatesOptions } from '../adapters/sveltekit/index.js';
 import type {
-  TanStackStartRouteTree,
+  TanStackStartRouter,
   TanStackStartSitemapConfig,
 } from '../adapters/tanstack-start/index.js';
 import type {
@@ -115,17 +115,15 @@ describe('TanStack Start package API', () => {
     expect(getTanStackStartBody).toBeTypeOf('function');
     expect(getTanStackStartHeaders).toBeTypeOf('function');
 
-    const routeTree: TanStackStartRouteTree = {
-      children: {
-        blogPostRoute: { fullPath: '/blog/$slug' },
+    const router: TanStackStartRouter = {
+      routesByPath: {
+        '/blog/$slug': { fullPath: '/blog/$slug' },
       },
-      fullPath: '/',
-      id: '__root__',
     };
     const config: TanStackStartSitemapConfig = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
-      routeTree,
+      router,
     };
     const res = await tanStackStartResponse(config);
 

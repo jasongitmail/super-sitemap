@@ -26,18 +26,22 @@ type TanStackStartRouteRecord = {
   fullPath?: string;
   id?: string;
   path?: string;
+  routesByPathKey?: string;
   to?: string;
 };
 
-export type TanStackStartRouteTree = {
-  _children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
-  children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
-  childrenById?: Record<string, TanStackStartRouteTree>;
+export type TanStackStartResolvedRoute = {
   filePath?: string;
   fullPath?: string;
   id?: string;
   path?: string;
   to?: string;
+};
+
+export type TanStackStartRoutesByPath = Record<string, TanStackStartResolvedRoute>;
+
+export type TanStackStartRouter = {
+  routesByPath: TanStackStartRoutesByPath;
 };
 
 export type TanStackStartLocaleMapping = {
@@ -61,10 +65,14 @@ export type ParseTanStackStartRouteTemplatesOptions = {
   locale?: TanStackStartLocaleMapping;
 };
 
+export type TanStackStartRouteInput = {
+  router?: TanStackStartRouter;
+  routesByPath?: TanStackStartRoutesByPath;
+};
+
 export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTemplatesOptions & {
   excludeRoutePatterns?: string[];
-  routeTree: TanStackStartRouteTree;
-};
+} & TanStackStartRouteInput;
 
 export type TanStackStartSitemapConfig = Omit<SitemapConfig, 'excludeRoutePatterns'> &
   CreateTanStackStartRouteTemplatesOptions;
@@ -99,9 +107,9 @@ type SegmentVariant = {
 export function createTanStackStartRouteTemplates({
   excludeRoutePatterns = [],
   locale,
-  routeTree,
+  ...routeInput
 }: CreateTanStackStartRouteTemplatesOptions): TanStackStartRouteTemplate[] {
-  const routeRecords = getTanStackStartRouteRecordsFromRouteTree(routeTree);
+  const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
   const templatesByCompatibilityKey = new Map<string, TanStackStartRouteTemplate>();
 
   for (const route of routeRecords) {
@@ -185,7 +193,7 @@ export function generateTanStackStartPaths({
   lang,
   locale,
   paramValues,
-  routeTree,
+  ...routeInput
 }: Pick<
   TanStackStartSitemapConfig,
   | 'defaultChangefreq'
@@ -194,12 +202,12 @@ export function generateTanStackStartPaths({
   | 'lang'
   | 'locale'
   | 'paramValues'
-  | 'routeTree'
->): PathObj[] {
+> &
+  TanStackStartRouteInput): PathObj[] {
   const templates = createTanStackStartRouteTemplates({
     excludeRoutePatterns,
     locale,
-    routeTree,
+    ...routeInput,
   });
 
   try {
@@ -248,8 +256,8 @@ export async function response({
   page,
   paramValues,
   processPaths,
-  routeTree,
   sort = false,
+  ...routeInput
 }: TanStackStartSitemapConfig): Promise<Response> {
   if (!origin) {
     throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
@@ -264,8 +272,8 @@ export async function response({
     locale,
     paramValues,
     processPaths,
-    routeTree,
     sort,
+    ...routeInput,
   });
 
   const totalPages = getTotalPages(paths, maxPerPage);
@@ -300,8 +308,8 @@ function prepareTanStackStartSitemapPaths({
   locale,
   paramValues,
   processPaths,
-  routeTree,
   sort = false,
+  ...routeInput
 }: Omit<TanStackStartSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>): PathObj[] {
   let paths = [
     ...generateTanStackStartPaths({
@@ -311,7 +319,7 @@ function prepareTanStackStartSitemapPaths({
       lang,
       locale,
       paramValues,
-      routeTree,
+      ...routeInput,
     }),
     ...generateAdditionalPaths({
       additionalPaths,
@@ -333,15 +341,28 @@ function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
   ) as PathObj;
 }
 
-function getTanStackStartRouteRecordsFromRouteTree(
-  routeTree: TanStackStartRouteTree
+function getTanStackStartRouteRecordsFromRoutesByPath(
+  routeInput: TanStackStartRouteInput
 ): TanStackStartRouteRecord[] {
-  const routes: TanStackStartRouteRecord[] = [];
-  const visited = new WeakSet<object>();
+  const routesByPath = routeInput.routesByPath ?? routeInput.router?.routesByPath;
 
-  visitRouteTreeNode(routeTree, routes, visited);
+  if (!routesByPath) {
+    throw new Error(
+      'TanStack Start sitemap: `router` or `routesByPath` property is required in sitemap config.'
+    );
+  }
 
-  return routes.sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
+  return Object.entries(routesByPath)
+    .map(([routesByPathKey, route]) => ({
+      filePath: route.filePath,
+      fullPath: route.fullPath,
+      id: route.id,
+      path: route.path,
+      routesByPathKey,
+      to: route.to,
+    }))
+    .filter(isEmittableRouteRecord)
+    .sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
 }
 
 function parseTanStackStartRouteTemplates(
@@ -403,7 +424,7 @@ function createRouteTemplate({
     locale,
     params,
     segments: routeSegments,
-    source: {
+    source: stripUndefinedRouteSource({
       adapter: 'tanstack-start',
       compatibilityKey,
       filePath: routeRecord.filePath,
@@ -411,50 +432,14 @@ function createRouteTemplate({
       id: routeRecord.id,
       path: routeRecord.path,
       to: routeRecord.to,
-    },
+    }),
   };
 }
 
-function visitRouteTreeNode(
-  routeNode: TanStackStartRouteTree,
-  routes: TanStackStartRouteRecord[],
-  visited: WeakSet<object>
-): void {
-  if (visited.has(routeNode)) return;
-  visited.add(routeNode);
-
-  if (isEmittableRouteRecord(routeNode)) {
-    routes.push({
-      filePath: routeNode.filePath,
-      fullPath: routeNode.fullPath,
-      id: routeNode.id,
-      path: routeNode.path,
-      to: routeNode.to,
-    });
-  }
-
-  for (const child of getRouteTreeChildren(routeNode)) {
-    visitRouteTreeNode(child, routes, visited);
-  }
-}
-
-function getRouteTreeChildren(routeNode: TanStackStartRouteTree): TanStackStartRouteTree[] {
-  return [
-    ...routeChildrenToArray(routeNode.children),
-    ...routeChildrenToArray(routeNode.childrenById),
-    ...routeChildrenToArray(routeNode._children),
-  ];
-}
-
-function routeChildrenToArray(
-  children: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[] | undefined
-): TanStackStartRouteTree[] {
-  if (!children) return [];
-  if (Array.isArray(children)) return children;
-
-  return Object.values(children).sort((a, b) =>
-    getCompatibilityPath(a).localeCompare(getCompatibilityPath(b))
-  );
+function stripUndefinedRouteSource(source: TanStackStartRouteSource): TanStackStartRouteSource {
+  return Object.fromEntries(
+    Object.entries(source).filter(([, value]) => value !== undefined)
+  ) as TanStackStartRouteSource;
 }
 
 function isEmittableRouteRecord(route: TanStackStartRouteRecord): boolean {
@@ -472,6 +457,7 @@ function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
     typeof route.fullPath === 'string' ||
     typeof route.to === 'string' ||
     typeof route.path === 'string' ||
+    typeof route.routesByPathKey === 'string' ||
     typeof route.id === 'string'
   );
 }
@@ -544,7 +530,9 @@ function getSegmentVariants(
 }
 
 function getCompatibilityPath(route: TanStackStartRouteRecord): string {
-  return normalizePath(route.fullPath ?? route.to ?? route.path ?? route.id ?? '/');
+  return normalizePath(
+    route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? '/'
+  );
 }
 
 function normalizePath(routePath: string): string {
