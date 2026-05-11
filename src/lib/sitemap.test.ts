@@ -182,6 +182,35 @@ describe('sitemap.ts', () => {
       );
     });
 
+    it('preserves input order by default and sorts alphabetically when enabled', async () => {
+      const defaultRes = await sitemap.response({
+        additionalPaths: ['/zebra.pdf', '/apple.pdf'],
+        excludeRoutePatterns: ['.*'],
+        lang: {
+          default: 'en',
+          alternates: ['zh'],
+        },
+        origin: 'https://example.com',
+      });
+      const sortedRes = await sitemap.response({
+        additionalPaths: ['/zebra.pdf', '/apple.pdf'],
+        excludeRoutePatterns: ['.*'],
+        lang: {
+          default: 'en',
+          alternates: ['zh'],
+        },
+        origin: 'https://example.com',
+        sort: 'alpha',
+      });
+      const getLocs = (xml: string) =>
+        Array.from(xml.matchAll(/<loc>https:\/\/example\.com([^<]+)<\/loc>/g)).map(
+          ([, path]) => path
+        );
+
+      expect(getLocs(await defaultRes.text())).toEqual(['/zebra.pdf', '/apple.pdf']);
+      expect(getLocs(await sortedRes.text())).toEqual(['/apple.pdf', '/zebra.pdf']);
+    });
+
     it('should deduplicate paths objects based on value of path', async () => {
       const newConfig = JSON.parse(JSON.stringify(config));
       newConfig.processPaths = (paths: PathObj[]) => {

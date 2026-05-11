@@ -140,4 +140,42 @@ describe('TanStack Start package API', () => {
     });
     expect(await res.text()).toContain('<loc>https://example.com/blog/hello-world</loc>');
   });
+
+  it('accepts generated TanStack router shapes without a routesByPath index signature', () => {
+    interface GeneratedRoutesByPath {
+      readonly '/blog/$slug': {
+        readonly fullPath: '/blog/$slug';
+        readonly id: '/blog/$slug';
+        readonly internalRouteMetadata: {
+          readonly parsed: true;
+        };
+      };
+    }
+
+    interface GeneratedTanStackRouter {
+      readonly routesById: unknown;
+      readonly routesByPath: GeneratedRoutesByPath;
+    }
+
+    const router: GeneratedTanStackRouter = {
+      routesById: {},
+      routesByPath: {
+        '/blog/$slug': {
+          fullPath: '/blog/$slug',
+          id: '/blog/$slug',
+          internalRouteMetadata: { parsed: true },
+        },
+      },
+    };
+    const routesByPathRouter: TanStackStartRouter<GeneratedTanStackRouter> = router;
+    const config: TanStackStartSitemapConfig<GeneratedTanStackRouter> = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/$slug': ['hello-world'] },
+      router: routesByPathRouter,
+    };
+
+    expect(getTanStackStartBody(config)).toContain(
+      '<loc>https://example.com/blog/hello-world</loc>'
+    );
+  });
 });

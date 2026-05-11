@@ -449,6 +449,7 @@ describe('TanStack Start adapter response wrapper', () => {
         ],
       },
       router,
+      sort: 'alpha',
     });
     const xml = await res.text();
 
@@ -508,6 +509,7 @@ describe('TanStack Start adapter response wrapper', () => {
         ];
       },
       router: routerFromRoutes([{ fullPath: '/about' }]),
+      sort: 'alpha',
     });
     const xml = await res.text();
 
@@ -519,7 +521,7 @@ describe('TanStack Start adapter response wrapper', () => {
     );
   });
 
-  it('generates paths in deterministic template and paramValues order before response sorting', () => {
+  it('preserves deterministic default ordering without alpha sorting', () => {
     const paths = generateTanStackStartPaths({
       paramValues: {
         '/blog/$slug': ['hello-world', 'another-post'],

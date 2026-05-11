@@ -38,11 +38,15 @@ export type TanStackStartResolvedRoute = {
   to?: string;
 };
 
-export type TanStackStartRoutesByPath = Record<string, TanStackStartResolvedRoute>;
+export type TanStackStartRoutesByPath = object;
 
-export type TanStackStartRouter = {
+export type TanStackStartRouterRoutesByPath = {
   routesByPath: TanStackStartRoutesByPath;
 };
+
+export type TanStackStartRouter<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+> = Pick<TRouter, 'routesByPath'>;
 
 export type TanStackStartLocaleMapping = {
   matcher?: string;
@@ -65,17 +69,22 @@ export type ParseTanStackStartRouteTemplatesOptions = {
   locale?: TanStackStartLocaleMapping;
 };
 
-export type TanStackStartRouteInput = {
-  router?: TanStackStartRouter;
-  routesByPath?: TanStackStartRoutesByPath;
+export type TanStackStartRouteInput<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+> = {
+  router?: TanStackStartRouter<TRouter>;
+  routesByPath?: TRouter['routesByPath'];
 };
 
-export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTemplatesOptions & {
+export type CreateTanStackStartRouteTemplatesOptions<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+> = ParseTanStackStartRouteTemplatesOptions & {
   excludeRoutePatterns?: string[];
-} & TanStackStartRouteInput;
+} & TanStackStartRouteInput<TRouter>;
 
-export type TanStackStartSitemapConfig = Omit<SitemapConfig, 'excludeRoutePatterns'> &
-  CreateTanStackStartRouteTemplatesOptions;
+export type TanStackStartSitemapConfig<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+> = Omit<SitemapConfig, 'excludeRoutePatterns'> & CreateTanStackStartRouteTemplatesOptions<TRouter>;
 
 export type GetTanStackStartHeadersOptions = {
   customHeaders?: Record<string, string>;
@@ -353,16 +362,46 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
   }
 
   return Object.entries(routesByPath)
-    .map(([routesByPathKey, route]) => ({
-      filePath: route.filePath,
-      fullPath: route.fullPath,
-      id: route.id,
-      path: route.path,
-      routesByPathKey,
-      to: route.to,
-    }))
+    .map(([routesByPathKey, route]) => createTanStackStartRouteRecord(routesByPathKey, route))
     .filter(isEmittableRouteRecord)
     .sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
+}
+
+/**
+ * Normalizes TanStack's generated route records without depending on their exact exported type.
+ */
+function createTanStackStartRouteRecord(
+  routesByPathKey: string,
+  route: unknown
+): TanStackStartRouteRecord {
+  const routeRecord = isRouteRecordObject(route) ? route : {};
+
+  return {
+    filePath: getOptionalStringRouteField(routeRecord, 'filePath'),
+    fullPath: getOptionalStringRouteField(routeRecord, 'fullPath'),
+    id: getOptionalStringRouteField(routeRecord, 'id'),
+    path: getOptionalStringRouteField(routeRecord, 'path'),
+    routesByPathKey,
+    to: getOptionalStringRouteField(routeRecord, 'to'),
+  };
+}
+
+/**
+ * Checks whether a route entry can contain route metadata fields.
+ */
+function isRouteRecordObject(route: unknown): route is Record<string, unknown> {
+  return typeof route === 'object' && route !== null;
+}
+
+/**
+ * Reads a route metadata field only when TanStack exposes it as a string.
+ */
+function getOptionalStringRouteField(
+  route: Record<string, unknown>,
+  field: keyof TanStackStartResolvedRoute
+): string | undefined {
+  const value = route[field];
+  return typeof value === 'string' ? value : undefined;
 }
 
 function parseTanStackStartRouteTemplates(
