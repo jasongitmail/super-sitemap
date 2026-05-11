@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CreateSvelteKitRouteTemplatesOptions } from '../adapters/sveltekit/index.js';
 import type {
-  TanStackStartRouteRecord,
-  TanStackStartRouteTemplate,
+  TanStackStartRouteTree,
   TanStackStartSitemapConfig,
 } from '../adapters/tanstack-start/index.js';
 import type {
@@ -24,12 +23,8 @@ import {
   parseSvelteKitRouteTemplate,
 } from '../adapters/sveltekit/index.js';
 import {
-  buildTanStackStartSitemap,
-  createTanStackStartRouteTemplates,
-  generateTanStackStartPaths,
   getBody as getTanStackStartBody,
   getHeaders as getTanStackStartHeaders,
-  parseTanStackStartRouteTemplates,
   response as tanStackStartResponse,
 } from '../adapters/tanstack-start/index.js';
 import { response, sampledPaths, sampledUrls } from './index.js';
@@ -119,21 +114,21 @@ describe('TanStack Start package API', () => {
     expect(tanStackStartResponse).toBeTypeOf('function');
     expect(getTanStackStartBody).toBeTypeOf('function');
     expect(getTanStackStartHeaders).toBeTypeOf('function');
-    expect(buildTanStackStartSitemap).toBeTypeOf('function');
-    expect(createTanStackStartRouteTemplates).toBeTypeOf('function');
-    expect(generateTanStackStartPaths).toBeTypeOf('function');
-    expect(parseTanStackStartRouteTemplates).toBeTypeOf('function');
 
-    const routes: TanStackStartRouteRecord[] = [{ fullPath: '/blog/$slug' }];
-    const templates: TanStackStartRouteTemplate[] = createTanStackStartRouteTemplates({ routes });
+    const routeTree: TanStackStartRouteTree = {
+      children: {
+        blogPostRoute: { fullPath: '/blog/$slug' },
+      },
+      fullPath: '/',
+      id: '__root__',
+    };
     const config: TanStackStartSitemapConfig = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
-      routes,
+      routeTree,
     };
     const res = await tanStackStartResponse(config);
 
-    expect(templates[0]?.source.compatibilityKey).toBe('/blog/$slug');
     expect(getTanStackStartBody(config)).toContain(
       '<loc>https://example.com/blog/hello-world</loc>'
     );

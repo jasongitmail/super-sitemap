@@ -93,8 +93,8 @@ Internally, Super Sitemap is split into:
   integrations; and
 - a SvelteKit adapter that converts SvelteKit route files into those normalized
   templates, exported from `super-sitemap/sveltekit`.
-- a TanStack Start adapter that converts app-provided generated route tree or
-  route-record data into the same normalized templates, exported from
+- a TanStack Start adapter that converts an app-provided generated route tree
+  into the same normalized templates, exported from
   `super-sitemap/tanstack-start`.
 
 These subpath exports are lower-level APIs. Existing SvelteKit users do not need
@@ -176,23 +176,6 @@ const headers = getHeaders({
     'cache-control': 'max-age=0, s-maxage=86400',
   },
 });
-```
-
-You can also pass generated route records directly. This is useful if your
-build tooling already has a side-effect-free manifest of TanStack routes:
-
-```ts
-import { response } from 'super-sitemap/tanstack-start';
-
-export function GET() {
-  return response({
-    origin: 'https://example.com',
-    routes: [{ fullPath: '/' }, { fullPath: '/about' }, { fullPath: '/blog/$slug' }],
-    paramValues: {
-      '/blog/$slug': ['hello-world'],
-    },
-  });
-}
 ```
 
 Use TanStack compatibility keys such as `/blog/$slug`, `/docs/$`, and

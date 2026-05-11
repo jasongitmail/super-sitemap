@@ -21,7 +21,7 @@ import {
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
 
-export type TanStackStartRouteRecord = {
+type TanStackStartRouteRecord = {
   filePath?: string;
   fullPath?: string;
   id?: string;
@@ -29,10 +29,15 @@ export type TanStackStartRouteRecord = {
   to?: string;
 };
 
-export type TanStackStartRouteTree = TanStackStartRouteRecord & {
+export type TanStackStartRouteTree = {
   _children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
   children?: Record<string, TanStackStartRouteTree> | TanStackStartRouteTree[];
   childrenById?: Record<string, TanStackStartRouteTree>;
+  filePath?: string;
+  fullPath?: string;
+  id?: string;
+  path?: string;
+  to?: string;
 };
 
 export type TanStackStartLocaleMapping = {
@@ -58,8 +63,7 @@ export type ParseTanStackStartRouteTemplatesOptions = {
 
 export type CreateTanStackStartRouteTemplatesOptions = ParseTanStackStartRouteTemplatesOptions & {
   excludeRoutePatterns?: string[];
-  routeTree?: TanStackStartRouteTree;
-  routes?: TanStackStartRouteRecord[];
+  routeTree: TanStackStartRouteTree;
 };
 
 export type TanStackStartSitemapConfig = Omit<SitemapConfig, 'excludeRoutePatterns'> &
@@ -96,9 +100,8 @@ export function createTanStackStartRouteTemplates({
   excludeRoutePatterns = [],
   locale,
   routeTree,
-  routes,
 }: CreateTanStackStartRouteTemplatesOptions): TanStackStartRouteTemplate[] {
-  const routeRecords = getExplicitRouteSource({ routeTree, routes });
+  const routeRecords = getTanStackStartRouteRecordsFromRouteTree(routeTree);
   const templatesByCompatibilityKey = new Map<string, TanStackStartRouteTemplate>();
 
   for (const route of routeRecords) {
@@ -183,7 +186,6 @@ export function generateTanStackStartPaths({
   locale,
   paramValues,
   routeTree,
-  routes,
 }: Pick<
   TanStackStartSitemapConfig,
   | 'defaultChangefreq'
@@ -193,13 +195,11 @@ export function generateTanStackStartPaths({
   | 'locale'
   | 'paramValues'
   | 'routeTree'
-  | 'routes'
 >): PathObj[] {
   const templates = createTanStackStartRouteTemplates({
     excludeRoutePatterns,
     locale,
     routeTree,
-    routes,
   });
 
   try {
@@ -249,7 +249,6 @@ export async function response({
   paramValues,
   processPaths,
   routeTree,
-  routes,
   sort = false,
 }: TanStackStartSitemapConfig): Promise<Response> {
   if (!origin) {
@@ -266,7 +265,6 @@ export async function response({
     paramValues,
     processPaths,
     routeTree,
-    routes,
     sort,
   });
 
@@ -303,7 +301,6 @@ function prepareTanStackStartSitemapPaths({
   paramValues,
   processPaths,
   routeTree,
-  routes,
   sort = false,
 }: Omit<TanStackStartSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>): PathObj[] {
   let paths = [
@@ -315,7 +312,6 @@ function prepareTanStackStartSitemapPaths({
       locale,
       paramValues,
       routeTree,
-      routes,
     }),
     ...generateAdditionalPaths({
       additionalPaths,
@@ -337,7 +333,7 @@ function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
   ) as PathObj;
 }
 
-export function getTanStackStartRouteRecordsFromRouteTree(
+function getTanStackStartRouteRecordsFromRouteTree(
   routeTree: TanStackStartRouteTree
 ): TanStackStartRouteRecord[] {
   const routes: TanStackStartRouteRecord[] = [];
@@ -348,7 +344,7 @@ export function getTanStackStartRouteRecordsFromRouteTree(
   return routes.sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
 }
 
-export function parseTanStackStartRouteTemplates(
+function parseTanStackStartRouteTemplates(
   route: TanStackStartRouteRecord | string,
   options: ParseTanStackStartRouteTemplatesOptions = {}
 ): TanStackStartRouteTemplate[] {
@@ -417,39 +413,6 @@ function createRouteTemplate({
       to: routeRecord.to,
     },
   };
-}
-
-function getExplicitRouteSource({
-  routeTree,
-  routes,
-}: {
-  routeTree?: TanStackStartRouteTree;
-  routes?: TanStackStartRouteRecord[];
-}): TanStackStartRouteRecord[] {
-  const routeSourceCount = Number(Boolean(routeTree)) + Number(Boolean(routes));
-
-  if (routeSourceCount !== 1) {
-    throw new Error(
-      'TanStack Start adapter: provide exactly one route source: `routeTree` or `routes`.'
-    );
-  }
-
-  if (routes) {
-    validateRouteRecords(routes);
-    return routes.filter(isEmittableRouteRecord);
-  }
-
-  return routeTree ? getTanStackStartRouteRecordsFromRouteTree(routeTree) : [];
-}
-
-function validateRouteRecords(routes: TanStackStartRouteRecord[]): void {
-  for (const route of routes) {
-    if (!hasRoutePathField(route)) {
-      throw new Error(
-        'TanStack Start adapter: route records must include at least one path field: `fullPath`, `to`, `path`, or `id`.'
-      );
-    }
-  }
 }
 
 function visitRouteTreeNode(
