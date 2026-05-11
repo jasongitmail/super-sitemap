@@ -449,7 +449,6 @@ describe('TanStack Start adapter response wrapper', () => {
         ],
       },
       router,
-      sort: 'alpha',
     });
     const xml = await res.text();
 
@@ -509,7 +508,6 @@ describe('TanStack Start adapter response wrapper', () => {
         ];
       },
       router: routerFromRoutes([{ fullPath: '/about' }]),
-      sort: 'alpha',
     });
     const xml = await res.text();
 
@@ -521,7 +519,7 @@ describe('TanStack Start adapter response wrapper', () => {
     );
   });
 
-  it('preserves deterministic default ordering without alpha sorting', () => {
+  it('generates paths in deterministic template and paramValues order before response sorting', () => {
     const paths = generateTanStackStartPaths({
       paramValues: {
         '/blog/$slug': ['hello-world', 'another-post'],
@@ -534,6 +532,28 @@ describe('TanStack Start adapter response wrapper', () => {
     });
 
     expect(paths.map(({ path }) => path)).toEqual([
+      '/',
+      '/about',
+      '/blog/hello-world',
+      '/blog/another-post',
+    ]);
+  });
+
+  it('preserves generated order when sorting is disabled explicitly', async () => {
+    const res = await response({
+      origin: 'https://example.com',
+      paramValues: {
+        '/blog/$slug': ['hello-world', 'another-post'],
+      },
+      router: routerFromRoutes([
+        { fullPath: '/blog/$slug' },
+        { fullPath: '/about' },
+        { fullPath: '/' },
+      ]),
+      sort: false,
+    });
+
+    expect(locsFromXml(await res.text())).toEqual([
       '/',
       '/about',
       '/blog/hello-world',

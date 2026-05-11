@@ -113,5 +113,11 @@ export type SitemapConfig = {
   defaultPriority?: Priority;
 
   processPaths?: (paths: PathObj[]) => PathObj[];
+
+  /**
+   * Optional. Defaults to `alpha`, which sorts all paths alphabetically.
+   * Set to `false` to preserve generated route order, dynamic `paramValues`
+   * order, and `additionalPaths` order.
+   */
   sort?: 'alpha' | false;
 };
