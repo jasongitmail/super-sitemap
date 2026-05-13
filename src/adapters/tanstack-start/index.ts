@@ -6,7 +6,7 @@ import type {
   RouteSource,
   RouteTemplate,
   SitemapConfig,
-} from '../../core/index.js';
+} from "../../core/index.js";
 
 import {
   deduplicatePaths,
@@ -17,9 +17,10 @@ import {
   renderSitemapIndexXml,
   renderSitemapXml,
   sortPaths,
-} from '../../core/index.js';
+} from "../../core/index.js";
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
+const routerCache = new WeakMap<TanStackStartRouterFactory, TanStackStartRouter>();
 
 type TanStackStartRouteRecord = {
   filePath?: string;
@@ -45,12 +46,16 @@ export type TanStackStartRouterRoutesByPath = {
 };
 
 export type TanStackStartRouter<
-  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
-> = Pick<TRouter, 'routesByPath'>;
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
+> = Pick<TRouter, "routesByPath">;
+
+export type TanStackStartRouterFactory<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
+> = () => TanStackStartRouter<TRouter>;
 
 export type TanStackStartLocaleMapping = {
   matcher?: string;
-  mode: RouteLocaleSlot['mode'];
+  mode: RouteLocaleSlot["mode"];
   paramName: string;
 };
 
@@ -61,7 +66,7 @@ export type TanStackStartRouteSource = RouteSource & {
   to?: string;
 };
 
-export type TanStackStartRouteTemplate = Omit<RouteTemplate, 'source'> & {
+export type TanStackStartRouteTemplate = Omit<RouteTemplate, "source"> & {
   source: TanStackStartRouteSource;
 };
 
@@ -70,21 +75,20 @@ export type ParseTanStackStartRouteTemplatesOptions = {
 };
 
 export type TanStackStartRouteInput<
-  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
 > = {
-  router?: TanStackStartRouter<TRouter>;
-  routesByPath?: TRouter['routesByPath'];
+  router: TanStackStartRouterFactory<TRouter>;
 };
 
 export type CreateTanStackStartRouteTemplatesOptions<
-  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
 > = ParseTanStackStartRouteTemplatesOptions & {
   excludeRoutePatterns?: string[];
 } & TanStackStartRouteInput<TRouter>;
 
 export type TanStackStartSitemapConfig<
-  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath
-> = Omit<SitemapConfig, 'excludeRoutePatterns'> & CreateTanStackStartRouteTemplatesOptions<TRouter>;
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
+> = Omit<SitemapConfig, "excludeRoutePatterns"> & CreateTanStackStartRouteTemplatesOptions<TRouter>;
 
 export type GetTanStackStartHeadersOptions = {
   customHeaders?: Record<string, string>;
@@ -92,19 +96,19 @@ export type GetTanStackStartHeadersOptions = {
 
 type ParsedSegment =
   | {
-      kind: 'omit';
+      kind: "omit";
     }
   | {
-      kind: 'optional-param';
+      kind: "optional-param";
       name: string;
     }
   | {
-      kind: 'param';
+      kind: "param";
       name: string;
       rest: boolean;
     }
   | {
-      kind: 'static';
+      kind: "static";
       value: string;
     };
 
@@ -125,8 +129,8 @@ export function createTanStackStartRouteTemplates({
     const templates = parseTanStackStartRouteTemplates(route, { locale }).filter(
       (template) =>
         !excludeRoutePatterns.some((pattern) =>
-          new RegExp(pattern).test(template.source.compatibilityKey)
-        )
+          new RegExp(pattern).test(template.source.compatibilityKey),
+        ),
     );
 
     for (const template of templates) {
@@ -137,7 +141,7 @@ export function createTanStackStartRouteTemplates({
   }
 
   return [...templatesByCompatibilityKey.values()].sort((a, b) =>
-    a.source.compatibilityKey.localeCompare(b.source.compatibilityKey)
+    a.source.compatibilityKey.localeCompare(b.source.compatibilityKey),
   );
 }
 
@@ -157,7 +161,7 @@ export function getBody({
   ...config
 }: TanStackStartSitemapConfig): string {
   if (!origin) {
-    throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
+    throw new Error("TanStack Start sitemap: `origin` property is required in sitemap config.");
   }
 
   const paths = prepareTanStackStartSitemapPaths(config);
@@ -172,11 +176,11 @@ export function getBody({
   }
 
   const paginatedPaths = paginatePaths({ maxPerPage, page, paths });
-  if (paginatedPaths.kind === 'invalid-page') {
-    return 'Invalid page param';
+  if (paginatedPaths.kind === "invalid-page") {
+    return "Invalid page param";
   }
-  if (paginatedPaths.kind === 'not-found') {
-    return 'Page does not exist';
+  if (paginatedPaths.kind === "not-found") {
+    return "Page does not exist";
   }
 
   return renderSitemapXml(origin, paginatedPaths.paths);
@@ -187,10 +191,10 @@ export function getHeaders({ customHeaders = {} }: GetTanStackStartHeadersOption
   string
 > {
   return {
-    'cache-control': 'max-age=0, s-maxage=3600',
-    'content-type': 'application/xml',
+    "cache-control": "max-age=0, s-maxage=3600",
+    "content-type": "application/xml",
     ...Object.fromEntries(
-      Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value])
+      Object.entries(customHeaders).map(([key, value]) => [key.toLowerCase(), value]),
     ),
   };
 }
@@ -205,12 +209,12 @@ export function generateTanStackStartPaths({
   ...routeInput
 }: Pick<
   TanStackStartSitemapConfig,
-  | 'defaultChangefreq'
-  | 'defaultPriority'
-  | 'excludeRoutePatterns'
-  | 'lang'
-  | 'locale'
-  | 'paramValues'
+  | "defaultChangefreq"
+  | "defaultPriority"
+  | "excludeRoutePatterns"
+  | "lang"
+  | "locale"
+  | "paramValues"
 > &
   TanStackStartRouteInput): PathObj[] {
   const templates = createTanStackStartRouteTemplates({
@@ -229,21 +233,21 @@ export function generateTanStackStartPaths({
     }).map(stripUndefinedPathMetadata);
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message.startsWith('Core: paramValues not provided for route: ')) {
-        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+      if (error.message.startsWith("Core: paramValues not provided for route: ")) {
+        const route = error.message.match(/'(.+)'/)?.[1] ?? "";
         throw new Error(
-          `TanStack Start sitemap: paramValues not provided for route: '${route}'. Update excludeRoutePatterns to exclude this route or add data for this route's params to paramValues.`
+          `TanStack Start sitemap: paramValues not provided for route: '${route}'. Update excludeRoutePatterns to exclude this route or add data for this route's params to paramValues.`,
         );
       }
 
       if (
         error.message.startsWith(
-          'Core: paramValues were provided for a route that does not exist: '
+          "Core: paramValues were provided for a route that does not exist: ",
         )
       ) {
-        const route = error.message.match(/'(.+)'/)?.[1] ?? '';
+        const route = error.message.match(/'(.+)'/)?.[1] ?? "";
         throw new Error(
-          `TanStack Start sitemap: paramValues were provided for a route that does not exist: '${route}'. Remove this property from paramValues or update your TanStack route source.`
+          `TanStack Start sitemap: paramValues were provided for a route that does not exist: '${route}'. Remove this property from paramValues or update your TanStack route source.`,
         );
       }
     }
@@ -269,7 +273,7 @@ export async function response({
   ...routeInput
 }: TanStackStartSitemapConfig): Promise<Response> {
   if (!origin) {
-    throw new Error('TanStack Start sitemap: `origin` property is required in sitemap config.');
+    throw new Error("TanStack Start sitemap: `origin` property is required in sitemap config.");
   }
 
   const paths = prepareTanStackStartSitemapPaths({
@@ -295,11 +299,11 @@ export async function response({
         : renderSitemapIndexXml(origin, totalPages);
   } else {
     const paginatedPaths = paginatePaths({ maxPerPage, page, paths });
-    if (paginatedPaths.kind === 'invalid-page') {
-      return new Response('Invalid page param', { status: 400 });
+    if (paginatedPaths.kind === "invalid-page") {
+      return new Response("Invalid page param", { status: 400 });
     }
-    if (paginatedPaths.kind === 'not-found') {
-      return new Response('Page does not exist', { status: 404 });
+    if (paginatedPaths.kind === "not-found") {
+      return new Response("Page does not exist", { status: 404 });
     }
 
     body = renderSitemapXml(origin, paginatedPaths.paths);
@@ -319,7 +323,7 @@ function prepareTanStackStartSitemapPaths({
   processPaths,
   sort = false,
   ...routeInput
-}: Omit<TanStackStartSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>): PathObj[] {
+}: Omit<TanStackStartSitemapConfig, "headers" | "maxPerPage" | "origin" | "page">): PathObj[] {
   let paths = [
     ...generateTanStackStartPaths({
       defaultChangefreq,
@@ -346,19 +350,17 @@ function prepareTanStackStartSitemapPaths({
 
 function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
   return Object.fromEntries(
-    Object.entries(pathObj).filter(([, value]) => value !== undefined)
+    Object.entries(pathObj).filter(([, value]) => value !== undefined),
   ) as PathObj;
 }
 
 function getTanStackStartRouteRecordsFromRoutesByPath(
-  routeInput: TanStackStartRouteInput
+  routeInput: TanStackStartRouteInput,
 ): TanStackStartRouteRecord[] {
-  const routesByPath = routeInput.routesByPath ?? routeInput.router?.routesByPath;
+  const routesByPath = getCachedTanStackStartRouter(routeInput.router).routesByPath;
 
   if (!routesByPath) {
-    throw new Error(
-      'TanStack Start sitemap: `router` or `routesByPath` property is required in sitemap config.'
-    );
+    throw new Error("TanStack Start sitemap: `router` must return a router with `routesByPath`.");
   }
 
   return Object.entries(routesByPath)
@@ -368,21 +370,44 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
 }
 
 /**
+ * Returns the cached TanStack router for a stable router factory.
+ *
+ * @param routerFactory - The app's exported `getRouter` function.
+ * @returns The cached TanStack router.
+ */
+function getCachedTanStackStartRouter<
+  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
+>(routerFactory: TanStackStartRouterFactory<TRouter>): TanStackStartRouter<TRouter> {
+  if (typeof routerFactory !== "function") {
+    throw new Error("TanStack Start sitemap: `router` must be your app's `getRouter` function.");
+  }
+
+  const cachedRouter = routerCache.get(routerFactory);
+  if (cachedRouter) {
+    return cachedRouter as TanStackStartRouter<TRouter>;
+  }
+
+  const router = routerFactory();
+  routerCache.set(routerFactory, router);
+  return router;
+}
+
+/**
  * Normalizes TanStack's generated route records without depending on their exact exported type.
  */
 function createTanStackStartRouteRecord(
   routesByPathKey: string,
-  route: unknown
+  route: unknown,
 ): TanStackStartRouteRecord {
   const routeRecord = isRouteRecordObject(route) ? route : {};
 
   return {
-    filePath: getOptionalStringRouteField(routeRecord, 'filePath'),
-    fullPath: getOptionalStringRouteField(routeRecord, 'fullPath'),
-    id: getOptionalStringRouteField(routeRecord, 'id'),
-    path: getOptionalStringRouteField(routeRecord, 'path'),
+    filePath: getOptionalStringRouteField(routeRecord, "filePath"),
+    fullPath: getOptionalStringRouteField(routeRecord, "fullPath"),
+    id: getOptionalStringRouteField(routeRecord, "id"),
+    path: getOptionalStringRouteField(routeRecord, "path"),
     routesByPathKey,
-    to: getOptionalStringRouteField(routeRecord, 'to'),
+    to: getOptionalStringRouteField(routeRecord, "to"),
   };
 }
 
@@ -390,7 +415,7 @@ function createTanStackStartRouteRecord(
  * Checks whether a route entry can contain route metadata fields.
  */
 function isRouteRecordObject(route: unknown): route is Record<string, unknown> {
-  return typeof route === 'object' && route !== null;
+  return typeof route === "object" && route !== null;
 }
 
 /**
@@ -398,17 +423,17 @@ function isRouteRecordObject(route: unknown): route is Record<string, unknown> {
  */
 function getOptionalStringRouteField(
   route: Record<string, unknown>,
-  field: keyof TanStackStartResolvedRoute
+  field: keyof TanStackStartResolvedRoute,
 ): string | undefined {
   const value = route[field];
-  return typeof value === 'string' ? value : undefined;
+  return typeof value === "string" ? value : undefined;
 }
 
 function parseTanStackStartRouteTemplates(
   route: TanStackStartRouteRecord | string,
-  options: ParseTanStackStartRouteTemplatesOptions = {}
+  options: ParseTanStackStartRouteTemplatesOptions = {},
 ): TanStackStartRouteTemplate[] {
-  const routeRecord = typeof route === 'string' ? { fullPath: route } : route;
+  const routeRecord = typeof route === "string" ? { fullPath: route } : route;
   const sourcePath = getCompatibilityPath(routeRecord);
   const parsedSegments = splitPath(sourcePath).map(parseTanStackStartSegment);
   const variants = expandSegmentVariants(parsedSegments, options.locale);
@@ -419,7 +444,7 @@ function parseTanStackStartRouteTemplates(
       localeMapping: options.locale,
       routeRecord,
       routeSegments: segments.flatMap((segment) => (segment.segment ? [segment.segment] : [])),
-    })
+    }),
   );
 }
 
@@ -438,17 +463,17 @@ function createRouteTemplate({
   let locale: RouteLocaleSlot | undefined;
 
   routeSegments.forEach((segment, segmentIndex) => {
-    if (segment.kind === 'locale') {
+    if (segment.kind === "locale") {
       locale = {
         matcher: segment.matcher,
-        mode: localeMapping?.mode ?? 'required',
+        mode: localeMapping?.mode ?? "required",
         paramName: segment.name,
         segmentIndex,
       };
       return;
     }
 
-    if (segment.kind === 'param') {
+    if (segment.kind === "param") {
       params.push({
         matcher: segment.matcher,
         name: segment.name,
@@ -464,7 +489,7 @@ function createRouteTemplate({
     params,
     segments: routeSegments,
     source: stripUndefinedRouteSource({
-      adapter: 'tanstack-start',
+      adapter: "tanstack-start",
       compatibilityKey,
       filePath: routeRecord.filePath,
       fullPath: routeRecord.fullPath,
@@ -477,40 +502,40 @@ function createRouteTemplate({
 
 function stripUndefinedRouteSource(source: TanStackStartRouteSource): TanStackStartRouteSource {
   return Object.fromEntries(
-    Object.entries(source).filter(([, value]) => value !== undefined)
+    Object.entries(source).filter(([, value]) => value !== undefined),
   ) as TanStackStartRouteSource;
 }
 
 function isEmittableRouteRecord(route: TanStackStartRouteRecord): boolean {
-  if (route.id === '__root__') return false;
+  if (route.id === "__root__") return false;
   if (!hasRoutePathField(route)) return false;
 
   const sourcePath = getCompatibilityPath(route);
-  if (sourcePath === '/') return true;
+  if (sourcePath === "/") return true;
 
   return splitPath(sourcePath).some((segment) => !isPathlessSegment(segment));
 }
 
 function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
   return (
-    typeof route.fullPath === 'string' ||
-    typeof route.to === 'string' ||
-    typeof route.path === 'string' ||
-    typeof route.routesByPathKey === 'string' ||
-    typeof route.id === 'string'
+    typeof route.fullPath === "string" ||
+    typeof route.to === "string" ||
+    typeof route.path === "string" ||
+    typeof route.routesByPathKey === "string" ||
+    typeof route.id === "string"
   );
 }
 
 function expandSegmentVariants(
   segments: ParsedSegment[],
-  locale: TanStackStartLocaleMapping | undefined
+  locale: TanStackStartLocaleMapping | undefined,
 ): SegmentVariant[][] {
   let variants: SegmentVariant[][] = [[]];
 
   for (const segment of segments) {
     const additions = getSegmentVariants(segment, locale);
     variants = variants.flatMap((variant) =>
-      additions.map((addition) => (addition ? [...variant, addition] : variant))
+      additions.map((addition) => (addition ? [...variant, addition] : variant)),
     );
   }
 
@@ -519,32 +544,32 @@ function expandSegmentVariants(
 
 function getSegmentVariants(
   segment: ParsedSegment,
-  locale: TanStackStartLocaleMapping | undefined
+  locale: TanStackStartLocaleMapping | undefined,
 ): Array<SegmentVariant | undefined> {
-  if (segment.kind === 'omit') {
+  if (segment.kind === "omit") {
     return [undefined];
   }
 
-  if (segment.kind === 'static') {
+  if (segment.kind === "static") {
     return [
       {
         compatibilityKeySegment: segment.value,
-        segment: { kind: 'static', value: segment.value },
+        segment: { kind: "static", value: segment.value },
       },
     ];
   }
 
-  const isRestParam = segment.kind === 'param' && segment.rest;
-  const compatibilityKeySegment = isRestParam ? '$' : `$${segment.name}`;
+  const isRestParam = segment.kind === "param" && segment.rest;
+  const compatibilityKeySegment = isRestParam ? "$" : `$${segment.name}`;
   const optionalCompatibilityKeySegment =
-    segment.kind === 'optional-param' ? `{-$${segment.name}}` : compatibilityKeySegment;
+    segment.kind === "optional-param" ? `{-$${segment.name}}` : compatibilityKeySegment;
 
   if (locale?.paramName === segment.name) {
     return [
       {
         compatibilityKeySegment: optionalCompatibilityKeySegment,
         segment: {
-          kind: 'locale',
+          kind: "locale",
           matcher: locale.matcher,
           name: segment.name,
         },
@@ -555,13 +580,13 @@ function getSegmentVariants(
   const paramVariant = {
     compatibilityKeySegment: optionalCompatibilityKeySegment,
     segment: {
-      kind: 'param',
+      kind: "param",
       name: segment.name,
-      rest: segment.kind === 'param' ? segment.rest : false,
+      rest: segment.kind === "param" ? segment.rest : false,
     },
   } satisfies SegmentVariant;
 
-  if (segment.kind === 'optional-param') {
+  if (segment.kind === "optional-param") {
     return [undefined, paramVariant];
   }
 
@@ -570,53 +595,53 @@ function getSegmentVariants(
 
 function getCompatibilityPath(route: TanStackStartRouteRecord): string {
   return normalizePath(
-    route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? '/'
+    route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? "/",
   );
 }
 
 function normalizePath(routePath: string): string {
   const normalizedPath = routePath.trim();
 
-  if (!normalizedPath || normalizedPath === '/') return '/';
+  if (!normalizedPath || normalizedPath === "/") return "/";
 
   return toPath(splitPath(normalizedPath));
 }
 
 function parseTanStackStartSegment(segment: string): ParsedSegment {
   if (isPathlessSegment(segment)) {
-    return { kind: 'omit' };
+    return { kind: "omit" };
   }
 
-  if (segment === '$') {
-    return { kind: 'param', name: '_splat', rest: true };
+  if (segment === "$") {
+    return { kind: "param", name: "_splat", rest: true };
   }
 
   const optionalParamMatch = OPTIONAL_PARAM_SEGMENT_REGEX.exec(segment);
   if (optionalParamMatch) {
-    return { kind: 'optional-param', name: optionalParamMatch[1] ?? '' };
+    return { kind: "optional-param", name: optionalParamMatch[1] ?? "" };
   }
 
-  if (segment.startsWith('$')) {
-    return { kind: 'param', name: segment.slice(1), rest: false };
+  if (segment.startsWith("$")) {
+    return { kind: "param", name: segment.slice(1), rest: false };
   }
 
-  return { kind: 'static', value: segment };
+  return { kind: "static", value: segment };
 }
 
 function isPathlessSegment(segment: string): boolean {
   return (
-    segment === 'index' ||
-    segment === '__root__' ||
-    segment.startsWith('_') ||
-    (segment.startsWith('(') && segment.endsWith(')'))
+    segment === "index" ||
+    segment === "__root__" ||
+    segment.startsWith("_") ||
+    (segment.startsWith("(") && segment.endsWith(")"))
   );
 }
 
 function splitPath(routePath: string): string[] {
-  return routePath.split('/').filter(Boolean);
+  return routePath.split("/").filter(Boolean);
 }
 
 function toPath(segments: Array<string | undefined>): string {
-  const path = segments.filter(Boolean).join('/');
-  return path ? `/${path}` : '/';
+  const path = segments.filter(Boolean).join("/");
+  return path ? `/${path}` : "/";
 }

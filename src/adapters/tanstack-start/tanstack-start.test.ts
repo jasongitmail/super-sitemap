@@ -19,11 +19,11 @@ type TestRouteRecord = {
 };
 
 function routerFromRoutes(routes: TestRouteRecord[]) {
-  return {
+  return () => ({
     routesByPath: Object.fromEntries(
       routes.map((route) => [route.fullPath ?? route.to ?? route.path ?? route.id ?? '/', route])
     ),
-  };
+  });
 }
 
 describe('TanStack Start adapter route parser', () => {
@@ -150,11 +150,13 @@ describe('TanStack Start adapter route parser', () => {
 
   it('retains source metadata and collapses duplicate canonical records deterministically', () => {
     const templates = createTanStackStartRouteTemplates({
-      routesByPath: {
-        '/about': { filePath: '/src/routes/about.tsx', fullPath: '/about' },
-        '/duplicate-a': { filePath: '/src/routes/duplicate-a.tsx', fullPath: '/duplicate' },
-        '/duplicate-b': { filePath: '/src/routes/duplicate-b.tsx', fullPath: '/duplicate' },
-      },
+      router: () => ({
+        routesByPath: {
+          '/about': { filePath: '/src/routes/about.tsx', fullPath: '/about' },
+          '/duplicate-a': { filePath: '/src/routes/duplicate-a.tsx', fullPath: '/duplicate' },
+          '/duplicate-b': { filePath: '/src/routes/duplicate-b.tsx', fullPath: '/duplicate' },
+        },
+      }),
     });
 
     expect(templates).toHaveLength(2);
@@ -242,7 +244,7 @@ describe('TanStack Start adapter route parser', () => {
 });
 
 describe('TanStack Start adapter route sources', () => {
-  const router = {
+  const router = () => ({
     routesById: {
       '/_app': { fullPath: '/_app', id: '/_app' },
       '/_app/dashboard': { fullPath: '/dashboard', id: '/_app/dashboard' },
@@ -256,7 +258,7 @@ describe('TanStack Start adapter route sources', () => {
       '/blog/$slug': { fullPath: '/blog/$slug', id: '/blog/$slug' },
       '/dashboard': { fullPath: '/dashboard', id: '/_app/dashboard' },
     },
-  };
+  });
 
   it('discovers resolved public routes from router.routesByPath', () => {
     const templates = createTanStackStartRouteTemplates({ router });
@@ -271,14 +273,16 @@ describe('TanStack Start adapter route sources', () => {
     ]);
   });
 
-  it('accepts routesByPath directly and uses map keys as route templates', () => {
+  it('uses route map keys as route templates when router records only have ids', () => {
     const paths = generateTanStackStartPaths({
       paramValues: {
         '/blog/$slug': ['hello-world'],
       },
-      routesByPath: {
-        '/blog/$slug': { id: '/_layout/blog/$slug' },
-      },
+      router: () => ({
+        routesByPath: {
+          '/blog/$slug': { id: '/_layout/blog/$slug' },
+        },
+      }),
     });
 
     expect(paths.map(({ path }) => path)).toEqual(['/blog/hello-world']);
@@ -316,11 +320,13 @@ describe('TanStack Start adapter route sources', () => {
 
   it('collapses duplicate route records deterministically', () => {
     const templates = createTanStackStartRouteTemplates({
-      routesByPath: {
-        '/alpha': { fullPath: '/alpha' },
-        '/duplicate-a': { filePath: 'a.tsx', fullPath: '/duplicate' },
-        '/duplicate-b': { filePath: 'b.tsx', fullPath: '/duplicate' },
-      },
+      router: () => ({
+        routesByPath: {
+          '/alpha': { fullPath: '/alpha' },
+          '/duplicate-a': { filePath: 'a.tsx', fullPath: '/duplicate' },
+          '/duplicate-b': { filePath: 'b.tsx', fullPath: '/duplicate' },
+        },
+      }),
     });
 
     expect(templates.map((template) => template.source)).toEqual([
@@ -369,7 +375,7 @@ describe('TanStack Start adapter route sources', () => {
 });
 
 describe('TanStack Start adapter response wrapper', () => {
-  const router = {
+  const router = () => ({
     routesByPath: {
       '/about': { fullPath: '/about', id: '/about' },
       '/blog': { fullPath: '/blog', id: '/blog' },
@@ -380,7 +386,7 @@ describe('TanStack Start adapter response wrapper', () => {
         id: '/rankings/$country/$state',
       },
     },
-  };
+  });
 
   const locsFromXml = (xml: string) =>
     Array.from(xml.matchAll(/<loc>https:\/\/example\.com([^<]+)<\/loc>/g)).map(([, path]) => path);
@@ -404,6 +410,33 @@ describe('TanStack Start adapter response wrapper', () => {
     expect(res.headers.get('cache-control')).toBe('max-age=0, s-maxage=3600');
     expect(xml).toContain('<urlset');
     expect(locsFromXml(xml)).toEqual(['/', '/about']);
+  });
+
+  it('caches the router returned from a stable getRouter function', async () => {
+    let calls = 0;
+    const getRouter = () => {
+      calls += 1;
+      return {
+        routesByPath: {
+          '/blog/$slug': { fullPath: '/blog/$slug', id: '/blog/$slug' },
+        },
+      };
+    };
+
+    const firstRes = await response({
+      origin: 'https://example.com',
+      paramValues: { '/blog/$slug': ['hello-world'] },
+      router: getRouter,
+    });
+    const secondRes = await response({
+      origin: 'https://example.com',
+      paramValues: { '/blog/$slug': ['another-post'] },
+      router: getRouter,
+    });
+
+    expect(calls).toBe(1);
+    expect(locsFromXml(await firstRes.text())).toEqual(['/blog/hello-world']);
+    expect(locsFromXml(await secondRes.text())).toEqual(['/blog/another-post']);
   });
 
   it('exports body and header helpers for framework-specific response wrappers', () => {

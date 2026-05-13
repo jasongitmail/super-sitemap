@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CreateSvelteKitRouteTemplatesOptions } from '../adapters/sveltekit/index.js';
 import type {
+  TanStackStartRouterFactory,
   TanStackStartRouter,
   TanStackStartSitemapConfig,
 } from '../adapters/tanstack-start/index.js';
@@ -120,10 +121,11 @@ describe('TanStack Start package API', () => {
         '/blog/$slug': { fullPath: '/blog/$slug' },
       },
     };
+    const getRouter: TanStackStartRouterFactory = () => router;
     const config: TanStackStartSitemapConfig = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
-      router,
+      router: getRouter,
     };
     const res = await tanStackStartResponse(config);
 
@@ -167,11 +169,11 @@ describe('TanStack Start package API', () => {
         },
       },
     };
-    const routesByPathRouter: TanStackStartRouter<GeneratedTanStackRouter> = router;
+    const getRouter: TanStackStartRouterFactory<GeneratedTanStackRouter> = () => router;
     const config: TanStackStartSitemapConfig<GeneratedTanStackRouter> = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
-      router: routesByPathRouter,
+      router: getRouter,
     };
 
     expect(getTanStackStartBody(config)).toContain(

@@ -134,9 +134,9 @@ Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.x
 ## TanStack Start example
 
 TanStack Start apps can use the TanStack adapter subpath and pass the app's
-TanStack router. Super Sitemap reads the router's resolved `routesByPath` map,
-which contains public routable URL templates after TanStack has processed the
-generated route tree.
+exported `getRouter` function. Super Sitemap calls and caches that function,
+then reads the router's resolved `routesByPath` map, which contains public
+routable URL templates after TanStack has processed the generated route tree.
 
 ```ts
 // /src/routes/sitemap.xml.ts
@@ -144,11 +144,9 @@ import { response } from 'super-sitemap/tanstack-start';
 import { getRouter } from '../router';
 
 export function GET() {
-  const router = getRouter();
-
   return response({
     origin: 'https://example.com',
-    router,
+    router: getRouter,
     paramValues: {
       '/blog/$slug': ['hello-world', 'another-post'],
       '/campsites/$country/$state': [
@@ -171,7 +169,7 @@ import { getRouter } from '../router';
 
 const body = getBody({
   origin: 'https://example.com',
-  router: getRouter(),
+  router: getRouter,
 });
 
 const headers = getHeaders({
