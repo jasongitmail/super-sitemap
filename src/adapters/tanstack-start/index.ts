@@ -145,15 +145,6 @@ export function createTanStackStartRouteTemplates({
   );
 }
 
-export function buildTanStackStartSitemap({
-  maxPerPage = 50_000,
-  origin,
-  page,
-  ...config
-}: TanStackStartSitemapConfig): string {
-  return getBody({ maxPerPage, origin, page, ...config });
-}
-
 export function getBody({
   maxPerPage = 50_000,
   origin,

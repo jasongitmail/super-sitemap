@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { generatePathsFromRouteTemplates } from '../../core/index.js';
 import {
-  buildTanStackStartSitemap,
   createTanStackStartRouteTemplates,
   generateTanStackStartPaths,
   getBody,
@@ -655,14 +654,5 @@ describe('TanStack Start adapter response wrapper', () => {
 
     expect(locsFromXml(await optionalLocaleRes.text())).toEqual(['/about', '/de/about']);
     expect(locsFromXml(await requiredLocaleRes.text())).toEqual(['/en/docs', '/de/docs']);
-  });
-
-  it('builds static XML strings for prerender-style usage', () => {
-    expect(
-      buildTanStackStartSitemap({
-        origin: 'https://example.com',
-        router: routerFromRoutes([{ fullPath: '/about' }]),
-      })
-    ).toContain('<loc>https://example.com/about</loc>');
   });
 });
