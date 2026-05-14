@@ -134,9 +134,10 @@ Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.x
 ## TanStack Start example
 
 TanStack Start apps can use the TanStack adapter subpath and pass the app's
-exported `getRouter` function. Super Sitemap calls and caches that function,
-then reads the router's resolved `routesByPath` map, which contains public
-routable URL templates after TanStack has processed the generated route tree.
+exported `getRouter` function. Super Sitemap calls that function for each
+sitemap generation, then reads the router's resolved `routesByPath` map, which
+contains public routable URL templates after TanStack has processed the
+generated route tree.
 
 ```ts
 // /src/routes/sitemap.xml.ts

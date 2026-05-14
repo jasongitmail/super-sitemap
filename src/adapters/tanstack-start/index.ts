@@ -20,7 +20,6 @@ import {
 } from "../../core/index.js";
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
-const routerCache = new WeakMap<TanStackStartRouterFactory, TanStackStartRouter>();
 
 type TanStackStartRouteRecord = {
   filePath?: string;
@@ -348,7 +347,11 @@ function stripUndefinedPathMetadata(pathObj: PathObj): PathObj {
 function getTanStackStartRouteRecordsFromRoutesByPath(
   routeInput: TanStackStartRouteInput,
 ): TanStackStartRouteRecord[] {
-  const routesByPath = getCachedTanStackStartRouter(routeInput.router).routesByPath;
+  if (typeof routeInput.router !== "function") {
+    throw new Error("TanStack Start sitemap: `router` must be your app's `getRouter` function.");
+  }
+
+  const routesByPath = routeInput.router().routesByPath;
 
   if (!routesByPath) {
     throw new Error("TanStack Start sitemap: `router` must return a router with `routesByPath`.");
@@ -358,29 +361,6 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
     .map(([routesByPathKey, route]) => createTanStackStartRouteRecord(routesByPathKey, route))
     .filter(isEmittableRouteRecord)
     .sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
-}
-
-/**
- * Returns the cached TanStack router for a stable router factory.
- *
- * @param routerFactory - The app's exported `getRouter` function.
- * @returns The cached TanStack router.
- */
-function getCachedTanStackStartRouter<
-  TRouter extends TanStackStartRouterRoutesByPath = TanStackStartRouterRoutesByPath,
->(routerFactory: TanStackStartRouterFactory<TRouter>): TanStackStartRouter<TRouter> {
-  if (typeof routerFactory !== "function") {
-    throw new Error("TanStack Start sitemap: `router` must be your app's `getRouter` function.");
-  }
-
-  const cachedRouter = routerCache.get(routerFactory);
-  if (cachedRouter) {
-    return cachedRouter as TanStackStartRouter<TRouter>;
-  }
-
-  const router = routerFactory();
-  routerCache.set(routerFactory, router);
-  return router;
 }
 
 /**

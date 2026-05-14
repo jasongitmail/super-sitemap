@@ -411,13 +411,16 @@ describe('TanStack Start adapter response wrapper', () => {
     expect(locsFromXml(xml)).toEqual(['/', '/about']);
   });
 
-  it('caches the router returned from a stable getRouter function', async () => {
+  it('calls the getRouter function for each sitemap response', async () => {
     let calls = 0;
     const getRouter = () => {
       calls += 1;
       return {
         routesByPath: {
           '/blog/$slug': { fullPath: '/blog/$slug', id: '/blog/$slug' },
+          ...(calls > 1
+            ? { '/docs/$slug': { fullPath: '/docs/$slug', id: '/docs/$slug' } }
+            : {}),
         },
       };
     };
@@ -429,13 +432,16 @@ describe('TanStack Start adapter response wrapper', () => {
     });
     const secondRes = await response({
       origin: 'https://example.com',
-      paramValues: { '/blog/$slug': ['another-post'] },
+      paramValues: {
+        '/blog/$slug': ['another-post'],
+        '/docs/$slug': ['guide'],
+      },
       router: getRouter,
     });
 
-    expect(calls).toBe(1);
+    expect(calls).toBe(2);
     expect(locsFromXml(await firstRes.text())).toEqual(['/blog/hello-world']);
-    expect(locsFromXml(await secondRes.text())).toEqual(['/blog/another-post']);
+    expect(locsFromXml(await secondRes.text())).toEqual(['/blog/another-post', '/docs/guide']);
   });
 
   it('exports body and header helpers for framework-specific response wrappers', () => {
