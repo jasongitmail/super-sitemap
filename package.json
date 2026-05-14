@@ -1,6 +1,6 @@
 {
   "name": "super-sitemap",
-  "version": "1.0.12",
+  "version": "1.0.13-tanstack.0",
   "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
   "sideEffects": false,
   "repository": {
@@ -25,7 +25,10 @@
     "preview": "vite preview",
     "prepare": "npm run package",
     "package": "rm -rf dist core adapters && rm -f src/core/*.d.ts src/adapters/sveltekit/*.d.ts src/adapters/tanstack-start/*.d.ts && svelte-kit sync && svelte-package && svelte-package -i src/core -o core && svelte-package -i src/adapters -o adapters && rm -f src/core/*.d.ts src/adapters/sveltekit/*.d.ts src/adapters/tanstack-start/*.d.ts && publint",
-    "prepublishOnly": "rm -rf dist && npm run package && npm test -- --run",
+    "prepublishOnly": "node scripts/verify-publish-tag.mjs && rm -rf dist && npm run package && npm test -- --run",
+    "npm:version:tanstack": "npm version prerelease --preid tanstack --no-git-tag-version",
+    "npm:publish:tanstack": "node scripts/publish-tanstack.mjs",
+    "npm:publish:tanstack:dry-run": "node scripts/publish-tanstack.mjs --dry-run",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",
