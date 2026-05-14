@@ -1015,8 +1015,18 @@ bun install
 
 ## Publishing
 
+Main release:
+
 A new version of this npm package is automatically published when the semver
 version within `package.json` is incremented.
+
+TanStack prerelease:
+
+```sh
+git switch tanstack
+npm run npm:version:tanstack
+npm run npm:publish:tanstack
+```
 
 ## Credits
 
