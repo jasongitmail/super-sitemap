@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+
+import type {
+  ParamValue as SvelteKitParamValue,
+  PathObj as SvelteKitPathObj,
+  SitemapConfig as SvelteKitSitemapConfig,
+} from './index.js';
+
+import packageJson from '../../../package.json';
+import * as sveltekit from './index.js';
+
+describe('SvelteKit package API', () => {
+  it('declares only the public SvelteKit package export path', () => {
+    expect(packageJson.exports).not.toHaveProperty('./adapters/sveltekit');
+    expect(packageJson.exports).not.toHaveProperty('./core');
+    expect(packageJson.exports['./sveltekit']).toEqual({
+      default: './adapters/sveltekit/index.js',
+      types: './adapters/sveltekit/index.d.ts',
+    });
+  });
+
+  it('exports SvelteKit adapter APIs and types for consumer-style usage', () => {
+    expect(sveltekit.response).toBeTypeOf('function');
+    expect(sveltekit.getBody).toBeTypeOf('function');
+    expect(sveltekit.getHeaders).toBeTypeOf('function');
+
+    const config: SvelteKitSitemapConfig = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/[slug]': ['hello-world'] },
+      routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
+    };
+
+    expect(sveltekit.getBody(config)).toContain('<loc>https://example.com/blog/hello-world</loc>');
+    expect(
+      sveltekit.getHeaders({
+        customHeaders: { 'cache-control': 'max-age=0, s-maxage=86400' },
+      })
+    ).toEqual({
+      'cache-control': 'max-age=0, s-maxage=86400',
+      'content-type': 'application/xml',
+    });
+  });
+
+  it('exports SvelteKit config types from the adapter entrypoint', () => {
+    const paramValue: SvelteKitParamValue = {
+      priority: 0.8,
+      values: ['hello-world'],
+    };
+    const pathObj: SvelteKitPathObj = { path: '/blog/hello-world' };
+    const config: SvelteKitSitemapConfig = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/[slug]': [paramValue] },
+      processPaths: (paths: SvelteKitPathObj[]) => [...paths, pathObj],
+      routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
+    };
+
+    expect(config.processPaths?.([])).toEqual([pathObj]);
+  });
+});

@@ -25,6 +25,9 @@ export function discoverSvelteKitPageRouteFilesFromDirectory(routesDir: string):
     .map((filePath) => toSvelteKitRouteFilePath(routesDir, filePath));
 }
 
+/**
+ * Checks whether an on-disk file path is a SvelteKit page route file.
+ */
 export function isSvelteKitPageRouteFile(filePath: string): boolean {
   return /\/\+page.*\.(svelte|md|svx)$/.test(filePath.replaceAll(path.sep, '/'));
 }

@@ -23,6 +23,9 @@ export function removeSvelteKitRouteGroups(route: string): string {
   return normalized || '/';
 }
 
+/**
+ * Sorts SvelteKit route keys alphabetically.
+ */
 export function sortSvelteKitRoutes(routes: string[]): string[] {
   return [...routes].sort();
 }

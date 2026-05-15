@@ -7,12 +7,14 @@ import type {
 } from '../core/internal/types.js';
 
 import {
-  createSvelteKitRouteTemplates,
   expandSvelteKitOptionalRoute,
   expandSvelteKitOptionalRoutes,
+} from '../adapters/sveltekit/internal/optional-routes.js';
+import {
+  createSvelteKitRouteTemplates,
   filterSvelteKitRoutes,
   orderSvelteKitTemplatesForCompatibility,
-} from '../adapters/sveltekit/index.js';
+} from '../adapters/sveltekit/internal/routes.js';
 import { getTotalPages, paginatePaths } from '../core/internal/pagination.js';
 import { deduplicatePaths, generateAdditionalPaths, sortPaths } from '../core/internal/paths.js';
 import { generatePathsFromRouteTemplates } from '../core/internal/route-templates.js';

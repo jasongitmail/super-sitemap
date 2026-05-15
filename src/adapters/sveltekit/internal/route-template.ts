@@ -3,11 +3,14 @@ import type {
   RouteParam,
   RouteSegment,
   RouteTemplate,
-} from '../../core/internal/types.js';
+} from '../../../core/internal/types.js';
 
 const LANG_TOKEN_REGEX = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const PARAM_SEGMENT_REGEX = /^\[(\[?)(\.\.\.)?([^\]=]+)(?:=([^\]]+))?\]?\]$/;
 
+/**
+ * Creates a regex matching SvelteKit optional or required lang route tokens.
+ */
 export function findSvelteKitLangToken(): RegExp {
   return new RegExp(LANG_TOKEN_REGEX);
 }
@@ -17,6 +20,9 @@ export type ParseSvelteKitRouteTemplateOptions = {
   route: string;
 };
 
+/**
+ * Converts a SvelteKit route key into Super Sitemap's normalized route template IR.
+ */
 export function parseSvelteKitRouteTemplate({
   filePath,
   route,
