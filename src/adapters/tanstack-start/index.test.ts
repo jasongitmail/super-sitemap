@@ -11,6 +11,7 @@ import * as tanStackStart from './index.js';
 
 describe('TanStack Start package API', () => {
   it('declares only the public TanStack Start package export path', () => {
+    expect(Object.keys(packageJson.exports)).not.toContain('.');
     expect(packageJson.exports).not.toHaveProperty('./adapters/tanstack-start');
     expect(packageJson.exports['./tanstack-start']).toEqual({
       default: './adapters/tanstack-start/index.js',

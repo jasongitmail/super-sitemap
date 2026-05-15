@@ -1,8 +1,9 @@
-import * as sitemap from '$lib/sitemap.js'; // Import from 'super-sitemap' in your app
 import type { RequestHandler } from '@sveltejs/kit';
 
 import * as blog from '$lib/data/blog.js';
 import { error } from '@sveltejs/kit';
+
+import * as sitemap from '../../../../adapters/sveltekit/index.js';
 
 // - Use prerender if you only have static routes or the data for your
 //   parameterized routes does not change between your builds builds. Otherwise,

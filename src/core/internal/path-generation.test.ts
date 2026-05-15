@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ParamValues, RouteTemplate } from './types.js';
 
-import { generatePathsFromRouteTemplates } from './route-templates.js';
+import { generatePathsFromRouteTemplates } from './path-generation.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',

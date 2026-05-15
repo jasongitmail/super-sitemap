@@ -21,3 +21,8 @@ export type SvelteKitSitemapConfig = SitemapConfig;
 export type GetSvelteKitHeadersOptions = {
   customHeaders?: Record<string, string>;
 };
+
+export type GetSamplePathsOptions = {
+  getCanonicalPath?: (path: string) => string;
+  sitemapConfig: SitemapConfig;
+};

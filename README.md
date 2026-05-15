@@ -28,8 +28,7 @@
   - [Optional Params](#optional-params)
   - [`processPaths()` callback](#processpaths-callback)
   - [i18n](#i18n)
-  - [Sampled URLs](#sampled-urls)
-  - [Sampled Paths](#sampled-paths)
+  - [Sample Paths](#sample-paths)
 - [Robots.txt](#robotstxt)
 - [Playwright test](#playwright-test)
 - [Tip: Querying your database for param values using SQL](#tip-querying-your-database-for-param-values-using-sql)
@@ -47,8 +46,8 @@
 - 👻 Exclude specific routes or patterns using regex patterns (e.g.
   `^/dashboard.*`, paginated URLs, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
-- 💆 Set custom headers to override [default headers](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L142):
-  `sitemap.response({ headers: {'cache-control: 'max-age=0, s-maxage=60'} })`.
+- 💆 Set custom headers to override default headers:
+  `sitemap.response({ headers: { 'cache-control': 'max-age=0, s-maxage=60' } })`.
 - 💡 Google, and other modern search engines, [ignore `priority` and
   `changefreq`](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#xml)
   and use their own heuristics to determine when to crawl pages on your site. As
@@ -75,30 +74,23 @@ Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#pla
 
 ## Architecture and package entrypoints
 
-For SvelteKit apps, keep using the package root:
+Super Sitemap is published through framework-specific package entrypoints:
 
 ```ts
-import * as sitemap from 'super-sitemap';
+import * as sitemap from 'super-sitemap/sveltekit';
 ```
 
-The root API remains the recommended SvelteKit integration. It discovers your
-`src/routes` page routes, applies SvelteKit route conventions such as route
-groups, matchers, optional params, and `[[lang]]`, then returns a ready-to-send
-XML `Response`.
+```ts
+import * as sitemap from 'super-sitemap/tanstack-start';
+```
 
-Internally, Super Sitemap is split into:
+The SvelteKit adapter discovers your `src/routes` page routes, applies SvelteKit
+route conventions such as route groups, matchers, optional params, and
+`[[lang]]`, then returns a ready-to-send XML `Response`.
 
-- a framework-agnostic core that renders sitemap paths, pagination, and XML from
-  normalized route templates, exported from `super-sitemap/core` for advanced
-  integrations; and
-- a SvelteKit adapter that converts SvelteKit route files into those normalized
-  templates, exported from `super-sitemap/sveltekit`.
-- a TanStack Start adapter that converts an app-provided TanStack router's
-  resolved `routesByPath` route map into the same normalized templates, exported from
-  `super-sitemap/tanstack-start`.
-
-These subpath exports are lower-level APIs. Existing SvelteKit users do not need
-them and do not need to change any setup shown below.
+The TanStack Start adapter accepts your app's `getRouter` function and reads the
+router's resolved `routesByPath` map. That lets Super Sitemap use the routes
+TanStack already generated instead of duplicating route discovery logic.
 
 ## Basic example
 
@@ -106,7 +98,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'super-sitemap';
+import * as sitemap from 'super-sitemap/sveltekit';
 
 export const GET = async () => {
   return await sitemap.response({
@@ -119,8 +111,8 @@ TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
-import * as sitemap from 'super-sitemap';
 import type { RequestHandler } from '@sveltejs/kit';
+import * as sitemap from 'super-sitemap/sveltekit';
 
 export const GET: RequestHandler = async () => {
   return await sitemap.response({
@@ -141,38 +133,35 @@ generated route tree.
 
 ```ts
 // /src/routes/sitemap.xml.ts
-import { response } from 'super-sitemap/tanstack-start';
+import { response, type SitemapConfig } from 'super-sitemap/tanstack-start';
 import { getRouter } from '../router';
 
-export function GET() {
-  return response({
-    origin: 'https://example.com',
-    router: getRouter,
-    paramValues: {
-      '/blog/$slug': ['hello-world', 'another-post'],
-      '/campsites/$country/$state': [
-        ['usa', 'new-york'],
-        ['canada', 'ontario'],
-      ],
-    },
-    excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
-  });
+const sitemapConfig = {
+  origin: 'https://example.com',
+  router: getRouter,
+  paramValues: {
+    '/blog/$slug': ['hello-world', 'another-post'],
+    '/campsites/$country/$state': [
+      ['usa', 'new-york'],
+      ['canada', 'ontario'],
+    ],
+  },
+  excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
+} satisfies SitemapConfig;
+
+export async function GET(): Promise<Response> {
+  return response(sitemapConfig);
 }
 ```
 
 For build-time, prerender-style, or custom response-wrapper usage, `getBody()`
 returns the XML string and `getHeaders()` returns the default sitemap headers
-merged with your overrides:
+merged with your overrides. Using the same `sitemapConfig` object shown above:
 
 ```ts
 import { getBody, getHeaders } from 'super-sitemap/tanstack-start';
-import { getRouter } from '../router';
 
-const body = getBody({
-  origin: 'https://example.com',
-  router: getRouter,
-});
-
+const body = getBody(sitemapConfig);
 const headers = getHeaders({
   customHeaders: {
     'cache-control': 'max-age=0, s-maxage=86400',
@@ -194,7 +183,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'super-sitemap';
+import * as sitemap from 'super-sitemap/sveltekit';
 import * as blog from '$lib/data/blog';
 
 export const prerender = true; // optional
@@ -266,8 +255,8 @@ TypeScript:
 ```ts
 // /src/routes/sitemap.xml/+server.ts
 import type { RequestHandler } from '@sveltejs/kit';
-import * as sitemap from 'super-sitemap';
 import * as blog from '$lib/data/blog';
+import * as sitemap from 'super-sitemap/sveltekit';
 
 export const prerender = true; // optional
 
@@ -347,7 +336,7 @@ JavaScript:
 
 ```js
 // /src/routes/sitemap[[page]].xml/+server.js
-import * as sitemap from 'super-sitemap';
+import * as sitemap from 'super-sitemap/sveltekit';
 
 export const GET = async ({ params }) => {
   return await sitemap.response({
@@ -362,8 +351,8 @@ TypeScript:
 
 ```ts
 // /src/routes/sitemap[[page]].xml/+server.ts
-import * as sitemap from 'super-sitemap';
 import type { RequestHandler } from '@sveltejs/kit';
+import * as sitemap from 'super-sitemap/sveltekit';
 
 export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
@@ -488,8 +477,8 @@ versions of that route.
 _**The `processPaths()` callback is powerful, but rarely needed.**_
 
 It allows you to arbitrarily process the path objects for your site before they become XML, with the
-only requirement that your callback function must return the expected type of
-[`PathObj[]`](https://github.com/jasongitmail/super-sitemap/blob/main/src/lib/sitemap.ts#L34).
+only requirement that your callback function must return the expected `PathObj[]`
+shape.
 
 This can be useful to do something bespoke that would not otherwise be possible. For example:
 
@@ -675,89 +664,103 @@ with a default language (e.g. `/about`) and lang slugs for alternate languages
   Sitemap relies on to identify your routes, to know what language to use, and
   to build the sitemap. "Never say never", but there are no plans to support this.
 
-## Sampled URLs
+## Sample Paths
 
-_**`sampledUrls()` is an optional utility to be used in your Playwright tests. You do not need to read this if just getting started.**_
+_**`getSamplePaths()` is optional. It is useful when you want one visitable path for each public route shape.**_
 
-Sampled URLs provides a utility to obtain a sample URL for each unique route on your site–i.e.:
+Sample paths are root-relative paths generated from the same sitemap config you
+use for `sitemap.xml`. Static routes return themselves, e.g. `/about`.
+Parameterized routes return one concrete path, e.g. `/blog/hello-world` for
+`/blog/[slug]` or `/blog/$slug`.
 
-1.  the URL for every static route (e.g. `/`, `/about`, `/pricing`, etc.), and
-2.  one URL for each parameterized route (e.g. `/blog/[slug]`)
+This is useful for overview routes or tests that fetch representative pages to
+inspect SEO metadata, OG images, status codes, and other route-level behavior.
 
-This can be helpful for writing functional tests, performing SEO analyses of your public pages, &
-similar.
+`getSamplePaths()` samples from final public sitemap paths after `processPaths`.
+It does not fetch or parse `sitemap.xml`, and it does not expose paths beyond
+what your sitemap config already exposes. If you publish `/sample-paths`
+publicly, keep private or authenticated routes excluded in your sitemap config.
 
-This data is generated by analyzing your site's `sitemap.xml`, so keep in mind that it will not
-contain any URLs excluded by `excludeRoutePatterns` in your sitemap config.
+`additionalPaths` that do not match an app route, such as PDFs, are ignored.
 
-```js
-import { sampledUrls } from 'super-sitemap';
+### SvelteKit
 
-const urls = await sampledUrls('http://localhost:5173/sitemap.xml');
-// [
-//   'http://localhost:5173/',
-//   'http://localhost:5173/about',
-//   'http://localhost:5173/pricing',
-//   'http://localhost:5173/features',
-//   'http://localhost:5173/login',
-//   'http://localhost:5173/signup',
-//   'http://localhost:5173/blog',
-//   'http://localhost:5173/blog/hello-world',
-//   'http://localhost:5173/blog/tag/red',
-// ]
-```
+```ts
+// /src/lib/sitemap-config.ts
+import type { SitemapConfig } from 'super-sitemap/sveltekit';
+import * as blog from '$lib/data/blog';
 
-### Limitations
-
-1. Result URLs will not include any `additionalPaths` from your sitemap config because it's
-   impossible to identify those by a pattern given only your routes and `sitemap.xml` as inputs.
-2. `sampledUrls()` does not distinguish between routes that differ only due to a pattern matcher.
-   For example, `/foo/[foo]` and `/foo/[foo=integer]` will evaluated as `/foo/[foo]` and one sample
-   URL will be returned.
-
-### Designed as a testing utility
-
-Both `sampledUrls()` and `sampledPaths()` are intended as utilities for use
-within your Playwright tests. Their design aims for developer convenience (i.e.
-no need to set up a 2nd sitemap config), not for performance, and they require a
-runtime with access to the file system like Node, to read your `/src/routes`. In
-other words, use for testing, not as a data source for production.
-
-You can use it in a Playwright test like below, then you'll have `sampledPublicPaths` available to use within your tests in this file.
-
-```js
-// foo.test.js
-import { expect, test } from '@playwright/test';
-import { sampledPaths } from 'super-sitemap';
-
-let sampledPublicPaths = [];
-try {
-  sampledPublicPaths = await sampledPaths('http://localhost:4173/sitemap.xml');
-} catch (err) {
-  console.error('Error:', err);
+export async function getSitemapConfig(): Promise<SitemapConfig> {
+  return {
+    origin: 'https://example.com',
+    excludeRoutePatterns: ['^/dashboard.*', '.*\\(authenticated\\).*'],
+    paramValues: {
+      '/blog/[slug]': await blog.getSlugs(),
+    },
+  };
 }
-
-// ...
 ```
 
-## Sampled Paths
+```ts
+// /src/routes/sitemap.xml/+server.ts
+import * as sitemap from 'super-sitemap/sveltekit';
+import { getSitemapConfig } from '$lib/sitemap-config';
 
-Same as [Sampled URLs](#sampled-urls), except it returns paths.
+export async function GET(): Promise<Response> {
+  return sitemap.response(await getSitemapConfig());
+}
+```
 
-```js
-import { sampledPaths } from 'super-sitemap';
+```ts
+// /src/routes/sample-paths/+server.ts
+import { getSamplePaths } from 'super-sitemap/sveltekit';
+import { getSitemapConfig } from '$lib/sitemap-config';
 
-const urls = await sampledPaths('http://localhost:5173/sitemap.xml');
-// [
-//   '/about',
-//   '/pricing',
-//   '/features',
-//   '/login',
-//   '/signup',
-//   '/blog',
-//   '/blog/hello-world',
-//   '/blog/tag/red',
-// ]
+export async function GET(): Promise<Response> {
+  const samplePaths = getSamplePaths({
+    sitemapConfig: await getSitemapConfig(),
+  });
+
+  return Response.json(samplePaths);
+}
+```
+
+### TanStack Start
+
+```ts
+// /src/routes/sample-paths.ts
+import { getSamplePaths } from 'super-sitemap/tanstack-start';
+import { getRouter } from '../router';
+
+export function GET() {
+  const samplePaths = getSamplePaths({
+    sitemapConfig: {
+      origin: 'https://example.com',
+      router: getRouter,
+      excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
+      paramValues: {
+        '/blog/$slug': ['hello-world', 'another-post'],
+        '/campsites/$country/$state': [
+          ['usa', 'new-york'],
+          ['canada', 'ontario'],
+        ],
+      },
+    },
+  });
+
+  return Response.json(samplePaths);
+}
+```
+
+Both adapters support an optional `getCanonicalPath` callback. Use it when your
+final sitemap paths contain localized variants that should collapse into one
+sample before route matching:
+
+```ts
+getSamplePaths({
+  sitemapConfig,
+  getCanonicalPath: (path) => path.replace(/^\/(de|es|zh)(?=\/|$)/, '') || '/',
+});
 ```
 
 ## Robots.txt
@@ -985,6 +988,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 ## Changelog
 
+- `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
@@ -996,7 +1000,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 - `0.14.12` - Adds [`i18n`](#i18n) support.
 - `0.14.11` - Adds [`optional params`](#optional-params) support.
 - `0.14.0` - Adds [`sitemap index`](#sitemap-index) support.
-- `0.13.0` - Adds [`sampledUrls()`](#sampled-urls) and [`sampledPaths()`](#sampled-paths).
+- `0.13.0` - Added legacy `sampledUrls()` and `sampledPaths()` utilities.
 - `0.12.0` - Adds config option to sort `'alpha'` or `false` (default).
 - `0.11.0` - BREAKING: Rename to `super-sitemap` on npm! 🚀
 - `0.10.0` - Adds ability to use unlimited dynamic params per route! 🎉
@@ -1010,7 +1014,7 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 ```bash
 git clone https://github.com/jasongitmail/super-sitemap.git
 bun install
-# Then edit files in `/src/lib`
+# Then edit files in `/src/adapters` or `/src/core`
 ```
 
 ## Publishing

@@ -11,6 +11,7 @@ import * as sveltekit from './index.js';
 
 describe('SvelteKit package API', () => {
   it('declares only the public SvelteKit package export path', () => {
+    expect(Object.keys(packageJson.exports)).not.toContain('.');
     expect(packageJson.exports).not.toHaveProperty('./adapters/sveltekit');
     expect(packageJson.exports).not.toHaveProperty('./core');
     expect(packageJson.exports['./sveltekit']).toEqual({
@@ -23,6 +24,7 @@ describe('SvelteKit package API', () => {
     expect(sveltekit.response).toBeTypeOf('function');
     expect(sveltekit.getBody).toBeTypeOf('function');
     expect(sveltekit.getHeaders).toBeTypeOf('function');
+    expect(sveltekit.getSamplePaths).toBeTypeOf('function');
 
     const config: SvelteKitSitemapConfig = {
       origin: 'https://example.com',
@@ -39,6 +41,7 @@ describe('SvelteKit package API', () => {
       'cache-control': 'max-age=0, s-maxage=86400',
       'content-type': 'application/xml',
     });
+    expect(sveltekit.getSamplePaths({ sitemapConfig: config })).toEqual(['/blog/hello-world']);
   });
 
   it('exports SvelteKit config types from the adapter entrypoint', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { generatePathsFromRouteTemplates } from '../../../core/internal/route-templates.js';
+import { generatePathsFromRouteTemplates } from '../../../core/internal/path-generation.js';
 import { createTanStackStartRouteTemplates } from './routes.js';
 
 type TestRouteRecord = {

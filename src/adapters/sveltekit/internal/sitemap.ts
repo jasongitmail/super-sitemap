@@ -2,12 +2,12 @@ import type { PathObj } from '../../../core/internal/types.js';
 import type { GetSvelteKitHeadersOptions, SitemapConfig } from './types.js';
 
 import { getTotalPages, paginatePaths } from '../../../core/internal/pagination.js';
+import { generatePathsFromRouteTemplates } from '../../../core/internal/path-generation.js';
 import {
   deduplicatePaths,
   generateAdditionalPaths,
   sortPaths,
 } from '../../../core/internal/paths.js';
-import { generatePathsFromRouteTemplates } from '../../../core/internal/route-templates.js';
 import { renderSitemapIndexXml, renderSitemapXml } from '../../../core/internal/xml.js';
 import {
   createSvelteKitRouteTemplates,
