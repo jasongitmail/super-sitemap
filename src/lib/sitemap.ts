@@ -1,4 +1,10 @@
-import type { LangConfig, ParamValue, ParamValues, PathObj, SitemapConfig } from '../core/index.js';
+import type {
+  LangConfig,
+  ParamValue,
+  ParamValues,
+  PathObj,
+  SitemapConfig,
+} from '../core/internal/types.js';
 
 import {
   createSvelteKitRouteTemplates,
@@ -7,16 +13,10 @@ import {
   filterSvelteKitRoutes,
   orderSvelteKitTemplatesForCompatibility,
 } from '../adapters/sveltekit/index.js';
-import {
-  deduplicatePaths,
-  generateAdditionalPaths,
-  generatePathsFromRouteTemplates,
-  getTotalPages,
-  paginatePaths,
-  renderSitemapIndexXml,
-  renderSitemapXml,
-  sortPaths,
-} from '../core/index.js';
+import { getTotalPages, paginatePaths } from '../core/internal/pagination.js';
+import { deduplicatePaths, generateAdditionalPaths, sortPaths } from '../core/internal/paths.js';
+import { generatePathsFromRouteTemplates } from '../core/internal/route-templates.js';
+import { renderSitemapIndexXml, renderSitemapXml } from '../core/internal/xml.js';
 
 export type {
   Alternate,
@@ -27,14 +27,14 @@ export type {
   PathObj,
   Priority,
   SitemapConfig,
-} from '../core/index.js';
+} from '../core/internal/types.js';
 
 export {
   deduplicatePaths,
   generateAdditionalPaths,
   renderSitemapIndexXml as generateSitemapIndex,
   renderSitemapXml as generateBody,
-} from '../core/index.js';
+};
 
 const langRegex = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const langRegexNoPath = /\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;

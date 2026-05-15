@@ -1,20 +1,3 @@
-export { getTotalPages, paginatePaths } from './pagination.js';
-export type { PaginatedPathsResult } from './pagination.js';
-export { deduplicatePaths, generateAdditionalPaths, sortPaths } from './paths.js';
-export { generatePathsFromRouteTemplates } from './route-templates.js';
-export type {
-  Alternate,
-  Changefreq,
-  LangConfig,
-  ParamValue,
-  ParamValues,
-  PathObj,
-  Priority,
-  RouteLocaleSlot,
-  RouteParam,
-  RouteSegment,
-  RouteSource,
-  RouteTemplate,
-  SitemapConfig,
-} from './types.js';
-export { renderSitemapIndexXml, renderSitemapXml } from './xml.js';
+// Core is package-internal shared implementation for root and adapter entrypoints.
+// Public types are re-exported from the package root and adapter barrels so
+// consumers do not need to import from `super-sitemap/core`.

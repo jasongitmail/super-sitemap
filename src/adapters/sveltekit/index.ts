@@ -1,4 +1,4 @@
-import type { LangConfig, ParamValues, RouteTemplate } from '../../core/index.js';
+import type { LangConfig, ParamValues, RouteTemplate } from '../../core/internal/types.js';
 
 import { discoverSvelteKitPageRouteFiles } from './discovery.js';
 import { expandSvelteKitOptionalRoutes } from './optional-routes.js';
@@ -9,6 +9,16 @@ import {
 } from './route-files.js';
 import { findSvelteKitLangToken, parseSvelteKitRouteTemplate } from './route-template.js';
 
+export type {
+  Alternate,
+  Changefreq,
+  LangConfig,
+  ParamValue,
+  ParamValues,
+  PathObj,
+  Priority,
+  SitemapConfig,
+} from '../../core/internal/types.js';
 export {
   discoverSvelteKitPageRouteFiles,
   discoverSvelteKitPageRouteFilesFromDirectory,

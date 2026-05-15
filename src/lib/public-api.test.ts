@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CreateSvelteKitRouteTemplatesOptions } from '../adapters/sveltekit/index.js';
 import type {
-  TanStackStartRouterFactory,
-  TanStackStartRouter,
-  TanStackStartSitemapConfig,
+  CreateSvelteKitRouteTemplatesOptions,
+  ParamValue as SvelteKitParamValue,
+  PathObj as SvelteKitPathObj,
+  SitemapConfig as SvelteKitSitemapConfig,
+} from '../adapters/sveltekit/index.js';
+import type {
+  ParamValue as TanStackStartParamValue,
+  PathObj as TanStackStartPathObj,
+  SitemapConfig as TanStackStartSitemapConfig,
 } from '../adapters/tanstack-start/index.js';
 import type {
   Alternate,
@@ -26,6 +31,7 @@ import {
 import {
   getBody as getTanStackStartBody,
   getHeaders as getTanStackStartHeaders,
+  getSamplePaths as getTanStackStartSamplePaths,
   response as tanStackStartResponse,
 } from '../adapters/tanstack-start/index.js';
 import { response, sampledPaths, sampledUrls } from './index.js';
@@ -76,6 +82,7 @@ describe('public package root API', () => {
 describe('SvelteKit package API', () => {
   it('declares only the public SvelteKit package export path', () => {
     expect(packageJson.exports).not.toHaveProperty('./adapters/sveltekit');
+    expect(packageJson.exports).not.toHaveProperty('./core');
     expect(packageJson.exports['./sveltekit']).toEqual({
       default: './adapters/sveltekit/index.js',
       types: './adapters/sveltekit/index.d.ts',
@@ -100,6 +107,21 @@ describe('SvelteKit package API', () => {
       { matcher: undefined, name: 'slug', rest: false, segmentIndex: 1 },
     ]);
   });
+
+  it('exports SvelteKit config types from the adapter entrypoint', () => {
+    const paramValue: SvelteKitParamValue = {
+      priority: 0.8,
+      values: ['hello-world'],
+    };
+    const pathObj: SvelteKitPathObj = { path: '/blog/hello-world' };
+    const config: SvelteKitSitemapConfig = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/[slug]': [paramValue] },
+      processPaths: (paths: SvelteKitPathObj[]) => [...paths, pathObj],
+    };
+
+    expect(config.processPaths?.([])).toEqual([pathObj]);
+  });
 });
 
 describe('TanStack Start package API', () => {
@@ -115,13 +137,14 @@ describe('TanStack Start package API', () => {
     expect(tanStackStartResponse).toBeTypeOf('function');
     expect(getTanStackStartBody).toBeTypeOf('function');
     expect(getTanStackStartHeaders).toBeTypeOf('function');
+    expect(getTanStackStartSamplePaths).toBeTypeOf('function');
 
-    const router: TanStackStartRouter = {
+    const router = {
       routesByPath: {
         '/blog/$slug': { fullPath: '/blog/$slug' },
       },
     };
-    const getRouter: TanStackStartRouterFactory = () => router;
+    const getRouter = () => router;
     const config: TanStackStartSitemapConfig = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
@@ -141,6 +164,28 @@ describe('TanStack Start package API', () => {
       'content-type': 'application/xml',
     });
     expect(await res.text()).toContain('<loc>https://example.com/blog/hello-world</loc>');
+    expect(getTanStackStartSamplePaths({ sitemapConfig: config })).toEqual(['/blog/hello-world']);
+  });
+
+  it('exports TanStack Start config types from the adapter entrypoint', () => {
+    const paramValue: TanStackStartParamValue = {
+      priority: 0.8,
+      values: ['hello-world'],
+    };
+    const pathObj: TanStackStartPathObj = { path: '/blog/hello-world' };
+    const router = {
+      routesByPath: {
+        '/blog/$slug': { fullPath: '/blog/$slug' },
+      },
+    };
+    const config: TanStackStartSitemapConfig = {
+      origin: 'https://example.com',
+      paramValues: { '/blog/$slug': [paramValue] },
+      processPaths: (paths: TanStackStartPathObj[]) => [...paths, pathObj],
+      router: () => router,
+    };
+
+    expect(config.processPaths?.([])).toEqual([pathObj]);
   });
 
   it('accepts generated TanStack router shapes without a routesByPath index signature', () => {
@@ -169,7 +214,7 @@ describe('TanStack Start package API', () => {
         },
       },
     };
-    const getRouter: TanStackStartRouterFactory<GeneratedTanStackRouter> = () => router;
+    const getRouter = (): GeneratedTanStackRouter => router;
     const config: TanStackStartSitemapConfig<GeneratedTanStackRouter> = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },

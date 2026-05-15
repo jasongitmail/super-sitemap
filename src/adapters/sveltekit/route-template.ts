@@ -1,4 +1,9 @@
-import type { RouteLocaleSlot, RouteParam, RouteSegment, RouteTemplate } from '../../core/index.js';
+import type {
+  RouteLocaleSlot,
+  RouteParam,
+  RouteSegment,
+  RouteTemplate,
+} from '../../core/internal/types.js';
 
 const LANG_TOKEN_REGEX = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const PARAM_SEGMENT_REGEX = /^\[(\[?)(\.\.\.)?([^\]=]+)(?:=([^\]]+))?\]?\]$/;
