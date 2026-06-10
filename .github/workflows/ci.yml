@@ -20,31 +20,64 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+      - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
-        run: npm install
-        # run: bun install --frozen-lockfile
-      - run: ls -la && ls src/lib -la
+        run: bun ci
+      - name: Type check
+        run: bun run check
       - name: Run unit tests
+        run: bun run test -- --run
+
+  example-sveltekit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+      - name: Install example dependencies
+        run: bun ci
+        working-directory: examples/sveltekit
+      - name: Run integration tests
         run: bun run test
+        working-directory: examples/sveltekit
+      - name: Build example app
+        run: bun run build
+        working-directory: examples/sveltekit
+
+  example-tanstack-start:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+      - name: Install example dependencies
+        run: bun ci
+        working-directory: examples/tanstack-start
+      - name: Run integration tests
+        run: bun run test
+        working-directory: examples/tanstack-start
+      - name: Build example app
+        run: bun run build
+        working-directory: examples/tanstack-start
 
   publish-to-npm-public:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: unit-tests
+    needs: [unit-tests, example-sveltekit, example-tanstack-start]
     # Avoid running for non-main branches and non-merge events like new pull requests.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm install
-      # - run: bun install --frozen-lockfile
-      - run: ls -la && ls src/lib -la
       - name: Publish to NPM, if version was incremented
         uses: JS-DevTools/npm-publish@v2
         with:
