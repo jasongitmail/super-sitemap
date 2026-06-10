@@ -2,8 +2,6 @@
 node_modules
 /build
 /dist
-/adapters
-/core
 /.svelte-kit
 /package
 .env
@@ -14,3 +12,4 @@ vite.config.ts.timestamp-*
 misc
 CLAUDE.md
 .serena
+.claude/

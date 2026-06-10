@@ -2,13 +2,12 @@
 node_modules
 /build
 /dist
-/adapters
-/core
+/examples
 /.svelte-kit
 /package
 /docs
 /misc
-.claude/settings.local.json
+.claude
 .serena
 CLAUDE.md
 .env

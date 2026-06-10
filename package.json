@@ -1,84 +1,77 @@
 {
   "name": "super-sitemap",
-  "version": "1.0.13-tanstack.1",
-  "description": "SvelteKit sitemap focused on ease of use and making it impossible to forget to add your paths.",
-  "sideEffects": false,
+  "version": "1.0.13-tanstack.2",
+  "description": "Sitemap library for TanStack Start and SvelteKit, focused on ease of use and making it impossible to forget to add your paths.",
+  "keywords": [
+    "react",
+    "robots.txt",
+    "seo",
+    "sitemap",
+    "sitemap generator",
+    "sitemap.xml",
+    "supersitemap",
+    "svelte",
+    "svelte kit",
+    "sveltekit",
+    "tanstack",
+    "tanstack start"
+  ],
+  "homepage": "https://github.com/jasongitmail/super-sitemap#readme",
+  "bugs": {
+    "url": "https://github.com/jasongitmail/super-sitemap/issues"
+  },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jasongitmail/super-sitemap.git"
   },
-  "license": "MIT",
-  "keywords": [
-    "sitemap",
-    "svelte kit",
-    "sveltekit",
-    "svelte",
-    "seo",
-    "sitemap.xml",
-    "sitemap generator",
-    "robots.txt",
-    "supersitemap"
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./sveltekit": {
+      "types": "./dist/adapters/sveltekit/index.d.ts",
+      "default": "./dist/adapters/sveltekit/index.js"
+    },
+    "./tanstack-start": {
+      "types": "./dist/adapters/tanstack-start/index.d.ts",
+      "default": "./dist/adapters/tanstack-start/index.js"
+    }
+  },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build && npm run package",
-    "preview": "vite preview",
+    "build": "npm run package",
     "prepare": "npm run package",
-    "package": "rm -rf dist core adapters && find src/core src/adapters/sveltekit src/adapters/tanstack-start -name '*.d.ts' -delete && svelte-kit sync && svelte-package -i src/core -o core && svelte-package -i src/adapters -o adapters && find src/core src/adapters/sveltekit src/adapters/tanstack-start -name '*.d.ts' -delete && publint",
+    "package": "rm -rf dist && tsc -p tsconfig.build.json && publint && node scripts/verify-package-output.mjs",
     "prepublishOnly": "node scripts/verify-publish-tag.mjs && npm run package && npm test -- --run",
     "npm:version:tanstack": "npm version prerelease --preid tanstack --no-git-tag-version",
     "npm:publish:tanstack": "node scripts/publish-tanstack.mjs",
     "npm:publish:tanstack:dry-run": "node scripts/publish-tanstack.mjs --dry-run",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "check": "tsc --noEmit",
+    "check:watch": "tsc --noEmit --watch",
     "test": "vitest",
     "test:unit": "vitest",
-    "lint": "prettier --plugin-search-dir . --check . && eslint .",
-    "format": "prettier --plugin-search-dir . --write . && eslint . --fix"
-  },
-  "exports": {
-    "./sveltekit": {
-      "types": "./adapters/sveltekit/index.d.ts",
-      "default": "./adapters/sveltekit/index.js"
-    },
-    "./tanstack-start": {
-      "types": "./adapters/tanstack-start/index.d.ts",
-      "default": "./adapters/tanstack-start/index.js"
-    }
-  },
-  "files": [
-    "adapters",
-    "core",
-    "!adapters/**/*.test.*",
-    "!adapters/**/*.spec.*",
-    "!core/**/*.test.*",
-    "!core/**/*.spec.*"
-  ],
-  "peerDependencies": {
-    "svelte": ">=4.0.0 <6.0.0"
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write . && eslint . --fix"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "^2.1.0",
-    "@sveltejs/kit": "^1.27.2",
-    "@sveltejs/package": "^2.2.2",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
     "@typescript-eslint/parser": "^6.9.1",
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-perfectionist": "^2.2.0",
-    "eslint-plugin-svelte": "^2.34.0",
     "eslint-plugin-tsdoc": "^0.2.17",
-    "mdsvex": "^0.11.2",
-    "msw": "^2.0.2",
     "prettier": "^2.8.8",
-    "prettier-plugin-svelte": "^2.10.1",
     "publint": "^0.2.5",
-    "svelte": "^4.2.2",
-    "svelte-check": "^3.5.2",
-    "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vitest": "^0.34.6"
   },
-  "type": "module"
+  "engines": {
+    "node": ">=18"
+  }
 }

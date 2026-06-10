@@ -2,8 +2,7 @@
 node_modules
 /build
 /dist
-/adapters
-/core
+/examples
 /.svelte-kit
 /package
 /docs
