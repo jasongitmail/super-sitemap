@@ -1,0 +1,8 @@
+node_modules
+dist
+.output
+.nitro
+.tanstack
+
+# Note: src/routeTree.gen.ts is intentionally NOT ignored.
+# TanStack's convention is to commit the generated route tree.
