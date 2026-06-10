@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/7d897ca4-a54f-4fba-91a8-549a2e61117b" alt="Svelte Super Sitemap">
+  <img src="https://raw.githubusercontent.com/jasongitmail/super-sitemap/main/docs/assets/readme-header.webp" alt="Super Sitemap">
 
-  <p>SvelteKit sitemap focused on ease of use and <br>making it impossible to forget to add your paths.</p>
+  <p>Sitemap library for TanStack Start and SvelteKit, focused on ease of use <br>and making it impossible to forget to add your paths.</p>
 
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
     <img alt="license badge" src="https://img.shields.io/npm/l/super-sitemap?color=limegreen">
@@ -21,7 +21,6 @@
 - [Usage](#usage)
   - [Architecture and package entrypoints](#architecture-and-package-entrypoints)
   - [Basic example](#basic-example)
-  - [TanStack Start example](#tanstack-start-example)
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
   - [Param Values](#param-values)
@@ -33,13 +32,15 @@
 - [Playwright test](#playwright-test)
 - [Tip: Querying your database for param values using SQL](#tip-querying-your-database-for-param-values-using-sql)
 - [Example sitemap output](#example-sitemap-output)
+- [Migrating from v1](#migrating-from-v1)
 - [Changelog](#changelog)
 
 ## Features
 
 - 🤓 Supports any rendering method.
-- 🪄 Automatically collects routes from `/src/routes` using Vite + data for route
-  parameters provided by you.
+- 🪄 Automatically collects your routes—from `/src/routes` in SvelteKit or from
+  your app's router in TanStack Start—plus data for route parameters provided
+  by you.
 - 🧠 Easy maintenance–accidental omission of data for parameterized routes
   throws an error and requires the developer to either explicitly exclude the
   route pattern or provide an array of data for that param value.
@@ -94,20 +95,7 @@ TanStack already generated instead of duplicating route discovery logic.
 
 ## Basic example
 
-JavaScript:
-
-```js
-// /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'super-sitemap/sveltekit';
-
-export const GET = async () => {
-  return await sitemap.response({
-    origin: 'https://example.com',
-  });
-};
-```
-
-TypeScript:
+### SvelteKit
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -121,18 +109,16 @@ export const GET: RequestHandler = async () => {
 };
 ```
 
-Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.xml`. This ensures your web server always sends the correct `application/xml` content type even if you decide to prerender your sitemap to static files.
+### TanStack Start
 
-## TanStack Start example
-
-TanStack Start apps can use the TanStack adapter subpath and pass the app's
-exported `getRouter` function. Super Sitemap calls that function for each
-sitemap generation, then reads the router's resolved `routesByPath` map, which
-contains public routable URL templates after TanStack has processed the
-generated route tree.
+Pass your app's exported `getRouter` function. Super Sitemap calls it for each
+sitemap generation and reads the router's resolved `routesByPath` map, so it
+uses the routes TanStack already generated — regardless of whether you define
+routes with file-based routing, code-based routing, or virtual file routes.
 
 ```ts
-// /src/routes/sitemap.xml.ts
+// /src/routes/sitemap[.]xml.ts — `[.]` escapes the dot in TanStack route file names
+import { createFileRoute } from '@tanstack/react-router';
 import { response, type SitemapConfig } from 'super-sitemap/tanstack-start';
 import { getRouter } from '../router';
 
@@ -141,25 +127,39 @@ const sitemapConfig = {
   router: getRouter,
   paramValues: {
     '/blog/$slug': ['hello-world', 'another-post'],
-    '/campsites/$country/$state': [
-      ['usa', 'new-york'],
-      ['canada', 'ontario'],
-    ],
   },
-  excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
 } satisfies SitemapConfig;
 
-export async function GET(): Promise<Response> {
-  return response(sitemapConfig);
-}
+export const Route = createFileRoute('/sitemap.xml')({
+  server: {
+    handlers: {
+      GET: () => response(sitemapConfig),
+    },
+  },
+});
 ```
 
-For build-time, prerender-style, or custom response-wrapper usage, `getBody()`
-returns the XML string and `getHeaders()` returns the default sitemap headers
-merged with your overrides. Using the same `sitemapConfig` object shown above:
+The `createFileRoute()` path string is managed by TanStack's plugin — it
+rewrites the escaped `[.]` filename segment to a literal dot for you. A running
+version of this route lives in [`examples/tanstack-start`](examples/tanstack-start)
+(in its paginated form; see [Sitemap Index](#sitemap-index)).
+
+Use TanStack route keys such as `/blog/$slug`, `/docs/$`, and
+`/blog/{-$category}` in `paramValues` and `excludeRoutePatterns`. The generated
+sitemap URLs are public paths like `/blog/hello-world`; TanStack syntax is not
+emitted into the XML.
+
+Server-only routes — those with server handlers and no component, like the
+sitemap route itself, robots.txt, or API routes — are excluded automatically,
+so the sitemap never lists itself and you don't need `excludeRoutePatterns`
+entries for endpoints.
+
+For build-time, prerender-style, or custom response-wrapper usage in either
+framework, `getBody()` returns the XML string and `getHeaders()` returns the
+default sitemap headers merged with your overrides:
 
 ```ts
-import { getBody, getHeaders } from 'super-sitemap/tanstack-start';
+import { getBody, getHeaders } from 'super-sitemap/tanstack-start'; // or 'super-sitemap/sveltekit'
 
 const body = getBody(sitemapConfig);
 const headers = getHeaders({
@@ -169,88 +169,12 @@ const headers = getHeaders({
 });
 ```
 
-Use TanStack compatibility keys such as `/blog/$slug`, `/docs/$`, and
-`/blog/{-$category}` in `paramValues` and `excludeRoutePatterns`. The generated
-sitemap URLs are public paths like `/blog/hello-world`; TanStack syntax is not
-emitted into the XML.
+Always include the `.xml` extension on your sitemap route name–e.g. `sitemap.xml`. This ensures your web server always sends the correct `application/xml` content type even if you decide to prerender your sitemap to static files.
 
 ## The "everything" example
 
 _**All aspects of the below example are optional, except for `origin` and
 `paramValues` to provide data for parameterized routes.**_
-
-JavaScript:
-
-```js
-// /src/routes/sitemap.xml/+server.js
-import * as sitemap from 'super-sitemap/sveltekit';
-import * as blog from '$lib/data/blog';
-
-export const prerender = true; // optional
-
-export const GET = async () => {
-  // Get data for parameterized routes however you need to; this is only an example.
-  let blogSlugs, blogTags;
-  try {
-    [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
-  } catch (err) {
-    throw error(500, 'Could not load data for param values.');
-  }
-
-  return await sitemap.response({
-    origin: 'https://example.com',
-    excludeRoutePatterns: [
-      '^/dashboard.*', // i.e. routes starting with `/dashboard`
-      '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '.*\\(authenticated\\).*', // i.e. routes within a group
-    ],
-    paramValues: {
-      // paramValues can be a 1D array of strings
-      '/blog/[slug]': blogSlugs, // e.g. ['hello-world', 'another-post']
-      '/blog/tag/[tag]': blogTags, // e.g. ['red', 'green', 'blue']
-
-      // Or a 2D array of strings
-      '/campsites/[country]/[state]': [
-        ['usa', 'new-york'],
-        ['usa', 'california'],
-        ['canada', 'toronto'],
-      ],
-
-      // Or an array of ParamValue objects
-      '/athlete-rankings/[country]/[state]': [
-        {
-          values: ['usa', 'new-york'], // required
-          lastmod: '2025-01-01T00:00:00Z', // optional
-          changefreq: 'daily', // optional
-          priority: 0.5, // optional
-        },
-        {
-          values: ['usa', 'california'],
-          lastmod: '2025-01-01T00:00:00Z',
-          changefreq: 'daily',
-          priority: 0.5,
-        },
-      ],
-    },
-    headers: {
-      'custom-header': 'foo', // case insensitive; xml content type & 1h CDN cache by default
-    },
-    additionalPaths: [
-      '/foo.pdf', // for example, to a file in your static dir
-    ],
-    defaultChangefreq: 'daily',
-    defaultPriority: 0.7,
-    sort: 'alpha', // default is false; 'alpha' sorts all paths alphabetically.
-    processPaths: (paths) => {
-      // Optional callback to allow arbitrary processing of your path objects. See the
-      // processPaths() section of the README.
-      return paths;
-    },
-  });
-};
-```
-
-TypeScript:
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -329,25 +253,10 @@ recommended by Google.**_
 
 You can enable sitemap index support with just two changes:
 
-1. Rename your route to `sitemap[[page]].xml`
+1. Rename your route so it serves `/sitemap.xml` plus `/sitemap1.xml`, `/sitemap2.xml`, etc.
 2. Pass the page param via your sitemap config
 
-JavaScript:
-
-```js
-// /src/routes/sitemap[[page]].xml/+server.js
-import * as sitemap from 'super-sitemap/sveltekit';
-
-export const GET = async ({ params }) => {
-  return await sitemap.response({
-    origin: 'https://example.com',
-    page: params.page,
-    // maxPerPage: 45_000 // optional; defaults to 50_000
-  });
-};
-```
-
-TypeScript:
+### SvelteKit
 
 ```ts
 // /src/routes/sitemap[[page]].xml/+server.ts
@@ -362,6 +271,27 @@ export const GET: RequestHandler = async ({ params }) => {
   });
 };
 ```
+
+### TanStack Start
+
+Name the route file `sitemap{-$page}[.]xml.ts` — an optional `page` param with
+a `sitemap` prefix and an escaped-dot `.xml` suffix:
+
+```ts
+// /src/routes/sitemap{-$page}[.]xml.ts
+export const Route = createFileRoute('/sitemap{-$page}.xml')({
+  server: {
+    handlers: {
+      GET: ({ params }) => response({ ...sitemapConfig, page: params.page }),
+    },
+  },
+});
+```
+
+`params.page` is `undefined` for `/sitemap.xml` and `'1'`, `'2'`, etc for the
+numbered pages. The sitemap route never lists itself: server-only routes are
+excluded automatically. This exact route file runs in
+[`examples/tanstack-start`](examples/tanstack-start).
 
 **Feel free to always set up your sitemap as a sitemap index, given it will work optimally whether you
 have few or many URLs.**
@@ -393,6 +323,11 @@ paginated URLs automatically.
 When specifying values for the params of your parameterized routes,
 you can use any of the following types:
 `string[]`, `string[][]`, or `ParamValue[]`.
+
+Property names use your framework's own route syntax: SvelteKit routes use
+square brackets (`/blog/[slug]`, `/[[lang]]/about`) and TanStack Start routes
+use TanStack syntax (`/blog/$slug`, `/docs/$`, `/blog/{-$category}`). The
+examples below use SvelteKit syntax; TanStack values work identically.
 
 Example:
 
@@ -449,6 +384,9 @@ Consequently, Super Sitemap will include all such path variations in your
 sitemap and will require you to either exclude these using `excludeRoutePatterns` or
 provide param values for them using `paramValues`, within your sitemap
 config object.
+
+TanStack Start optional params like `/posts/{-$category}` expand the same
+way — use TanStack syntax in your `paramValues` and `excludeRoutePatterns` keys.
 
 ### For example:
 
@@ -656,6 +594,29 @@ with a default language (e.g. `/about`) and lang slugs for alternate languages
 
 - Using [Paraglide](https://github.com/opral/paraglide-js)? See the [example code here](https://github.com/jasongitmail/super-sitemap/issues/24#issuecomment-2813870191) if you use Paraglide to localize path names on your site.
 
+### i18n with TanStack Start
+
+TanStack Start has no equivalent of SvelteKit's `[[lang]]` convention, so the
+TanStack adapter never infers a language param. Instead, declare which route
+param holds the language value using the `langParam` config property, alongside
+the same `lang` config described above:
+
+```ts
+// Routes like /{-$locale}/about (optional) or /$locale/about (required)
+const sitemapConfig = {
+  origin: 'https://example.com',
+  router: getRouter,
+  lang: {
+    default: 'en', // e.g. /about
+    alternates: ['zh', 'de'], // e.g. /zh/about, /de/about
+  },
+  langParam: {
+    paramName: 'locale', // your route param's name, without TanStack syntax
+    mode: 'optional', // 'optional' for {-$locale}, 'required' for $locale
+  },
+} satisfies SitemapConfig;
+```
+
 ### Q&A on i18n
 
 - **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (German)?**
@@ -729,27 +690,34 @@ export async function GET(): Promise<Response> {
 
 ```ts
 // /src/routes/sample-paths.ts
+import { createFileRoute } from '@tanstack/react-router';
 import { getSamplePaths } from 'super-sitemap/tanstack-start';
 import { getRouter } from '../router';
 
-export function GET() {
-  const samplePaths = getSamplePaths({
-    sitemapConfig: {
-      origin: 'https://example.com',
-      router: getRouter,
-      excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
-      paramValues: {
-        '/blog/$slug': ['hello-world', 'another-post'],
-        '/campsites/$country/$state': [
-          ['usa', 'new-york'],
-          ['canada', 'ontario'],
-        ],
+export const Route = createFileRoute('/sample-paths')({
+  server: {
+    handlers: {
+      GET: () => {
+        const samplePaths = getSamplePaths({
+          sitemapConfig: {
+            origin: 'https://example.com',
+            router: getRouter,
+            excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
+            paramValues: {
+              '/blog/$slug': ['hello-world', 'another-post'],
+              '/campsites/$country/$state': [
+                ['usa', 'new-york'],
+                ['canada', 'ontario'],
+              ],
+            },
+          },
+        });
+
+        return Response.json(samplePaths);
       },
     },
-  });
-
-  return Response.json(samplePaths);
-}
+  },
+});
 ```
 
 Both adapters support an optional `getCanonicalPath` callback. Use it when your
@@ -767,7 +735,8 @@ getSamplePaths({
 
 It's important to create a `robots.txt` so search engines know where to find your sitemap.
 
-You can create it at `/static/robots.txt`:
+You can create it at `/static/robots.txt` (SvelteKit) or `/public/robots.txt`
+(TanStack Start):
 
 ```text
 User-agent: *
@@ -986,8 +955,25 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 
 </details>
 
+## Migrating from v1
+
+Version 2 publishes framework-specific entrypoints and contains breaking
+changes for v1 users:
+
+- **Imports moved.** The package root export was removed. Update
+  `import * as sitemap from 'super-sitemap'` to
+  `import * as sitemap from 'super-sitemap/sveltekit'`. The `response()`,
+  `getBody()`, and `getHeaders()` APIs and config are otherwise compatible.
+- **`sampledUrls()` and `sampledPaths()` were removed.** Use
+  [`getSamplePaths()`](#sample-paths) instead. It samples from your sitemap
+  config directly instead of fetching and parsing your live sitemap XML, so it
+  needs no network access and returns one canonical path per route shape.
+- **No more `svelte` peer dependency.** Super Sitemap no longer declares any
+  peer dependencies, so installs are warning-free regardless of your framework.
+
 ## Changelog
 
+- `1.0.13-tanstack.3` (unreleased) - BREAKING: TanStack Start's `locale` config property renamed to `langParam`; `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
@@ -1014,7 +1000,20 @@ SELECT * FROM campsites WHERE LOWER(country) = LOWER(params.country) AND LOWER(s
 ```bash
 git clone https://github.com/jasongitmail/super-sitemap.git
 bun install
-# Then edit files in `/src/adapters` or `/src/core`
+bun run test      # unit tests for src/core and src/adapters
+bun run check     # type checking
+bun run lint
+```
+
+Runnable example apps live in `examples/sveltekit` and `examples/tanstack-start`.
+Each is a self-contained app that imports the library from source and serves as
+both an integration test and a dev playground:
+
+```bash
+cd examples/sveltekit   # or examples/tanstack-start
+bun install
+bun run test            # end-to-end sitemap tests against the real framework
+bun run dev             # browse the example, including /sitemap.xml
 ```
 
 ## Publishing
