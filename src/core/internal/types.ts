@@ -1,6 +1,5 @@
 export type Changefreq = 'always' | 'daily' | 'hourly' | 'monthly' | 'never' | 'weekly' | 'yearly';
 
-/* eslint-disable perfectionist/sort-object-types */
 export type ParamValue = {
   values: string[];
   lastmod?: string;
@@ -8,7 +7,6 @@ export type ParamValue = {
   changefreq?: Changefreq;
 };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type ParamValues = Record<string, ParamValue[] | never | string[] | string[][]>;
 
 export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
@@ -48,7 +46,6 @@ export type RouteSegment =
       value: string;
     };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type RouteParam = {
   name: string;
   matcher?: string;
@@ -56,7 +53,6 @@ export type RouteParam = {
   segmentIndex: number;
 };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type RouteLocaleSlot = {
   paramName: string;
   mode: 'optional' | 'required';
@@ -64,14 +60,12 @@ export type RouteLocaleSlot = {
   segmentIndex: number;
 };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type RouteSource = {
   adapter: string;
   compatibilityKey: string;
   filePath?: string;
 };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type NormalizedRoute = {
   id: string;
   segments: RouteSegment[];
@@ -80,7 +74,6 @@ export type NormalizedRoute = {
   source: RouteSource;
 };
 
-/* eslint-disable perfectionist/sort-object-types */
 export type SitemapConfig = {
   additionalPaths?: string[];
   excludeRoutePatterns?: string[];

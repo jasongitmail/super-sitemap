@@ -4,7 +4,7 @@
 // 2. Every package.json `exports` subpath resolves to real `types` and
 //    `default` files.
 //
-// Runs after `svelte-package` in the `package` npm script.
+// Runs after `tsc` in the `package` npm script.
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';

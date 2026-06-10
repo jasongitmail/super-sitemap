@@ -34,7 +34,6 @@ export const GET: RequestHandler = async ({ params }) => {
     origin: 'https://example.com',
     page: params.page,
 
-    /* eslint-disable perfectionist/sort-objects */
     paramValues: {
       '/[[lang]]/[foo]': ['foo-path-1'],
       '/[[lang]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
