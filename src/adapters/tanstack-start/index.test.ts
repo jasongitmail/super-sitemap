@@ -14,8 +14,8 @@ describe('TanStack Start package API', () => {
     expect(Object.keys(packageJson.exports)).not.toContain('.');
     expect(packageJson.exports).not.toHaveProperty('./adapters/tanstack-start');
     expect(packageJson.exports['./tanstack-start']).toEqual({
-      default: './adapters/tanstack-start/index.js',
-      types: './adapters/tanstack-start/index.d.ts',
+      default: './dist/adapters/tanstack-start/index.js',
+      types: './dist/adapters/tanstack-start/index.d.ts',
     });
   });
 
@@ -101,7 +101,7 @@ describe('TanStack Start package API', () => {
       },
     };
     const getRouter = (): GeneratedTanStackRouter => router;
-    const config: TanStackStartSitemapConfig<GeneratedTanStackRouter> = {
+    const config: TanStackStartSitemapConfig = {
       origin: 'https://example.com',
       paramValues: { '/blog/$slug': ['hello-world'] },
       router: getRouter,

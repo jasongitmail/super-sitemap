@@ -2,13 +2,13 @@ import type { PathObj } from './types.js';
 
 export type PaginatedPathsResult =
   | {
-      kind: 'invalid-page';
+      error: 'invalid-page';
     }
   | {
-      kind: 'not-found';
+      error: 'not-found';
     }
   | {
-      kind: 'ok';
+      error: null;
       paths: PathObj[];
     };
 
@@ -26,16 +26,16 @@ export function paginatePaths({
   paths: PathObj[];
 }): PaginatedPathsResult {
   if (!/^[1-9]\d*$/.test(page)) {
-    return { kind: 'invalid-page' };
+    return { error: 'invalid-page' };
   }
 
   const pageInt = Number(page);
   if (pageInt > getTotalPages(paths, maxPerPage)) {
-    return { kind: 'not-found' };
+    return { error: 'not-found' };
   }
 
   return {
-    kind: 'ok',
+    error: null,
     paths: paths.slice((pageInt - 1) * maxPerPage, pageInt * maxPerPage),
   };
 }

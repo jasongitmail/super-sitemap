@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateSvelteKitPaths, getBody, getHeaders, response } from './sitemap.js';
+import { getBody, getHeaders, prepareSitemapPaths, response } from './sitemap.js';
 
 describe('SvelteKit adapter sitemap paths', () => {
   it('preserves deterministic default ordering without alpha sorting', () => {
-    const paths = generateSvelteKitPaths({
+    const paths = prepareSitemapPaths({
       paramValues: {
         '/blog/[slug]': ['hello-world', 'another-post'],
       },
@@ -35,7 +35,7 @@ describe('SvelteKit adapter response wrapper', () => {
         origin: undefined,
         routeFiles: ['/src/routes/about/+page.svelte'],
       })
-    ).rejects.toThrow('SvelteKit sitemap: `origin` property is required in sitemap config.');
+    ).rejects.toThrow('super-sitemap: `origin` property is required in sitemap config.');
 
     const res = await response({
       origin: 'https://example.com',
@@ -123,7 +123,7 @@ describe('SvelteKit adapter response wrapper', () => {
         origin: 'https://example.com',
         routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
       })
-    ).rejects.toThrow("SvelteKit sitemap: paramValues not provided for route: '/blog/[slug]'.");
+    ).rejects.toThrow("super-sitemap: paramValues not provided for route: '/blog/[slug]'.");
     await expect(
       response({
         origin: 'https://example.com',
@@ -131,7 +131,7 @@ describe('SvelteKit adapter response wrapper', () => {
         routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
       })
     ).rejects.toThrow(
-      "SvelteKit sitemap: paramValues were provided for a route that does not exist: '/missing/[slug]'."
+      "super-sitemap: paramValues were provided for a route that does not exist: '/missing/[slug]'."
     );
   });
 

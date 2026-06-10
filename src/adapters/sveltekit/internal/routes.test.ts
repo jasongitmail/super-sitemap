@@ -3,22 +3,21 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import type { RouteTemplate } from '../../../core/internal/types.js';
+import type { NormalizedRoute } from '../../../core/internal/types.js';
 
 import {
-  createSvelteKitRouteTemplates,
-  discoverSvelteKitPageRouteFiles,
   discoverSvelteKitPageRouteFilesFromDirectory,
+  listFilePathsRecursively,
+} from '../../../test-utils/sveltekit-route-files.js';
+import {
+  createSvelteKitNormalizedRoutes,
   expandSvelteKitOptionalRoute,
   expandSvelteKitOptionalRoutes,
-  filterSvelteKitRoutes,
   findSvelteKitLangToken,
-  listFilePathsRecursively,
   normalizeSvelteKitRouteFile,
-  orderSvelteKitTemplatesForCompatibility,
-  parseSvelteKitRouteTemplate,
+  orderSvelteKitNormalizedRoutesForCompatibility,
+  parseSvelteKitNormalizedRoute,
   removeSvelteKitRouteGroups,
-  sortSvelteKitRoutes,
 } from './routes.js';
 
 const source = (compatibilityKey: string) => ({
@@ -27,16 +26,8 @@ const source = (compatibilityKey: string) => ({
 });
 
 describe('SvelteKit routes', () => {
-  it('discovers page routes and excludes endpoint-only files', () => {
-    const routes = discoverSvelteKitPageRouteFiles();
-
-    expect(routes).toContain('/src/routes/(public)/[[lang]]/about/+page.svelte');
-    expect(routes).toContain('/src/routes/(public)/markdown-md/+page.md');
-    expect(routes).toContain('/src/routes/(public)/markdown-svx/+page.svx');
-    expect(routes).not.toContain('/src/routes/(public)/[[lang]]/sitemap[[page]].xml/+server.ts');
-    expect(routes.some((route) => route.includes('+server.'))).toBe(false);
-  });
-
+  // Real import.meta.glob discovery is integration-tested in examples/sveltekit,
+  // which is a live SvelteKit app with routes at /src/routes.
   it('returns the full path of each file in nested directories', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'super-sitemap-'));
     const nestedDir = path.join(tmpDir, 'nested', 'deeper');
@@ -114,26 +105,25 @@ describe('SvelteKit routes', () => {
     expect(removeSvelteKitRouteGroups('/(public)')).toBe('/');
   });
 
-  it('sorts routes alphabetically', () => {
-    expect(sortSvelteKitRoutes(['/z', '/', '/a'])).toEqual(['/', '/a', '/z']);
-  });
-
   it('filters before removing route groups and normalizes SvelteKit page file variants', () => {
-    const routes = [
-      '/src/routes/(public)/+page.svelte',
-      '/src/routes/(public)/terms/+page@.svelte',
-      '/src/routes/(public)/break/+page@foo.svelte',
-      '/src/routes/(public)/break-dynamic/+page@[id].svelte',
-      '/src/routes/(public)/break-group/+page@(id).svelte',
-      '/src/routes/(secret-group)/hidden/+page.svelte',
-      '/src/routes/(public)/(nested-group)/visible/+page.md',
-      '/src/routes/(public)/content/+page.svx',
-      '/src/routes/(public)/blog/[page=integer]/+page.svelte',
-    ];
+    const normalizedRoutes = createSvelteKitNormalizedRoutes({
+      excludeRoutePatterns: ['\\(secret-group\\)', '.*\\[page=integer\\].*'],
+      routeFiles: [
+        '/src/routes/(public)/+page.svelte',
+        '/src/routes/(public)/terms/+page@.svelte',
+        '/src/routes/(public)/break/+page@foo.svelte',
+        '/src/routes/(public)/break-dynamic/+page@[id].svelte',
+        '/src/routes/(public)/break-group/+page@(id).svelte',
+        '/src/routes/(secret-group)/hidden/+page.svelte',
+        '/src/routes/(public)/(nested-group)/visible/+page.md',
+        '/src/routes/(public)/content/+page.svx',
+        '/src/routes/(public)/blog/[page=integer]/+page.svelte',
+      ],
+    });
 
-    expect(filterSvelteKitRoutes(routes, ['\\(secret-group\\)', '.*\\[page=integer\\].*'])).toEqual(
-      ['/', '/break', '/break-dynamic', '/break-group', '/content', '/terms', '/visible']
-    );
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/', '/break', '/break-dynamic', '/break-group', '/content', '/terms', '/visible']);
   });
 
   it('expands optional params while preserving matcher syntax for route keys', () => {
@@ -165,18 +155,18 @@ describe('SvelteKit routes', () => {
     expect(findSvelteKitLangToken().test('/blog/[slug]')).toBe(false);
   });
 
-  it('maps locale, matcher, rest, source, and compatibility metadata into normalized templates', () => {
-    const optionalLocale = parseSvelteKitRouteTemplate({
+  it('maps locale, matcher, rest, source, and compatibility metadata into normalized normalizedRoutes', () => {
+    const optionalLocale = parseSvelteKitNormalizedRoute({
       filePath: '/src/routes/(public)/[[lang=lang]]/blog/[slug]/+page.svelte',
       route: '/[[lang=lang]]/blog/[slug]',
     });
-    const requiredLocale = parseSvelteKitRouteTemplate({
+    const requiredLocale = parseSvelteKitNormalizedRoute({
       route: '/[lang]/campsites/[country]/[state]',
     });
-    const matcherParam = parseSvelteKitRouteTemplate({
+    const matcherParam = parseSvelteKitNormalizedRoute({
       route: '/blog/[page=integer]',
     });
-    const restParam = parseSvelteKitRouteTemplate({
+    const restParam = parseSvelteKitNormalizedRoute({
       route: '/docs/[...rest]',
     });
 
@@ -204,11 +194,11 @@ describe('SvelteKit routes', () => {
     ]);
     expect(restParam.params).toEqual([{ name: 'rest', rest: true, segmentIndex: 1 }]);
 
-    for (const template of [optionalLocale, requiredLocale, matcherParam, restParam]) {
-      expect(template.segments).not.toContainEqual(
+    for (const normalizedRoute of [optionalLocale, requiredLocale, matcherParam, restParam]) {
+      expect(normalizedRoute.segments).not.toContainEqual(
         expect.objectContaining({ value: expect.stringMatching(/\+page|\.svelte|\[\[/) })
       );
-      expect(template.segments).not.toContainEqual(
+      expect(normalizedRoute.segments).not.toContainEqual(
         expect.objectContaining({ name: expect.stringMatching(/\[[^\]]+\]/) })
       );
     }
@@ -216,17 +206,17 @@ describe('SvelteKit routes', () => {
 
   it('requires locale config when localized SvelteKit routes exist', () => {
     expect(() =>
-      createSvelteKitRouteTemplates({
+      createSvelteKitNormalizedRoutes({
         lang: { alternates: [], default: 'en' },
         routeFiles: ['/src/routes/(public)/[[lang]]/about/+page.svelte'],
       })
     ).toThrow(
-      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]].'
+      'super-sitemap: `lang` property is required in sitemap config because one or more routes contain [[lang]].'
     );
   });
 
-  it('returns normalized syntax-free templates from SvelteKit route files', () => {
-    const templates = createSvelteKitRouteTemplates({
+  it('returns normalized syntax-free normalizedRoutes from SvelteKit route files', () => {
+    const normalizedRoutes = createSvelteKitNormalizedRoutes({
       excludeRoutePatterns: ['\\(authenticated\\)'],
       lang: { alternates: ['zh'], default: 'en' },
       routeFiles: [
@@ -235,8 +225,8 @@ describe('SvelteKit routes', () => {
       ],
     });
 
-    expect(templates).toHaveLength(1);
-    expect(templates[0]).toMatchObject({
+    expect(normalizedRoutes).toHaveLength(1);
+    expect(normalizedRoutes[0]).toMatchObject({
       locale: { mode: 'optional', paramName: 'lang' },
       segments: [
         { kind: 'locale', name: 'lang' },
@@ -247,17 +237,17 @@ describe('SvelteKit routes', () => {
         filePath: '/src/routes/(public)/[[lang]]/about/+page.svelte',
       },
     });
-    expect(templates[0]?.segments).not.toContainEqual(
+    expect(normalizedRoutes[0]?.segments).not.toContainEqual(
       expect.objectContaining({ value: expect.stringMatching(/\(|\)|\+page|\.svelte|\[/) })
     );
   });
 
-  it('orders dynamic templates by paramValues while keeping static templates first', () => {
+  it('orders dynamic normalizedRoutes by paramValues while keeping static normalizedRoutes first', () => {
     const paramValues = Object.fromEntries([
       ['/tag/[tag]', ['red']],
       ['/blog/[slug]', ['hello-world']],
     ]);
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: '/blog/[slug]',
         params: [{ name: 'slug', segmentIndex: 1 }],
@@ -284,10 +274,10 @@ describe('SvelteKit routes', () => {
     ];
 
     expect(
-      orderSvelteKitTemplatesForCompatibility({
+      orderSvelteKitNormalizedRoutesForCompatibility({
+        normalizedRoutes,
         paramValues,
-        templates,
-      }).map((template) => template.source.compatibilityKey)
+      }).map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
     ).toEqual(['/about', '/tag/[tag]', '/blog/[slug]']);
   });
 });

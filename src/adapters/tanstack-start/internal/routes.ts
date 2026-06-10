@@ -1,13 +1,15 @@
 import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
 import type {
-  CreateTanStackStartRouteTemplatesOptions,
-  ParseTanStackStartRouteTemplatesOptions,
-  TanStackStartLocaleMapping,
+  CreateTanStackStartNormalizedRoutesOptions,
+  ParseTanStackStartNormalizedRoutesOptions,
+  TanStackStartLangParamConfig,
+  TanStackStartNormalizedRoute,
   TanStackStartResolvedRoute,
   TanStackStartRouteInput,
   TanStackStartRouteSource,
-  TanStackStartRouteTemplate,
 } from './types.js';
+
+import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
 
@@ -17,6 +19,7 @@ type TanStackStartRouteRecord = {
   id?: string;
   path?: string;
   routesByPathKey?: string;
+  serverOnly?: boolean;
   to?: string;
 };
 
@@ -43,30 +46,33 @@ type SegmentVariant = {
   segment?: RouteSegment;
 };
 
-export function createTanStackStartRouteTemplates({
+export function createTanStackStartNormalizedRoutes({
   excludeRoutePatterns = [],
-  locale,
+  langParam,
   ...routeInput
-}: CreateTanStackStartRouteTemplatesOptions): TanStackStartRouteTemplate[] {
+}: CreateTanStackStartNormalizedRoutesOptions): TanStackStartNormalizedRoute[] {
   const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
-  const templatesByCompatibilityKey = new Map<string, TanStackStartRouteTemplate>();
+  const normalizedRoutesByCompatibilityKey = new Map<string, TanStackStartNormalizedRoute>();
 
   for (const route of routeRecords) {
-    const templates = parseTanStackStartRouteTemplates(route, { locale }).filter(
-      (template) =>
+    const normalizedRoutes = parseTanStackStartNormalizedRoutes(route, { langParam }).filter(
+      (normalizedRoute) =>
         !excludeRoutePatterns.some((pattern) =>
-          new RegExp(pattern).test(template.source.compatibilityKey)
+          new RegExp(pattern).test(normalizedRoute.source.compatibilityKey)
         )
     );
 
-    for (const template of templates) {
-      if (!templatesByCompatibilityKey.has(template.source.compatibilityKey)) {
-        templatesByCompatibilityKey.set(template.source.compatibilityKey, template);
+    for (const normalizedRoute of normalizedRoutes) {
+      if (!normalizedRoutesByCompatibilityKey.has(normalizedRoute.source.compatibilityKey)) {
+        normalizedRoutesByCompatibilityKey.set(
+          normalizedRoute.source.compatibilityKey,
+          normalizedRoute
+        );
       }
     }
   }
 
-  return [...templatesByCompatibilityKey.values()].sort((a, b) =>
+  return [...normalizedRoutesByCompatibilityKey.values()].sort((a, b) =>
     a.source.compatibilityKey.localeCompare(b.source.compatibilityKey)
   );
 }
@@ -75,13 +81,13 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
   routeInput: TanStackStartRouteInput
 ): TanStackStartRouteRecord[] {
   if (typeof routeInput.router !== 'function') {
-    throw new Error("TanStack Start sitemap: `router` must be your app's `getRouter` function.");
+    throw new Error("super-sitemap: `router` must be your app's `getRouter` function.");
   }
 
   const routesByPath = routeInput.router().routesByPath;
 
   if (!routesByPath) {
-    throw new Error('TanStack Start sitemap: `router` must return a router with `routesByPath`.');
+    throw new Error('super-sitemap: `router` must return a router with `routesByPath`.');
   }
 
   return Object.entries(routesByPath)
@@ -105,6 +111,7 @@ function createTanStackStartRouteRecord(
     id: getOptionalStringRouteField(routeRecord, 'id'),
     path: getOptionalStringRouteField(routeRecord, 'path'),
     routesByPathKey,
+    serverOnly: isServerOnlyRoute(routeRecord),
     to: getOptionalStringRouteField(routeRecord, 'to'),
   };
 }
@@ -114,6 +121,22 @@ function createTanStackStartRouteRecord(
  */
 function isRouteRecordObject(route: unknown): route is Record<string, unknown> {
   return typeof route === 'object' && route !== null;
+}
+
+/**
+ * Detects routes that declare server handlers but render no component, such as
+ * the sitemap endpoint itself, robots.txt, or API routes. These are excluded
+ * from the sitemap automatically, mirroring the SvelteKit adapter's pages-only
+ * discovery, so users never have to exclude their sitemap route from its own
+ * output. Routes with a component are always kept, even when they also declare
+ * server handlers, so a misread shape can never silently drop a page.
+ */
+function isServerOnlyRoute(route: Record<string, unknown>): boolean {
+  const options = route['options'];
+  if (typeof options !== 'object' || options === null) return false;
+
+  const routeOptions = options as Record<string, unknown>;
+  return routeOptions['server'] != null && routeOptions['component'] == null;
 }
 
 /**
@@ -127,36 +150,36 @@ function getOptionalStringRouteField(
   return typeof value === 'string' ? value : undefined;
 }
 
-function parseTanStackStartRouteTemplates(
+function parseTanStackStartNormalizedRoutes(
   route: TanStackStartRouteRecord | string,
-  options: ParseTanStackStartRouteTemplatesOptions = {}
-): TanStackStartRouteTemplate[] {
+  options: ParseTanStackStartNormalizedRoutesOptions = {}
+): TanStackStartNormalizedRoute[] {
   const routeRecord = typeof route === 'string' ? { fullPath: route } : route;
   const sourcePath = getCompatibilityPath(routeRecord);
   const parsedSegments = splitPath(sourcePath).map(parseTanStackStartSegment);
-  const variants = expandSegmentVariants(parsedSegments, options.locale);
+  const variants = expandSegmentVariants(parsedSegments, options.langParam);
 
   return variants.map((segments) =>
-    createRouteTemplate({
+    createNormalizedRoute({
       compatibilityKey: toPath(segments.map((segment) => segment.compatibilityKeySegment)),
-      localeMapping: options.locale,
+      langParam: options.langParam,
       routeRecord,
       routeSegments: segments.flatMap((segment) => (segment.segment ? [segment.segment] : [])),
     })
   );
 }
 
-function createRouteTemplate({
+function createNormalizedRoute({
   compatibilityKey,
-  localeMapping,
+  langParam,
   routeRecord,
   routeSegments,
 }: {
   compatibilityKey: string;
-  localeMapping?: TanStackStartLocaleMapping;
+  langParam?: TanStackStartLangParamConfig;
   routeRecord: TanStackStartRouteRecord;
   routeSegments: RouteSegment[];
-}): TanStackStartRouteTemplate {
+}): TanStackStartNormalizedRoute {
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
 
@@ -164,7 +187,7 @@ function createRouteTemplate({
     if (segment.kind === 'locale') {
       locale = {
         matcher: segment.matcher,
-        mode: localeMapping?.mode ?? 'required',
+        mode: langParam?.mode ?? 'required',
         paramName: segment.name,
         segmentIndex,
       };
@@ -206,6 +229,7 @@ function stripUndefinedRouteSource(source: TanStackStartRouteSource): TanStackSt
 
 function isEmittableRouteRecord(route: TanStackStartRouteRecord): boolean {
   if (route.id === '__root__') return false;
+  if (route.serverOnly) return false;
   if (!hasRoutePathField(route)) return false;
 
   const sourcePath = getCompatibilityPath(route);
@@ -226,12 +250,12 @@ function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
 
 function expandSegmentVariants(
   segments: ParsedSegment[],
-  locale: TanStackStartLocaleMapping | undefined
+  langParam: TanStackStartLangParamConfig | undefined
 ): SegmentVariant[][] {
   let variants: SegmentVariant[][] = [[]];
 
   for (const segment of segments) {
-    const additions = getSegmentVariants(segment, locale);
+    const additions = getSegmentVariants(segment, langParam);
     variants = variants.flatMap((variant) =>
       additions.map((addition) => (addition ? [...variant, addition] : variant))
     );
@@ -242,7 +266,7 @@ function expandSegmentVariants(
 
 function getSegmentVariants(
   segment: ParsedSegment,
-  locale: TanStackStartLocaleMapping | undefined
+  langParam: TanStackStartLangParamConfig | undefined
 ): Array<SegmentVariant | undefined> {
   if (segment.kind === 'omit') {
     return [undefined];
@@ -262,13 +286,13 @@ function getSegmentVariants(
   const optionalCompatibilityKeySegment =
     segment.kind === 'optional-param' ? `{-$${segment.name}}` : compatibilityKeySegment;
 
-  if (locale?.paramName === segment.name) {
+  if (langParam?.paramName === segment.name) {
     return [
       {
         compatibilityKeySegment: optionalCompatibilityKeySegment,
         segment: {
           kind: 'locale',
-          matcher: locale.matcher,
+          matcher: langParam.matcher,
           name: segment.name,
         },
       },
@@ -295,14 +319,6 @@ function getCompatibilityPath(route: TanStackStartRouteRecord): string {
   return normalizePath(
     route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? '/'
   );
-}
-
-function normalizePath(routePath: string): string {
-  const normalizedPath = routePath.trim();
-
-  if (!normalizedPath || normalizedPath === '/') return '/';
-
-  return toPath(splitPath(normalizedPath));
 }
 
 function parseTanStackStartSegment(segment: string): ParsedSegment {
@@ -333,13 +349,4 @@ function isPathlessSegment(segment: string): boolean {
     segment.startsWith('_') ||
     (segment.startsWith('(') && segment.endsWith(')'))
   );
-}
-
-function splitPath(routePath: string): string[] {
-  return routePath.split('/').filter(Boolean);
-}
-
-function toPath(segments: Array<string | undefined>): string {
-  const path = segments.filter(Boolean).join('/');
-  return path ? `/${path}` : '/';
 }

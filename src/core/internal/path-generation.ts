@@ -1,31 +1,54 @@
 import type {
   Alternate,
   LangConfig,
+  NormalizedRoute,
   ParamValue,
   ParamValues,
   PathObj,
   RouteParam,
   RouteSegment,
-  RouteTemplate,
   SitemapConfig,
 } from './types.js';
 
-type GenerateRouteTemplatePathsOptions = {
+import { toPath } from './paths.js';
+
+type GenerateNormalizedRoutePathsOptions = {
   defaultChangefreq?: SitemapConfig['defaultChangefreq'];
   defaultPriority?: SitemapConfig['defaultPriority'];
   lang?: LangConfig;
+  normalizedRoutes: NormalizedRoute[];
   paramValues?: ParamValues;
-  templates: RouteTemplate[];
 };
 
-export function generatePathsFromRouteTemplates({
+/**
+ * Raised when paramValues and discovered routes disagree. Carries the route's
+ * compatibility key so adapters can rethrow with framework-specific guidance
+ * instead of parsing error message strings.
+ */
+export class SitemapRouteParamError extends Error {
+  readonly code: 'missing-param-values' | 'unknown-param-values-route';
+  readonly route: string;
+
+  constructor(code: SitemapRouteParamError['code'], route: string) {
+    super(
+      code === 'missing-param-values'
+        ? `paramValues not provided for route: '${route}'.`
+        : `paramValues were provided for a route that does not exist: '${route}'.`
+    );
+    this.code = code;
+    this.name = 'SitemapRouteParamError';
+    this.route = route;
+  }
+}
+
+export function generatePathsFromNormalizedRoutes({
   defaultChangefreq,
   defaultPriority,
   lang = { alternates: [], default: 'en' },
+  normalizedRoutes,
   paramValues = {},
-  templates,
-}: GenerateRouteTemplatePathsOptions): PathObj[] {
-  validateKnownParamValueKeys(templates, paramValues);
+}: GenerateNormalizedRoutePathsOptions): PathObj[] {
+  validateKnownParamValueKeys(normalizedRoutes, paramValues);
 
   const defaults = {
     changefreq: defaultChangefreq,
@@ -34,21 +57,22 @@ export function generatePathsFromRouteTemplates({
   };
   const paths: PathObj[] = [];
 
-  for (const template of templates) {
-    const params = getTemplateParams(template);
-    const paramValue = paramValues[template.source.compatibilityKey];
+  for (const normalizedRoute of normalizedRoutes) {
+    const params = getNormalizedRouteParams(normalizedRoute);
+    const paramValue = paramValues[normalizedRoute.source.compatibilityKey];
 
     if (params.length && paramValue === undefined) {
-      throw new Error(
-        `Core: paramValues not provided for route: '${template.source.compatibilityKey}'.`
+      throw new SitemapRouteParamError(
+        'missing-param-values',
+        normalizedRoute.source.compatibilityKey
       );
     }
 
     if (!params.length) {
       pushLocalizedPaths(
         paths,
-        template,
-        { ...defaults, path: buildPath(template.segments) },
+        normalizedRoute,
+        { ...defaults, path: buildPath(normalizedRoute.segments) },
         lang,
         new Map()
       );
@@ -60,11 +84,11 @@ export function generatePathsFromRouteTemplates({
         const paramValueMap = valuesByParamName(params, item.values);
         pushLocalizedPaths(
           paths,
-          template,
+          normalizedRoute,
           {
             changefreq: item.changefreq ?? defaults.changefreq,
             lastmod: item.lastmod,
-            path: buildPath(template.segments, paramValueMap),
+            path: buildPath(normalizedRoute.segments, paramValueMap),
             priority: item.priority ?? defaults.priority,
           },
           lang,
@@ -79,10 +103,10 @@ export function generatePathsFromRouteTemplates({
         const paramValueMap = valuesByParamName(params, values);
         pushLocalizedPaths(
           paths,
-          template,
+          normalizedRoute,
           {
             ...defaults,
-            path: buildPath(template.segments, paramValueMap),
+            path: buildPath(normalizedRoute.segments, paramValueMap),
           },
           lang,
           paramValueMap
@@ -95,10 +119,10 @@ export function generatePathsFromRouteTemplates({
       const paramValueMap = valuesByParamName(params, [value]);
       pushLocalizedPaths(
         paths,
-        template,
+        normalizedRoute,
         {
           ...defaults,
-          path: buildPath(template.segments, paramValueMap),
+          path: buildPath(normalizedRoute.segments, paramValueMap),
         },
         lang,
         paramValueMap
@@ -109,27 +133,28 @@ export function generatePathsFromRouteTemplates({
   return paths;
 }
 
-function validateKnownParamValueKeys(templates: RouteTemplate[], paramValues: ParamValues) {
+function validateKnownParamValueKeys(
+  normalizedRoutes: NormalizedRoute[],
+  paramValues: ParamValues
+) {
   const knownCompatibilityKeys = new Set(
-    templates.map((template) => template.source.compatibilityKey)
+    normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
   );
 
   for (const paramValueKey in paramValues) {
     if (!knownCompatibilityKeys.has(paramValueKey)) {
-      throw new Error(
-        `Core: paramValues were provided for a route that does not exist: '${paramValueKey}'.`
-      );
+      throw new SitemapRouteParamError('unknown-param-values-route', paramValueKey);
     }
   }
 }
 
-function getTemplateParams(template: RouteTemplate): RouteParam[] {
-  if (template.params) {
-    return [...template.params].sort((a, b) => a.segmentIndex - b.segmentIndex);
+function getNormalizedRouteParams(normalizedRoute: NormalizedRoute): RouteParam[] {
+  if (normalizedRoute.params) {
+    return [...normalizedRoute.params].sort((a, b) => a.segmentIndex - b.segmentIndex);
   }
 
   const params: RouteParam[] = [];
-  template.segments.forEach((segment, segmentIndex) => {
+  normalizedRoute.segments.forEach((segment, segmentIndex) => {
     if (segment.kind === 'param') {
       params.push({
         matcher: segment.matcher,
@@ -193,24 +218,19 @@ function buildPath(
   return toPath(pathSegments);
 }
 
-function toPath(segments: string[]): string {
-  const path = segments.filter(Boolean).join('/');
-  return path ? `/${path}` : '/';
-}
-
 function pushLocalizedPaths(
   paths: PathObj[],
-  template: RouteTemplate,
+  normalizedRoute: NormalizedRoute,
   pathObj: PathObj,
   lang: LangConfig,
   paramValues: Map<string, string>
 ) {
-  if (!template.locale) {
+  if (!normalizedRoute.locale) {
     paths.push(pathObj);
     return;
   }
 
-  const variations = getLocaleVariations(template, pathObj.path, lang, paramValues);
+  const variations = getLocaleVariations(normalizedRoute, pathObj.path, lang, paramValues);
 
   for (const variation of variations) {
     paths.push({
@@ -222,15 +242,15 @@ function pushLocalizedPaths(
 }
 
 function getLocaleVariations(
-  template: RouteTemplate,
+  normalizedRoute: NormalizedRoute,
   defaultPath: string,
   lang: LangConfig,
   paramValues: Map<string, string>
 ): Alternate[] {
   const variations: Alternate[] = [];
   const defaultLocalePath =
-    template.locale?.mode === 'required'
-      ? buildPath(template.segments, paramValues, lang.default)
+    normalizedRoute.locale?.mode === 'required'
+      ? buildPath(normalizedRoute.segments, paramValues, lang.default)
       : defaultPath;
 
   variations.push({
@@ -241,7 +261,7 @@ function getLocaleVariations(
   for (const alternate of lang.alternates) {
     variations.push({
       lang: alternate,
-      path: buildPath(template.segments, paramValues, alternate),
+      path: buildPath(normalizedRoute.segments, paramValues, alternate),
     });
   }
 

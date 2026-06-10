@@ -1,12 +1,15 @@
+import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
 import type {
   SitemapConfig as BaseSitemapConfig,
   LangConfig,
 } from '../../../core/internal/types.js';
 
+export type { GetHeadersOptions };
+
 /**
- * Options for creating normalized route templates from SvelteKit page route files.
+ * Options for creating normalized routes from SvelteKit page route files.
  */
-export type CreateSvelteKitRouteTemplatesOptions = {
+export type CreateSvelteKitNormalizedRoutesOptions = {
   excludeRoutePatterns?: string[];
   lang?: LangConfig;
   routeFiles?: string[];
@@ -14,12 +17,6 @@ export type CreateSvelteKitRouteTemplatesOptions = {
 
 export type SitemapConfig = BaseSitemapConfig & {
   routeFiles?: string[];
-};
-
-export type SvelteKitSitemapConfig = SitemapConfig;
-
-export type GetSvelteKitHeadersOptions = {
-  customHeaders?: Record<string, string>;
 };
 
 export type GetSamplePathsOptions = {

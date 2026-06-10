@@ -10,7 +10,10 @@ export type {
 export { getSamplePaths } from './internal/sample-paths.js';
 export { getBody, getHeaders, response } from './internal/sitemap.js';
 export type {
+  GetHeadersOptions,
   GetSamplePathsOptions,
-  GetTanStackStartHeadersOptions,
   SitemapConfig,
+  TanStackStartLangParamConfig,
+  TanStackStartRouter,
+  TanStackStartRouterFactory,
 } from './internal/types.js';

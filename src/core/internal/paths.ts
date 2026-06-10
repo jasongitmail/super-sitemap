@@ -49,3 +49,29 @@ export function sortPaths(paths: PathObj[], sort: SitemapConfig['sort']): PathOb
 
   return [...paths].sort((a, b) => a.path.localeCompare(b.path));
 }
+
+/**
+ * Normalizes a path to a root-relative form with no trailing or duplicate slashes.
+ */
+export function normalizePath(routePath: string): string {
+  const normalizedPath = routePath.trim();
+
+  if (!normalizedPath || normalizedPath === '/') return '/';
+
+  return toPath(splitPath(normalizedPath));
+}
+
+/**
+ * Splits a path into its non-empty segments.
+ */
+export function splitPath(routePath: string): string[] {
+  return routePath.split('/').filter(Boolean);
+}
+
+/**
+ * Joins segments into a root-relative path, treating empty input as `/`.
+ */
+export function toPath(segments: Array<string | undefined>): string {
+  const path = segments.filter(Boolean).join('/');
+  return path ? `/${path}` : '/';
+}

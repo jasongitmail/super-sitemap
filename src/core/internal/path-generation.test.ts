@@ -1,17 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ParamValues, RouteTemplate } from './types.js';
+import type { NormalizedRoute, ParamValues } from './types.js';
 
-import { generatePathsFromRouteTemplates } from './path-generation.js';
+import { SitemapRouteParamError, generatePathsFromNormalizedRoutes } from './path-generation.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',
   compatibilityKey,
 });
 
-describe('core normalized route templates', () => {
+function captureError(fn: () => unknown): unknown {
+  try {
+    fn();
+  } catch (error) {
+    return error;
+  }
+  throw new Error('Expected function to throw.');
+}
+
+describe('core normalized routes', () => {
   it('generates static entries from normalized segment IR', () => {
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       { id: 'home', segments: [], source: source('home') },
       {
         id: 'about',
@@ -25,15 +34,13 @@ describe('core normalized route templates', () => {
       },
     ];
 
-    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
-      '/',
-      '/about',
-      '/blog',
-    ]);
+    expect(generatePathsFromNormalizedRoutes({ normalizedRoutes }).map(({ path }) => path)).toEqual(
+      ['/', '/about', '/blog']
+    );
   });
 
-  it('interpolates single param templates from normalized params', () => {
-    const templates: RouteTemplate[] = [
+  it('interpolates single param normalizedRoutes from normalized params', () => {
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'blog-entry',
         params: [{ name: 'slug', segmentIndex: 1 }],
@@ -46,17 +53,17 @@ describe('core normalized route templates', () => {
     ];
 
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
         paramValues: {
           'blog-entry': ['hello-world', 'another-post'],
         },
-        templates,
       }).map(({ path }) => path)
     ).toEqual(['/blog/hello-world', '/blog/another-post']);
   });
 
-  it('interpolates multi param templates in positional order', () => {
-    const templates: RouteTemplate[] = [
+  it('interpolates multi param normalizedRoutes in positional order', () => {
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'campsite-state',
         params: [
@@ -73,7 +80,8 @@ describe('core normalized route templates', () => {
     ];
 
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
         paramValues: {
           'campsite-state': [
             ['usa', 'new-york'],
@@ -81,7 +89,6 @@ describe('core normalized route templates', () => {
             ['canada', 'ontario'],
           ],
         },
-        templates,
       }).map(({ path }) => path)
     ).toEqual([
       '/campsites/usa/new-york',
@@ -91,7 +98,7 @@ describe('core normalized route templates', () => {
   });
 
   it('preserves ParamValue metadata and fills supported defaults', () => {
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'rankings',
         params: [
@@ -108,9 +115,10 @@ describe('core normalized route templates', () => {
     ];
 
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
         defaultChangefreq: 'weekly',
         defaultPriority: 0.7,
+        normalizedRoutes,
         paramValues: {
           rankings: [
             {
@@ -124,7 +132,6 @@ describe('core normalized route templates', () => {
             },
           ],
         },
-        templates,
       })
     ).toEqual([
       {
@@ -143,7 +150,7 @@ describe('core normalized route templates', () => {
   });
 
   it('expands optional and required locale slots from explicit metadata', () => {
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'optional-locale-about',
         locale: { mode: 'optional', paramName: 'locale', segmentIndex: 0 },
@@ -162,9 +169,9 @@ describe('core normalized route templates', () => {
     ];
 
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
         lang: { alternates: ['de', 'fr'], default: 'en' },
-        templates,
+        normalizedRoutes,
       })
     ).toEqual([
       {
@@ -237,7 +244,7 @@ describe('core normalized route templates', () => {
   });
 
   it('uses source metadata for core validation errors', () => {
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'missing-data',
         params: [{ name: 'slug', segmentIndex: 0 }],
@@ -246,20 +253,32 @@ describe('core normalized route templates', () => {
       },
     ];
 
-    expect(() => generatePathsFromRouteTemplates({ templates })).toThrow(
-      "Core: paramValues not provided for route: 'friendly route key'."
+    const missingError = captureError(() =>
+      generatePathsFromNormalizedRoutes({ normalizedRoutes })
     );
+    expect(missingError).toBeInstanceOf(SitemapRouteParamError);
+    expect(missingError).toMatchObject({
+      code: 'missing-param-values',
+      message: "paramValues not provided for route: 'friendly route key'.",
+      route: 'friendly route key',
+    });
 
-    expect(() =>
-      generatePathsFromRouteTemplates({
+    const unknownError = captureError(() =>
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
         paramValues: { unknown: ['value'] },
-        templates,
       })
-    ).toThrow("Core: paramValues were provided for a route that does not exist: 'unknown'.");
+    );
+    expect(unknownError).toBeInstanceOf(SitemapRouteParamError);
+    expect(unknownError).toMatchObject({
+      code: 'unknown-param-values-route',
+      message: "paramValues were provided for a route that does not exist: 'unknown'.",
+      route: 'unknown',
+    });
   });
 
   it('handles large string arrays and ParamValue arrays without stack overflow', () => {
-    const templates: RouteTemplate[] = [
+    const normalizedRoutes: NormalizedRoute[] = [
       {
         id: 'large-slugs',
         params: [{ name: 'slug', segmentIndex: 1 }],
@@ -287,7 +306,7 @@ describe('core normalized route templates', () => {
       'large-slugs': Array.from({ length: size }, (_, index) => `item-${index}`),
     };
 
-    const paths = generatePathsFromRouteTemplates({ paramValues, templates });
+    const paths = generatePathsFromNormalizedRoutes({ normalizedRoutes, paramValues });
 
     expect(paths).toHaveLength(size * 2);
     expect(paths[0]?.path).toBe('/large/item-0');

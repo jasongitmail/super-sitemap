@@ -9,8 +9,4 @@ export type {
 } from '../../core/internal/types.js';
 export { getSamplePaths } from './internal/sample-paths.js';
 export { getBody, getHeaders, response } from './internal/sitemap.js';
-export type {
-  GetSamplePathsOptions,
-  GetSvelteKitHeadersOptions,
-  SitemapConfig,
-} from './internal/types.js';
+export type { GetHeadersOptions, GetSamplePathsOptions, SitemapConfig } from './internal/types.js';

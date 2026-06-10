@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { generatePathsFromRouteTemplates } from '../../../core/internal/path-generation.js';
-import { createTanStackStartRouteTemplates } from './routes.js';
+import { generatePathsFromNormalizedRoutes } from '../../../core/internal/path-generation.js';
+import { createTanStackStartNormalizedRoutes } from './routes.js';
 
 type TestRouteRecord = {
   filePath?: string;
@@ -20,33 +20,32 @@ function routerFromRoutes(routes: TestRouteRecord[]) {
 }
 
 describe('TanStack Start adapter route parser', () => {
-  it('normalizes static, root, and index routes into syntax-free templates', () => {
-    const templates = createTanStackStartRouteTemplates({
+  it('normalizes static, root, and index routes into syntax-free normalizedRoutes', () => {
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/' }, { fullPath: '' }, { fullPath: '/about/team' }]),
     });
 
-    expect(templates).toHaveLength(2);
-    expect(templates.map((template) => template.segments)).toEqual([
+    expect(normalizedRoutes).toHaveLength(2);
+    expect(normalizedRoutes.map((normalizedRoute) => normalizedRoute.segments)).toEqual([
       [],
       [
         { kind: 'static', value: 'about' },
         { kind: 'static', value: 'team' },
       ],
     ]);
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
-      '/',
-      '/about/team',
-    ]);
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/', '/about/team']);
   });
 
   it('normalizes dynamic params, preserves multi-param order, and handles splat rest params', () => {
-    const [blog] = createTanStackStartRouteTemplates({
+    const [blog] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
     });
-    const [campsite] = createTanStackStartRouteTemplates({
+    const [campsite] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/campsites/$country/$state' }]),
     });
-    const [docs] = createTanStackStartRouteTemplates({
+    const [docs] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/docs/$' }]),
     });
 
@@ -63,14 +62,14 @@ describe('TanStack Start adapter route parser', () => {
       { name: 'state', rest: false, segmentIndex: 2 },
     ]);
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes: campsite ? [campsite] : [],
         paramValues: {
           '/campsites/$country/$state': [
             ['usa', 'new-york'],
             ['canada', 'ontario'],
           ],
         },
-        templates: campsite ? [campsite] : [],
       }).map(({ path }) => path)
     ).toEqual(['/campsites/usa/new-york', '/campsites/canada/ontario']);
     expect(docs).toMatchObject({
@@ -83,14 +82,14 @@ describe('TanStack Start adapter route parser', () => {
   });
 
   it('expands optional params to base and dynamic variants without implicit locale inference', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
-    const langTemplates = createTanStackStartRouteTemplates({
+    const langNormalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/{-$lang}/about' }]),
     });
 
-    expect(templates).toMatchObject([
+    expect(normalizedRoutes).toMatchObject([
       {
         params: [],
         segments: [{ kind: 'static', value: 'blog' }],
@@ -105,15 +104,17 @@ describe('TanStack Start adapter route parser', () => {
         source: { compatibilityKey: '/blog/{-$category}' },
       },
     ]);
-    expect(langTemplates[0]?.locale).toBeUndefined();
-    expect(langTemplates[1]?.locale).toBeUndefined();
+    expect(langNormalizedRoutes[0]?.locale).toBeUndefined();
+    expect(langNormalizedRoutes[1]?.locale).toBeUndefined();
     expect(
-      langTemplates.find((template) => template.source.compatibilityKey.includes('$'))?.params
+      langNormalizedRoutes.find((normalizedRoute) =>
+        normalizedRoute.source.compatibilityKey.includes('$')
+      )?.params
     ).toEqual([{ name: 'lang', rest: false, segmentIndex: 0 }]);
   });
 
   it('omits pathless and group-like segments and respects canonical fullPath over path', () => {
-    const [template] = createTanStackStartRouteTemplates({
+    const [normalizedRoute] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([
         {
           fullPath: '/app/$postId',
@@ -122,11 +123,11 @@ describe('TanStack Start adapter route parser', () => {
         },
       ]),
     });
-    const [pathlessTemplate] = createTanStackStartRouteTemplates({
+    const [pathlessNormalizedRoute] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/_layout/(marketing)/pricing' }]),
     });
 
-    expect(template).toMatchObject({
+    expect(normalizedRoute).toMatchObject({
       params: [{ name: 'postId', rest: false, segmentIndex: 1 }],
       segments: [
         { kind: 'static', value: 'app' },
@@ -138,11 +139,11 @@ describe('TanStack Start adapter route parser', () => {
         path: '/_layout/(marketing)/wrong/$ignored',
       },
     });
-    expect(pathlessTemplate?.segments).toEqual([{ kind: 'static', value: 'pricing' }]);
+    expect(pathlessNormalizedRoute?.segments).toEqual([{ kind: 'static', value: 'pricing' }]);
   });
 
   it('retains source metadata and collapses duplicate canonical records deterministically', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: () => ({
         routesByPath: {
           '/about': { filePath: '/src/routes/about.tsx', fullPath: '/about' },
@@ -152,8 +153,8 @@ describe('TanStack Start adapter route parser', () => {
       }),
     });
 
-    expect(templates).toHaveLength(2);
-    expect(templates.map((template) => template.source)).toEqual([
+    expect(normalizedRoutes).toHaveLength(2);
+    expect(normalizedRoutes.map((normalizedRoute) => normalizedRoute.source)).toEqual([
       {
         adapter: 'tanstack-start',
         compatibilityKey: '/about',
@@ -170,40 +171,67 @@ describe('TanStack Start adapter route parser', () => {
   });
 
   it('uses TanStack compatibility keys for core safety errors', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
     });
 
-    expect(() => generatePathsFromRouteTemplates({ templates })).toThrow(
-      "Core: paramValues not provided for route: '/blog/$slug'."
+    expect(() => generatePathsFromNormalizedRoutes({ normalizedRoutes })).toThrow(
+      "paramValues not provided for route: '/blog/$slug'."
     );
     expect(() =>
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
         paramValues: { '/blog/$missing': ['hello-world'] },
-        templates,
       })
-    ).toThrow("Core: paramValues were provided for a route that does not exist: '/blog/$missing'.");
+    ).toThrow("paramValues were provided for a route that does not exist: '/blog/$missing'.");
+  });
+
+  it('excludes server-only routes such as the sitemap endpoint itself', () => {
+    const component = () => null;
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
+      router: () => ({
+        routesByPath: {
+          '/about': { fullPath: '/about', options: { component } },
+          '/api/health': { fullPath: '/api/health', options: { server: { handlers: {} } } },
+          '/lazy-page': { fullPath: '/lazy-page', options: {} },
+          '/page-with-server': {
+            fullPath: '/page-with-server',
+            options: { component, server: { handlers: {} } },
+          },
+          '/sitemap{-$page}.xml': {
+            fullPath: '/sitemap{-$page}.xml',
+            options: { server: { handlers: {} } },
+          },
+        },
+      }),
+    });
+
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/about', '/lazy-page', '/page-with-server']);
   });
 
   it('allows optional route variants to be excluded explicitly', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       excludeRoutePatterns: ['/blog/\\{\\-\\$category\\}'],
       router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual(['/blog']);
-    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
-      '/blog',
-    ]);
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/blog']);
+    expect(generatePathsFromNormalizedRoutes({ normalizedRoutes }).map(({ path }) => path)).toEqual(
+      ['/blog']
+    );
   });
 
   it('supports explicit locale mapping without leaking TanStack syntax into normalized IR', () => {
-    const [optionalLocale] = createTanStackStartRouteTemplates({
-      locale: { mode: 'optional', paramName: 'locale' },
+    const [optionalLocale] = createTanStackStartNormalizedRoutes({
+      langParam: { mode: 'optional', paramName: 'locale' },
       router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
-    const [requiredLocale] = createTanStackStartRouteTemplates({
-      locale: { mode: 'required', paramName: 'locale' },
+    const [requiredLocale] = createTanStackStartNormalizedRoutes({
+      langParam: { mode: 'required', paramName: 'locale' },
       router: routerFromRoutes([{ fullPath: '/$locale/docs/$slug' }]),
     });
 
@@ -225,11 +253,11 @@ describe('TanStack Start adapter route parser', () => {
       ],
     });
 
-    for (const template of [optionalLocale, requiredLocale]) {
-      expect(template?.segments).not.toContainEqual(
+    for (const normalizedRoute of [optionalLocale, requiredLocale]) {
+      expect(normalizedRoute?.segments).not.toContainEqual(
         expect.objectContaining({ value: expect.stringMatching(/\$|\{|\}|\(|\)|^_/) })
       );
-      expect(template?.segments).not.toContainEqual(
+      expect(normalizedRoute?.segments).not.toContainEqual(
         expect.objectContaining({ name: expect.stringMatching(/\$|\{|\}/) })
       );
     }
@@ -254,20 +282,15 @@ describe('TanStack Start adapter route sources', () => {
   });
 
   it('discovers resolved public routes from router.routesByPath', () => {
-    const templates = createTanStackStartRouteTemplates({ router });
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({ router });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
-      '/about',
-      '/about/company',
-      '/about/team',
-      '/blog',
-      '/blog/$slug',
-      '/dashboard',
-    ]);
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/about', '/about/company', '/about/team', '/blog', '/blog/$slug', '/dashboard']);
   });
 
-  it('uses route map keys as route templates when router records only have ids', () => {
-    const [template] = createTanStackStartRouteTemplates({
+  it('uses route map keys as normalized routes when router records only have ids', () => {
+    const [normalizedRoute] = createTanStackStartNormalizedRoutes({
       router: () => ({
         routesByPath: {
           '/blog/$slug': { id: '/_layout/blog/$slug' },
@@ -275,31 +298,35 @@ describe('TanStack Start adapter route sources', () => {
       }),
     });
 
-    expect(template?.source.compatibilityKey).toBe('/blog/$slug');
+    expect(normalizedRoute?.source.compatibilityKey).toBe('/blog/$slug');
     expect(
-      generatePathsFromRouteTemplates({
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes: normalizedRoute ? [normalizedRoute] : [],
         paramValues: {
           '/blog/$slug': ['hello-world'],
         },
-        templates: template ? [template] : [],
       }).map(({ path }) => path)
     ).toEqual(['/blog/hello-world']);
   });
 
   it('does not use routesById or emit noisy pathless route ids', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router,
     });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).not.toContain('/_app');
-    expect(templates.map((template) => template.source.compatibilityKey)).not.toContain(
-      '/_pathlessLayout'
-    );
-    expect(templates.map((template) => template.source.compatibilityKey)).toContain('/dashboard');
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).not.toContain('/_app');
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).not.toContain('/_pathlessLayout');
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toContain('/dashboard');
   });
 
   it('supports minimum route record source fields and returns deterministic order', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([
         { id: '/id-only' },
         { path: '/path-only' },
@@ -308,16 +335,13 @@ describe('TanStack Start adapter route sources', () => {
       ]),
     });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
-      '/full-path',
-      '/id-only',
-      '/path-only',
-      '/to-only/$id',
-    ]);
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/full-path', '/id-only', '/path-only', '/to-only/$id']);
   });
 
   it('collapses duplicate route records deterministically', () => {
-    const templates = createTanStackStartRouteTemplates({
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: () => ({
         routesByPath: {
           '/alpha': { fullPath: '/alpha' },
@@ -327,7 +351,7 @@ describe('TanStack Start adapter route sources', () => {
       }),
     });
 
-    expect(templates.map((template) => template.source)).toEqual([
+    expect(normalizedRoutes.map((normalizedRoute) => normalizedRoute.source)).toEqual([
       { adapter: 'tanstack-start', compatibilityKey: '/alpha', fullPath: '/alpha' },
       {
         adapter: 'tanstack-start',
@@ -338,25 +362,17 @@ describe('TanStack Start adapter route sources', () => {
     ]);
   });
 
-  it('applies exclusions before emitting templates and before requiring param values', () => {
-    const templates = createTanStackStartRouteTemplates({
+  it('applies exclusions before emitting normalizedRoutes and before requiring param values', () => {
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
       excludeRoutePatterns: ['/blog/\\$slug'],
       router,
     });
 
-    expect(templates.map((template) => template.source.compatibilityKey)).toEqual([
-      '/about',
-      '/about/company',
-      '/about/team',
-      '/blog',
-      '/dashboard',
-    ]);
-    expect(generatePathsFromRouteTemplates({ templates }).map(({ path }) => path)).toEqual([
-      '/about',
-      '/about/company',
-      '/about/team',
-      '/blog',
-      '/dashboard',
-    ]);
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/about', '/about/company', '/about/team', '/blog', '/dashboard']);
+    expect(generatePathsFromNormalizedRoutes({ normalizedRoutes }).map(({ path }) => path)).toEqual(
+      ['/about', '/about/company', '/about/team', '/blog', '/dashboard']
+    );
   });
 });

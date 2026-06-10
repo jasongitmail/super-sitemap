@@ -1,15 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import type {
   LangConfig,
+  NormalizedRoute,
   ParamValues,
   RouteLocaleSlot,
   RouteParam,
   RouteSegment,
-  RouteTemplate,
 } from '../../../core/internal/types.js';
-import type { CreateSvelteKitRouteTemplatesOptions } from './types.js';
+import type { CreateSvelteKitNormalizedRoutesOptions } from './types.js';
 
 const LANG_TOKEN_REGEX = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const PAGE_ROUTE_FILE_REGEX = /\/\+page.*\.(svelte|md|svx)$/;
@@ -17,7 +14,7 @@ const PARAM_SEGMENT_REGEX = /^\[(\[?)(\.\.\.)?([^\]=]+)(?:=([^\]]+))?\]?\]$/;
 const ROUTE_GROUP_REGEX = /\/\([^)]+\)/g;
 const SRC_ROUTES_PREFIX = '/src/routes';
 
-type ParseSvelteKitRouteTemplateOptions = {
+type ParseSvelteKitNormalizedRouteOptions = {
   filePath?: string;
   route: string;
 };
@@ -30,13 +27,13 @@ type ParsedSvelteKitParamSegment = {
 };
 
 /**
- * Creates normalized route templates from SvelteKit page route files.
+ * Creates normalized routes from SvelteKit page route files.
  */
-export function createSvelteKitRouteTemplates({
+export function createSvelteKitNormalizedRoutes({
   excludeRoutePatterns = [],
   lang = { alternates: [], default: 'en' },
   routeFiles = discoverSvelteKitPageRouteFiles(),
-}: CreateSvelteKitRouteTemplatesOptions): RouteTemplate[] {
+}: CreateSvelteKitNormalizedRoutesOptions): NormalizedRoute[] {
   validateSvelteKitLocaleConfig(routeFiles, lang);
 
   const routeEntries = routeFiles
@@ -57,14 +54,14 @@ export function createSvelteKitRouteTemplates({
       }))
     );
 
-  const templatesByRoute = new Map(
+  const normalizedRoutesByRoute = new Map(
     routeEntries.map(({ filePath, route }) => [
       route,
-      parseSvelteKitRouteTemplate({ filePath, route }),
+      parseSvelteKitNormalizedRoute({ filePath, route }),
     ])
   );
 
-  return [...templatesByRoute.values()];
+  return [...normalizedRoutesByRoute.values()];
 }
 
 /**
@@ -77,64 +74,6 @@ export function discoverSvelteKitPageRouteFiles(): string[] {
   const svxRoutes = Object.keys(import.meta.glob('/src/routes/**/+page*.svx'));
 
   return svelteRoutes.concat(mdRoutes, svxRoutes);
-}
-
-/**
- * Discovers SvelteKit page route files from an on-disk src/routes directory.
- *
- * This supports route discovery outside Vite's import.meta.glob context.
- */
-export function discoverSvelteKitPageRouteFilesFromDirectory(routesDir: string): string[] {
-  return listFilePathsRecursively(routesDir)
-    .filter(isSvelteKitPageRouteFile)
-    .map((filePath) => toSvelteKitRouteFilePath(routesDir, filePath));
-}
-
-/**
- * Checks whether an on-disk file path is a SvelteKit page route file.
- */
-export function isSvelteKitPageRouteFile(filePath: string): boolean {
-  return /\/\+page.*\.(svelte|md|svx)$/.test(filePath.replaceAll(path.sep, '/'));
-}
-
-/**
- * Recursively reads a directory and returns the full disk path of each file.
- *
- * @param dirPath - The directory to traverse.
- * @returns An array of strings representing full disk file paths.
- */
-export function listFilePathsRecursively(dirPath: string): string[] {
-  const paths: string[] = [];
-
-  for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
-    const entryPath = path.join(dirPath, entry.name);
-
-    if (entry.isDirectory()) {
-      paths.push(...listFilePathsRecursively(entryPath));
-      continue;
-    }
-
-    if (entry.isFile()) {
-      paths.push(entryPath);
-    }
-  }
-
-  return paths;
-}
-
-/**
- * Converts SvelteKit page files into public route keys after applying exclusions.
- */
-export function filterSvelteKitRoutes(
-  routeFiles: string[],
-  excludeRoutePatterns: string[]
-): string[] {
-  return sortSvelteKitRoutes(
-    routeFiles
-      .map(normalizeSvelteKitRouteFile)
-      .filter((route) => !excludeRoutePatterns.some((pattern) => new RegExp(pattern).test(route)))
-      .map(removeSvelteKitRouteGroups)
-  );
 }
 
 /**
@@ -156,13 +95,6 @@ export function normalizeSvelteKitRouteFile(filePath: string): string {
 export function removeSvelteKitRouteGroups(route: string): string {
   const normalized = route.replaceAll(ROUTE_GROUP_REGEX, '');
   return normalized || '/';
-}
-
-/**
- * Sorts SvelteKit route keys alphabetically.
- */
-export function sortSvelteKitRoutes(routes: string[]): string[] {
-  return [...routes].sort();
 }
 
 /**
@@ -225,12 +157,12 @@ export function findSvelteKitLangToken(): RegExp {
 }
 
 /**
- * Converts a SvelteKit route key into Super Sitemap's normalized route template IR.
+ * Converts a SvelteKit route key into Super Sitemap's normalized route IR.
  */
-export function parseSvelteKitRouteTemplate({
+export function parseSvelteKitNormalizedRoute({
   filePath,
   route,
-}: ParseSvelteKitRouteTemplateOptions): RouteTemplate {
+}: ParseSvelteKitNormalizedRouteOptions): NormalizedRoute {
   const segments: RouteSegment[] = [];
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
@@ -288,65 +220,68 @@ export function parseSvelteKitRouteTemplate({
 }
 
 /**
- * Orders SvelteKit route templates to preserve the SvelteKit adapter's path output order.
+ * Orders SvelteKit normalized routes to preserve the SvelteKit adapter's path output order.
  */
-export function orderSvelteKitTemplatesForCompatibility({
+export function orderSvelteKitNormalizedRoutesForCompatibility({
+  normalizedRoutes,
   paramValues = {},
-  templates,
 }: {
+  normalizedRoutes: NormalizedRoute[];
   paramValues?: ParamValues;
-  templates: RouteTemplate[];
-}): RouteTemplate[] {
-  const templatesByCompatibilityKey = new Map(
-    templates.map((template) => [template.source.compatibilityKey, template])
+}): NormalizedRoute[] {
+  const normalizedRoutesByCompatibilityKey = new Map(
+    normalizedRoutes.map((normalizedRoute) => [
+      normalizedRoute.source.compatibilityKey,
+      normalizedRoute,
+    ])
   );
-  const dynamicTemplatesInParamValueOrderWithoutLocale: RouteTemplate[] = [];
-  const dynamicTemplatesInParamValueOrderWithLocale: RouteTemplate[] = [];
-  const usedDynamicTemplateKeys = new Set<string>();
+  const dynamicRoutesInParamValueOrderWithoutLocale: NormalizedRoute[] = [];
+  const dynamicRoutesInParamValueOrderWithLocale: NormalizedRoute[] = [];
+  const usedDynamicRouteKeys = new Set<string>();
 
   for (const paramValueKey in paramValues) {
-    const template = templatesByCompatibilityKey.get(paramValueKey);
-    if (template && hasNonLocaleParams(template)) {
-      if (template.locale) {
-        dynamicTemplatesInParamValueOrderWithLocale.push(template);
+    const normalizedRoute = normalizedRoutesByCompatibilityKey.get(paramValueKey);
+    if (normalizedRoute && hasNonLocaleParams(normalizedRoute)) {
+      if (normalizedRoute.locale) {
+        dynamicRoutesInParamValueOrderWithLocale.push(normalizedRoute);
       } else {
-        dynamicTemplatesInParamValueOrderWithoutLocale.push(template);
+        dynamicRoutesInParamValueOrderWithoutLocale.push(normalizedRoute);
       }
-      usedDynamicTemplateKeys.add(paramValueKey);
+      usedDynamicRouteKeys.add(paramValueKey);
     }
   }
 
-  const staticTemplatesWithoutLocale: RouteTemplate[] = [];
-  const staticTemplatesWithLocale: RouteTemplate[] = [];
-  const remainingDynamicTemplatesWithoutLocale: RouteTemplate[] = [];
-  const remainingDynamicTemplatesWithLocale: RouteTemplate[] = [];
+  const staticRoutesWithoutLocale: NormalizedRoute[] = [];
+  const staticRoutesWithLocale: NormalizedRoute[] = [];
+  const remainingDynamicRoutesWithoutLocale: NormalizedRoute[] = [];
+  const remainingDynamicRoutesWithLocale: NormalizedRoute[] = [];
 
-  for (const template of templates) {
-    if (!hasNonLocaleParams(template)) {
-      if (template.locale) {
-        staticTemplatesWithLocale.push(template);
+  for (const normalizedRoute of normalizedRoutes) {
+    if (!hasNonLocaleParams(normalizedRoute)) {
+      if (normalizedRoute.locale) {
+        staticRoutesWithLocale.push(normalizedRoute);
       } else {
-        staticTemplatesWithoutLocale.push(template);
+        staticRoutesWithoutLocale.push(normalizedRoute);
       }
       continue;
     }
 
-    if (!usedDynamicTemplateKeys.has(template.source.compatibilityKey)) {
-      if (template.locale) {
-        remainingDynamicTemplatesWithLocale.push(template);
+    if (!usedDynamicRouteKeys.has(normalizedRoute.source.compatibilityKey)) {
+      if (normalizedRoute.locale) {
+        remainingDynamicRoutesWithLocale.push(normalizedRoute);
       } else {
-        remainingDynamicTemplatesWithoutLocale.push(template);
+        remainingDynamicRoutesWithoutLocale.push(normalizedRoute);
       }
     }
   }
 
   return [
-    ...staticTemplatesWithoutLocale,
-    ...dynamicTemplatesInParamValueOrderWithoutLocale,
-    ...remainingDynamicTemplatesWithoutLocale,
-    ...staticTemplatesWithLocale,
-    ...dynamicTemplatesInParamValueOrderWithLocale,
-    ...remainingDynamicTemplatesWithLocale,
+    ...staticRoutesWithoutLocale,
+    ...dynamicRoutesInParamValueOrderWithoutLocale,
+    ...remainingDynamicRoutesWithoutLocale,
+    ...staticRoutesWithLocale,
+    ...dynamicRoutesInParamValueOrderWithLocale,
+    ...remainingDynamicRoutesWithLocale,
   ];
 }
 
@@ -357,18 +292,10 @@ export function validateSvelteKitLocaleConfig(routeFiles: string[], lang: LangCo
   const routesContainLangParam = routeFiles.some((route) => findSvelteKitLangToken().test(route));
 
   if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
-    throw Error(
-      'Must specify `lang` property within the sitemap config because one or more routes contain [[lang]].'
+    throw new Error(
+      'super-sitemap: `lang` property is required in sitemap config because one or more routes contain [[lang]].'
     );
   }
-}
-
-/**
- * Converts an on-disk page route file path into SvelteKit's Vite-style route path.
- */
-function toSvelteKitRouteFilePath(routesDir: string, filePath: string): string {
-  const relativePath = path.relative(routesDir, filePath).split(path.sep).join('/');
-  return `/src/routes/${relativePath}`;
 }
 
 /**
@@ -387,8 +314,8 @@ function parseSvelteKitParamSegment(segment: string): ParsedSvelteKitParamSegmen
 }
 
 /**
- * Checks whether a route template has params other than the locale slot.
+ * Checks whether a normalized route has params other than the locale slot.
  */
-function hasNonLocaleParams(template: RouteTemplate): boolean {
-  return template.segments.some((segment) => segment.kind === 'param');
+function hasNonLocaleParams(normalizedRoute: NormalizedRoute): boolean {
+  return normalizedRoute.segments.some((segment) => segment.kind === 'param');
 }

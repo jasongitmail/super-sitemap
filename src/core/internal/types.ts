@@ -72,7 +72,7 @@ export type RouteSource = {
 };
 
 /* eslint-disable perfectionist/sort-object-types */
-export type RouteTemplate = {
+export type NormalizedRoute = {
   id: string;
   segments: RouteSegment[];
   params?: RouteParam[];

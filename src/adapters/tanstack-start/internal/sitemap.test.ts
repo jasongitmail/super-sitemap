@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateTanStackStartPaths, getBody, getHeaders, response } from './sitemap.js';
+import { getBody, getHeaders, prepareSitemapPaths, response } from './sitemap.js';
 
 type TestRouteRecord = {
   filePath?: string;
@@ -19,8 +19,8 @@ function routerFromRoutes(routes: TestRouteRecord[]) {
 }
 
 describe('TanStack Start adapter sitemap paths', () => {
-  it('uses route map keys as route templates when router records only have ids', () => {
-    const paths = generateTanStackStartPaths({
+  it('uses route map keys as normalized routes when router records only have ids', () => {
+    const paths = prepareSitemapPaths({
       paramValues: {
         '/blog/$slug': ['hello-world'],
       },
@@ -36,17 +36,17 @@ describe('TanStack Start adapter sitemap paths', () => {
 
   it('rejects empty route sources through param validation', () => {
     expect(() =>
-      generateTanStackStartPaths({
+      prepareSitemapPaths({
         paramValues: { '/missing/$slug': ['hello-world'] },
         router: routerFromRoutes([{ id: '__root__' }]),
       })
     ).toThrow(
-      "TanStack Start sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
+      "super-sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
     );
   });
 
   it('preserves deterministic default ordering without alpha sorting', () => {
-    const paths = generateTanStackStartPaths({
+    const paths = prepareSitemapPaths({
       paramValues: {
         '/blog/$slug': ['hello-world', 'another-post'],
       },
@@ -90,7 +90,7 @@ describe('TanStack Start adapter response wrapper', () => {
         origin: undefined,
         router: routerFromRoutes([{ fullPath: '/about' }]),
       })
-    ).rejects.toThrow('TanStack Start sitemap: `origin` property is required in sitemap config.');
+    ).rejects.toThrow('super-sitemap: `origin` property is required in sitemap config.');
 
     const res = await response({
       origin: 'https://example.com',
@@ -206,7 +206,7 @@ describe('TanStack Start adapter response wrapper', () => {
         origin: 'https://example.com',
         router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
       })
-    ).rejects.toThrow("TanStack Start sitemap: paramValues not provided for route: '/blog/$slug'.");
+    ).rejects.toThrow("super-sitemap: paramValues not provided for route: '/blog/$slug'.");
     await expect(
       response({
         origin: 'https://example.com',
@@ -214,7 +214,7 @@ describe('TanStack Start adapter response wrapper', () => {
         router: routerFromRoutes([{ fullPath: '/blog/$slug' }]),
       })
     ).rejects.toThrow(
-      "TanStack Start sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
+      "super-sitemap: paramValues were provided for a route that does not exist: '/missing/$slug'."
     );
   });
 
@@ -318,13 +318,13 @@ describe('TanStack Start adapter response wrapper', () => {
   it('supports explicit optional and required locale route mappings', async () => {
     const optionalLocaleRes = await response({
       lang: { alternates: ['de'], default: 'en' },
-      locale: { mode: 'optional', paramName: 'locale' },
+      langParam: { mode: 'optional', paramName: 'locale' },
       origin: 'https://example.com',
       router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
     const requiredLocaleRes = await response({
       lang: { alternates: ['de'], default: 'en' },
-      locale: { mode: 'required', paramName: 'locale' },
+      langParam: { mode: 'required', paramName: 'locale' },
       origin: 'https://example.com',
       router: routerFromRoutes([{ fullPath: '/$locale/docs' }]),
     });

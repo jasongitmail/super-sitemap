@@ -7,14 +7,14 @@ describe('core pagination helpers', () => {
     const paths = [{ path: '/one' }, { path: '/two' }, { path: '/three' }];
 
     expect(paginatePaths({ maxPerPage: 2, page: '2', paths })).toEqual({
-      kind: 'ok',
+      error: null,
       paths: [{ path: '/three' }],
     });
     expect(paginatePaths({ maxPerPage: 2, page: '0', paths })).toEqual({
-      kind: 'invalid-page',
+      error: 'invalid-page',
     });
     expect(paginatePaths({ maxPerPage: 2, page: '3', paths })).toEqual({
-      kind: 'not-found',
+      error: 'not-found',
     });
   });
 });
