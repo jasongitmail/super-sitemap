@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "sk-sitemap",
+      "name": "super-sitemap",
       "devDependencies": {
         "@types/node": "^20.0.0",
         "oxfmt": "^0.53.0",
