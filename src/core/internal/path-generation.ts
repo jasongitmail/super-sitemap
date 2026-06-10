@@ -1,3 +1,4 @@
+import { toPath } from './paths.js';
 import type {
   Alternate,
   LangConfig,
@@ -9,8 +10,6 @@ import type {
   RouteSegment,
   SitemapConfig,
 } from './types.js';
-
-import { toPath } from './paths.js';
 
 type GenerateNormalizedRoutePathsOptions = {
   defaultChangefreq?: SitemapConfig['defaultChangefreq'];

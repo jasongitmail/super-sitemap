@@ -1,8 +1,7 @@
-import type { PathObj } from '../../../core/internal/types.js';
-import type { SitemapConfig, TanStackStartNormalizedRoute } from './types.js';
-
 import * as core from '../../../core/internal/sitemap.js';
+import type { PathObj } from '../../../core/internal/types.js';
 import { createTanStackStartNormalizedRoutes } from './routes.js';
+import type { SitemapConfig, TanStackStartNormalizedRoute } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
 

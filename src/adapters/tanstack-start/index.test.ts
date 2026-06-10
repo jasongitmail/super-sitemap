@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import packageJson from '../../../package.json';
 import type {
   ParamValue as TanStackStartParamValue,
   PathObj as TanStackStartPathObj,
   SitemapConfig as TanStackStartSitemapConfig,
 } from './index.js';
-
-import packageJson from '../../../package.json';
 import * as tanStackStart from './index.js';
 
 describe('TanStack Start package API', () => {

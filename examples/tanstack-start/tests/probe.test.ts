@@ -10,8 +10,8 @@ it('probe route record shapes', () => {
       JSON.stringify({
         key,
         optionKeys: Object.keys(options),
-        hasComponent: options.component != null,
-        hasServer: options.server != null,
+        hasComponent: options.component !== null && options.component !== undefined,
+        hasServer: options.server !== null && options.server !== undefined,
         serverKeys: options.server ? Object.keys(options.server) : null,
       })
     );

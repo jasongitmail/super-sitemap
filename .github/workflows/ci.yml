@@ -23,6 +23,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun ci
+      - name: Check formatting
+        run: bun run format
+      - name: Lint
+        run: bun run lint
       - name: Type check
         run: bun run check
       - name: Run unit tests

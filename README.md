@@ -496,7 +496,6 @@ language versions of your pages.
 
 1. Create a directory named `[[lang]]` at `src/routes/[[lang]]`. Place any
    routes that you intend to translate inside here.
-
    - **This parameter must be named `lang`.**
    - This parameter can specify a [param
      matcher](https://kit.svelte.dev/docs/advanced-routing#matching), if

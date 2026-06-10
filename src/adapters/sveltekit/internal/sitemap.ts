@@ -1,11 +1,10 @@
-import type { NormalizedRoute, PathObj } from '../../../core/internal/types.js';
-import type { SitemapConfig } from './types.js';
-
 import * as core from '../../../core/internal/sitemap.js';
+import type { NormalizedRoute, PathObj } from '../../../core/internal/types.js';
 import {
   createSvelteKitNormalizedRoutes,
   orderSvelteKitNormalizedRoutesForCompatibility,
 } from './routes.js';
+import type { SitemapConfig } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
 

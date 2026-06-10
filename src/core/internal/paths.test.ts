@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathObj } from './types.js';
-
 import { deduplicatePaths, generateAdditionalPaths, sortPaths } from './paths.js';
+import type { PathObj } from './types.js';
 
 describe('core path helpers', () => {
   it('normalizes additional paths with defaults without locale expansion', () => {

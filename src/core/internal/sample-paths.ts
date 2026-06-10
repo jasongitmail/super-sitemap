@@ -1,6 +1,5 @@
-import type { NormalizedRoute, PathObj } from './types.js';
-
 import { normalizePath } from './paths.js';
+import type { NormalizedRoute, PathObj } from './types.js';
 
 export type SelectSamplePathsOptions = {
   /** Optional canonicalizer applied to each path before dedupe and sampling. */

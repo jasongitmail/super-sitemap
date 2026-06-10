@@ -1,5 +1,5 @@
-import { response, type SitemapConfig } from 'super-sitemap/tanstack-start';
 import { createFileRoute } from '@tanstack/react-router';
+import { response, type SitemapConfig } from 'super-sitemap/tanstack-start';
 
 import { getRouter } from '../router';
 

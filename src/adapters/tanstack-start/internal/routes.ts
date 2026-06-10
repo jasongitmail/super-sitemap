@@ -1,3 +1,4 @@
+import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
 import type {
   CreateTanStackStartNormalizedRoutesOptions,
@@ -8,8 +9,6 @@ import type {
   TanStackStartRouteInput,
   TanStackStartRouteSource,
 } from './types.js';
-
-import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
 
@@ -136,7 +135,9 @@ function isServerOnlyRoute(route: Record<string, unknown>): boolean {
   if (typeof options !== 'object' || options === null) return false;
 
   const routeOptions = options as Record<string, unknown>;
-  return routeOptions['server'] != null && routeOptions['component'] == null;
+  const server = routeOptions['server'];
+  const component = routeOptions['component'];
+  return server !== null && server !== undefined && (component === null || component === undefined);
 }
 
 /**

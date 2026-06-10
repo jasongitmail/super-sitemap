@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NormalizedRoute } from './types.js';
-
 import { selectSamplePaths } from './sample-paths.js';
+import type { NormalizedRoute } from './types.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',

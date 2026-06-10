@@ -1,8 +1,7 @@
-import type { NormalizedRoute, PathObj, SitemapConfig } from './types.js';
-
 import { getTotalPages, paginatePaths } from './pagination.js';
 import { SitemapRouteParamError, generatePathsFromNormalizedRoutes } from './path-generation.js';
 import { deduplicatePaths, generateAdditionalPaths, sortPaths } from './paths.js';
+import type { NormalizedRoute, PathObj, SitemapConfig } from './types.js';
 import { renderSitemapIndexXml, renderSitemapXml } from './xml.js';
 
 const DEFAULT_MAX_PER_PAGE = 50_000;

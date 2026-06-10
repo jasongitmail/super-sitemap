@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NormalizedRoute } from './types.js';
-
 import { getBody, getHeaders, preparePaths, response } from './sitemap.js';
+import type { NormalizedRoute } from './types.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',

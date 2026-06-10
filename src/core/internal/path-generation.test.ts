@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NormalizedRoute, ParamValues } from './types.js';
-
 import { SitemapRouteParamError, generatePathsFromNormalizedRoutes } from './path-generation.js';
+import type { NormalizedRoute, ParamValues } from './types.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',

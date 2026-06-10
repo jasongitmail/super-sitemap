@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import packageJson from '../../../package.json';
 import type {
   ParamValue as SvelteKitParamValue,
   PathObj as SvelteKitPathObj,
   SitemapConfig as SvelteKitSitemapConfig,
 } from './index.js';
-
-import packageJson from '../../../package.json';
 import * as sveltekit from './index.js';
 
 describe('SvelteKit package API', () => {

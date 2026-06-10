@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathObj } from '../../../core/internal/types.js';
-
 import { getSamplePaths } from './sample-paths.js';
 
 type TestRouteRecord = {

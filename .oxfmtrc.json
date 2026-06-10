@@ -1,0 +1,20 @@
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "endOfLine": "lf",
+  "ignorePatterns": [
+    "**/.*",
+    "**/*.d.ts",
+    "**/*.gen.ts",
+    "dist/**",
+    "package/**",
+    "misc/**",
+    "examples/sveltekit/**",
+    "CLAUDE.md"
+  ],
+  "sortImports": {}
+}

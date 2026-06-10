@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 const publishTag = process.env.npm_config_tag ?? 'latest';

@@ -52,7 +52,7 @@ appear — but each enforces it with its framework's own mechanics:
 - **SvelteKit**: structural. Discovery globs only `+page.{svelte,md,svx}`
   files, so `+server.ts` endpoints (the sitemap route itself, robots.txt, API
   routes) are never seen in the first place.
-- **TanStack Start**: detected. `routesByPath` contains *every* route,
+- **TanStack Start**: detected. `routesByPath` contains _every_ route,
   including server routes, so the adapter inspects each resolved route's
   `options`: a route that declares `options.server` (server handlers) and has
   no `options.component` is server-only and is excluded. This means the sitemap
@@ -73,7 +73,7 @@ only available signal, verified against the real router in
 TanStack Router offers several ways to define routes — file-based routing
 (generated `routeTree.gen.ts`), code-based routing (`createRootRoute` /
 `createRoute` by hand), and virtual file routes. The adapter supports **all of
-them by construction**: it consumes the *resolved router instance*
+them by construction**: it consumes the _resolved router instance_
 (`getRouter().routesByPath`), which exists identically regardless of how the
 route tree was authored. This is exactly why the adapter takes `getRouter`
 instead of globbing files. Pathless/layout entries and `__root__` are filtered
@@ -101,22 +101,22 @@ wins) → sort (only when `sort: 'alpha'`).
 
 ## Naming and definitions
 
-| Term | Meaning |
-| --- | --- |
-| **Normalized route** (`NormalizedRoute`) | The IR: one routable URL pattern, normalized out of framework syntax. Ordered `segments`, optional `params` metadata, optional `locale` slot, and a `source`. Adapters produce them; core consumes them. |
-| **Segment** (`RouteSegment`) | One path segment of a normalized route. Discriminated union: `static` (literal text), `param` (placeholder, optionally `rest` for splats), `locale` (the language slot). |
-| **Compatibility key** (`source.compatibilityKey`) | The framework-native route string users write in `paramValues` and see in error messages — `/blog/[slug]` for SvelteKit, `/blog/$slug` for TanStack. The external contract is framework-native; the IR is internal. |
-| **`paramValues`** | User-supplied data for parameterized routes, keyed by compatibility key. Values: `string[]` (one param), `string[][]` (multi param), or `ParamValue[]` (values + per-path `lastmod`/`changefreq`/`priority`). |
-| **`PathObj`** | One concrete sitemap entry: `path` plus optional `lastmod`, `changefreq`, `priority`, `alternates`. |
-| **Alternate** | One hreflang variant (`lang` + `path`) emitted as `<xhtml:link rel="alternate">`. |
-| **`lang`** | Config declaring *which languages the site has*: `{ default, alternates }`. Shared by both adapters; consumed by core. |
-| **`langParam`** (TanStack only) | Config declaring *which route param is the language slot*: `{ paramName, mode, matcher? }`. SvelteKit doesn't need it because a param literally named `lang` is the slot by convention, and `[[lang]]` vs `[lang]` implies the mode. |
-| **`SitemapRouteParamError`** | Structured error thrown by core path generation (`code` + `route`) so callers never parse message strings. `preparePaths` formats it into the user-facing message. |
-| **`error` discriminant** | Result types that represent success-or-failure (`PaginatedPathsResult`, render results) discriminate on `error: null \| '<code>'` — machine-readable codes, never display strings, so callers can map them to statuses (400/404) without string matching. |
-| **`kind` discriminant** | Variant-tag unions that are not success/failure (`RouteSegment`, `ParsedSitemapXml`) discriminate on `kind`. |
-| **Error prefix** | All user-facing errors are prefixed `super-sitemap:` and name routes by compatibility key, with remediation guidance. Formatting lives in one place (`core/internal/sitemap.ts`); adapters contain no try/catch. |
-| **Sitemap index** | When paths exceed `maxPerPage` (default 50,000), the root sitemap becomes an index linking `/sitemap1.xml`, `/sitemap2.xml`, …; the `page` config selects a page. |
-| **Sample paths** | One concrete, visitable path per route shape, selected from the final prepared sitemap paths (`getSamplePaths` → core `selectSamplePaths`). Used for SEO smoke tests. |
+| Term                                              | Meaning                                                                                                                                                                                                                                                   |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Normalized route** (`NormalizedRoute`)          | The IR: one routable URL pattern, normalized out of framework syntax. Ordered `segments`, optional `params` metadata, optional `locale` slot, and a `source`. Adapters produce them; core consumes them.                                                  |
+| **Segment** (`RouteSegment`)                      | One path segment of a normalized route. Discriminated union: `static` (literal text), `param` (placeholder, optionally `rest` for splats), `locale` (the language slot).                                                                                  |
+| **Compatibility key** (`source.compatibilityKey`) | The framework-native route string users write in `paramValues` and see in error messages — `/blog/[slug]` for SvelteKit, `/blog/$slug` for TanStack. The external contract is framework-native; the IR is internal.                                       |
+| **`paramValues`**                                 | User-supplied data for parameterized routes, keyed by compatibility key. Values: `string[]` (one param), `string[][]` (multi param), or `ParamValue[]` (values + per-path `lastmod`/`changefreq`/`priority`).                                             |
+| **`PathObj`**                                     | One concrete sitemap entry: `path` plus optional `lastmod`, `changefreq`, `priority`, `alternates`.                                                                                                                                                       |
+| **Alternate**                                     | One hreflang variant (`lang` + `path`) emitted as `<xhtml:link rel="alternate">`.                                                                                                                                                                         |
+| **`lang`**                                        | Config declaring _which languages the site has_: `{ default, alternates }`. Shared by both adapters; consumed by core.                                                                                                                                    |
+| **`langParam`** (TanStack only)                   | Config declaring _which route param is the language slot_: `{ paramName, mode, matcher? }`. SvelteKit doesn't need it because a param literally named `lang` is the slot by convention, and `[[lang]]` vs `[lang]` implies the mode.                      |
+| **`SitemapRouteParamError`**                      | Structured error thrown by core path generation (`code` + `route`) so callers never parse message strings. `preparePaths` formats it into the user-facing message.                                                                                        |
+| **`error` discriminant**                          | Result types that represent success-or-failure (`PaginatedPathsResult`, render results) discriminate on `error: null \| '<code>'` — machine-readable codes, never display strings, so callers can map them to statuses (400/404) without string matching. |
+| **`kind` discriminant**                           | Variant-tag unions that are not success/failure (`RouteSegment`, `ParsedSitemapXml`) discriminate on `kind`.                                                                                                                                              |
+| **Error prefix**                                  | All user-facing errors are prefixed `super-sitemap:` and name routes by compatibility key, with remediation guidance. Formatting lives in one place (`core/internal/sitemap.ts`); adapters contain no try/catch.                                          |
+| **Sitemap index**                                 | When paths exceed `maxPerPage` (default 50,000), the root sitemap becomes an index linking `/sitemap1.xml`, `/sitemap2.xml`, …; the `page` config selects a page.                                                                                         |
+| **Sample paths**                                  | One concrete, visitable path per route shape, selected from the final prepared sitemap paths (`getSamplePaths` → core `selectSamplePaths`). Used for SEO smoke tests.                                                                                     |
 
 ## Repository layout
 

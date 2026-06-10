@@ -1,8 +1,7 @@
-import type { GetSamplePathsOptions } from './types.js';
-
 import { selectSamplePaths } from '../../../core/internal/sample-paths.js';
 import { createTanStackStartNormalizedRoutes } from './routes.js';
 import { prepareSitemapPaths } from './sitemap.js';
+import type { GetSamplePathsOptions } from './types.js';
 
 /**
  * Returns one canonical sample path for each sitemap-published TanStack route shape.
