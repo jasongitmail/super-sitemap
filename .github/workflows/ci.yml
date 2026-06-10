@@ -28,9 +28,9 @@ jobs:
       - name: Lint
         run: bun run lint
       - name: Type check
-        run: bun run check
+        run: bun run typecheck
       - name: Run unit tests
-        run: bun run test -- --run
+        run: bun run test
 
   example-sveltekit:
     runs-on: ubuntu-latest

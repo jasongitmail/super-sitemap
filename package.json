@@ -43,21 +43,21 @@
     }
   },
   "scripts": {
-    "build": "npm run package",
+    "build": "bun run package",
     "prepare": "npm run package",
     "package": "rm -rf dist && tsc -p tsconfig.build.json && publint && node scripts/verify-package-output.mjs",
-    "prepublishOnly": "node scripts/verify-publish-tag.mjs && npm run package && npm test -- --run",
+    "prepublishOnly": "node scripts/verify-publish-tag.mjs && npm run package && npm test",
     "npm:version:tanstack": "npm version prerelease --preid tanstack --no-git-tag-version",
     "npm:publish:tanstack": "node scripts/publish-tanstack.mjs",
     "npm:publish:tanstack:dry-run": "node scripts/publish-tanstack.mjs --dry-run",
-    "check": "tsc --noEmit",
-    "check:watch": "tsc --noEmit --watch",
-    "test": "vitest",
-    "test:unit": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check .",
-    "format:fix": "oxfmt --write ."
+    "format:fix": "oxfmt --write .",
+    "ready": "bun run lint && bun run format && bun run typecheck && bun run test"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
