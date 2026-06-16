@@ -44,7 +44,7 @@ describe('SvelteKit adapter sample paths', () => {
     const paths = getSamplePaths({
       sitemapConfig: {
         additionalPaths: ['/manual.pdf'],
-        excludeRoutePatterns: ['^/dashboard$'],
+        excludeRoutePatterns: [/^\/dashboard$/],
         origin: 'https://example.com',
         routeFiles: ['/src/routes/about/+page.svelte', '/src/routes/dashboard/+page.svelte'],
       },

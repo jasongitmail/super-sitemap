@@ -76,7 +76,7 @@ export type NormalizedRoute = {
 
 export type SitemapConfig = {
   additionalPaths?: string[];
-  excludeRoutePatterns?: string[];
+  excludeRoutePatterns?: RegExp[];
   headers?: Record<string, string>;
   lang?: LangConfig;
   maxPerPage?: number;

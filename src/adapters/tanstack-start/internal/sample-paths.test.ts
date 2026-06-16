@@ -65,7 +65,7 @@ describe('TanStack Start adapter sample paths', () => {
     const paths = getSamplePaths({
       sitemapConfig: {
         additionalPaths: ['/manual.pdf'],
-        excludeRoutePatterns: ['^/dashboard$'],
+        excludeRoutePatterns: [/^\/dashboard$/],
         origin: 'https://example.com',
         router: routerFromRoutes([{ fullPath: '/about' }, { fullPath: '/dashboard' }]),
       },

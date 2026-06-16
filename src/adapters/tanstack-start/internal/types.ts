@@ -61,7 +61,7 @@ export type TanStackStartRouteInput = {
 
 export type CreateTanStackStartNormalizedRoutesOptions = ParseTanStackStartNormalizedRoutesOptions &
   TanStackStartRouteInput & {
-    excludeRoutePatterns?: string[];
+    excludeRoutePatterns?: RegExp[];
   };
 
 export type SitemapConfig = Omit<BaseSitemapConfig, 'excludeRoutePatterns'> &

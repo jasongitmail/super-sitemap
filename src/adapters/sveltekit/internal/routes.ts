@@ -1,3 +1,4 @@
+import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type {
   LangConfig,
   NormalizedRoute,
@@ -41,7 +42,9 @@ export function createSvelteKitNormalizedRoutes({
       filePath,
       route: normalizeSvelteKitRouteFile(filePath),
     }))
-    .filter(({ route }) => !excludeRoutePatterns.some((pattern) => new RegExp(pattern).test(route)))
+    .filter(
+      ({ route }) => !excludeRoutePatterns.some((pattern) => routeMatchesPattern(pattern, route))
+    )
     .map(({ filePath, route }) => ({
       filePath,
       route: removeSvelteKitRouteGroups(route),

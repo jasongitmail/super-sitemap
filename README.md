@@ -1,8 +1,8 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/jasongitmail/super-sitemap/main/docs/assets/readme-header.webp" alt="Super Sitemap">
 
-  <p>Sitemap library for TanStack Start and SvelteKit, focused on ease of use <br>and making it impossible to forget to add your paths.</p>
-  <p>Built on a framework-agnostic core.</p>
+  <p>Sitemap library focused on ease of use <br>and making it impossible to forget to add your paths.</p>
+  <p>For TanStack Start and SvelteKit.</p>
 
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
     <img alt="license badge" src="https://img.shields.io/npm/l/super-sitemap?color=limegreen">
@@ -44,8 +44,8 @@
 - 🧠 Easy maintenance. Accidental omission of data for parameterized routes
   throws an error, and is only resolved by excluding that route pattern or
   providing data for its param value(s).
-- 👻 Exclude specific routes or patterns using regex patterns (e.g.
-  `^/dashboard.*`, paginated URLs, etc).
+- 👻 Exclude specific routes using JavaScript `RegExp` objects (e.g.
+  `/^\/dashboard/`, paginated routes, etc).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override default headers:
   `sitemap.response({ headers: { 'cache-control': 'max-age=0, s-maxage=60' } })`.
@@ -148,9 +148,9 @@ export const GET: RequestHandler = async () => {
   return await sitemap.response({
     origin: 'https://example.com',
     excludeRoutePatterns: [
-      '^/dashboard.*', // i.e. routes starting with `/dashboard`
-      '.*\\[page=integer\\].*', // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
-      '.*\\(authenticated\\).*', // i.e. routes within a group
+      /^\/dashboard/, // i.e. routes starting with `/dashboard`
+      /\[page=integer\]/, // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
+      /\(authenticated\)/, // i.e. routes within a group
     ],
     paramValues: {
       // paramValues can be a 1D array of strings
@@ -339,48 +339,49 @@ within your sitemap config object.
 
 ### For example:
 
-- `/something` will exist in your sitemap unless excluded with a pattern of
-  `/something$`.
-- `/something/[[paramA]]` must be either excluded using an `excludeRoutePattern` of
-  `.*/something/\\[\\[paramA\\]\\]$` _or_ appear within your config's
+- `/something` will exist in your sitemap unless excluded with a `RegExp` like
+  `/\/something$/`.
+- `/something/[[paramA]]` must be either excluded using an `excludeRoutePatterns`
+  entry like `/\/something\/\[\[paramA\]\]$/` _or_ appear within your config's
   `paramValues` like this: `'/something/[[paramA]]': ['foo', 'foo2', 'foo3']`.
 - And `/something/[[paramA]]/[[paramB]]` must be either excluded using an
-  `excludeRoutePattern` of `.*/something/\\[\\[paramA\\]\\]/\\[\\[paramB\\]\\]$` _or_
-  appear within your config's `paramValues` like this: `'/something/[[paramA]]/[[paramB]]':
-[['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
+  `excludeRoutePatterns` entry like `/\/something\/\[\[paramA\]\]\/\[\[paramB\]\]$/`
+  _or_ appear within your config's `paramValues` like this:
+  `'/something/[[paramA]]/[[paramB]]': [['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
 
 Alternatively, you can exclude ALL versions of this route by providing a single
-regex pattern within `excludeRoutePatterns` that matches all of them, such as
-`/something`; notice this do NOT end with a `$`, thereby allowing this pattern
-to match all 3 versions of this route.
+`RegExp` object within `excludeRoutePatterns` that matches all of them, such as
+`/\/something/`; notice this does NOT end with a `$`, thereby allowing this
+pattern to match all 3 versions of this route.
 
 If you plan to mix and match use of `excludeRoutePatterns` and `paramValues` for
 a given route that contains optional params, terminate all of your
-`excludeRoutePatterns` for that route with `$`, to target only the specific
-desired versions of that route.
+`excludeRoutePatterns` regular expressions for that route with `$`, to target
+only the specific desired versions of that route.
 
 ### Tanstack Start
 
 TanStack Start optional params like `/posts/{-$category}` expand the same
-way — use TanStack syntax in your `paramValues` and `excludeRoutePatterns` keys.
+way — use TanStack syntax in your `paramValues` keys and JavaScript `RegExp`
+objects in `excludeRoutePatterns`.
 
-For example, these `excludeRoutePatterns` strings match TanStack Start route
-patterns, not generated URLs:
+For example, these `excludeRoutePatterns` patterns match TanStack Start route
+keys, not generated URLs:
 
 ```ts
 excludeRoutePatterns: [
-  '^/blog/\\$slug$', // dynamic route such as `/blog/$slug`
-  '^/posts$', // only `/posts`, not `/posts/{-$category}`
-  '^/posts/\\{\\-\\$category\\}$', // only `/posts/{-$category}`
-  '^/posts(?:$|/)', // `/posts` and `/posts/{-$category}`
-  '^/docs/\\$$', // splat route such as `/docs/$`
-  '^/dashboard(?:$|/)', // `/dashboard` and nested dashboard routes
+  /^\/blog\/\$slug$/, // dynamic route such as `/blog/$slug`
+  /^\/posts$/, // only `/posts`, not `/posts/{-$category}`
+  /^\/posts\/\{-\$category\}$/, // only `/posts/{-$category}`
+  /^\/posts(?:$|\/)/, // `/posts` and `/posts/{-$category}`
+  /^\/docs\/\$$/, // splat route such as `/docs/$`
+  /^\/dashboard(?:$|\/)/, // `/dashboard` and nested dashboard routes
 ];
 ```
 
 Route groups and pathless layout segments are omitted from TanStack compatibility
-keys before matching, so exclude the resulting public route pattern, such as
-`^/dashboard(?:$|/)`, instead of the group folder name.
+keys before matching, so exclude the resulting public route key, such as
+`/^\/dashboard(?:$|\/)/`, instead of the group folder name.
 
 ## processPaths() callback
 
@@ -625,7 +626,7 @@ import * as blog from '$lib/data/blog';
 export async function getSitemapConfig(): Promise<SitemapConfig> {
   return {
     origin: 'https://example.com',
-    excludeRoutePatterns: ['^/dashboard.*', '.*\\(authenticated\\).*'],
+    excludeRoutePatterns: [/^\/dashboard/, /\(authenticated\)/],
     paramValues: {
       '/blog/[slug]': await blog.getSlugs(),
     },
@@ -673,7 +674,7 @@ export const Route = createFileRoute('/sample-paths')({
           sitemapConfig: {
             origin: 'https://example.com',
             router: getRouter,
-            excludeRoutePatterns: ['^/dashboard.*', '/admin/.*'],
+            excludeRoutePatterns: [/^\/dashboard/, /^\/admin\//],
             paramValues: {
               '/blog/$slug': ['hello-world', 'another-post'],
               '/campsites/$country/$state': [
@@ -941,12 +942,16 @@ changes for v1 users:
   [`getSamplePaths()`](#sample-paths) instead. It samples from your sitemap
   config directly instead of fetching and parsing your live sitemap XML, so it
   needs no network access and returns one canonical path per route shape.
+- **`excludeRoutePatterns` accepts `RegExp` objects.** String regex sources are
+  no longer supported. Use JavaScript regex literals or `RegExp` objects, such
+  as `[/^\/dashboard/, /\(authenticated\)/]`. Global (`g`) and sticky (`y`)
+  flags are safe because Super Sitemap resets `lastIndex` before matching.
 - **No more `svelte` peer dependency.** Super Sitemap no longer declares any
   peer dependencies, so installs are warning-free regardless of your framework.
 
 ## Changelog
 
-- `1.0.13-tanstack.3` (unreleased) - BREAKING: TanStack Start's `locale` config property renamed to `langParam`; `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
+- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: TanStack Start's `locale` config property renamed to `langParam`; `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.

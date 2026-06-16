@@ -107,7 +107,7 @@ describe('SvelteKit routes', () => {
 
   it('filters before removing route groups and normalizes SvelteKit page file variants', () => {
     const normalizedRoutes = createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns: ['\\(secret-group\\)', '.*\\[page=integer\\].*'],
+      excludeRoutePatterns: [/\(secret-group\)/, /\[page=integer\]/],
       routeFiles: [
         '/src/routes/(public)/+page.svelte',
         '/src/routes/(public)/terms/+page@.svelte',
@@ -124,6 +124,24 @@ describe('SvelteKit routes', () => {
     expect(
       normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
     ).toEqual(['/', '/break', '/break-dynamic', '/break-group', '/content', '/terms', '/visible']);
+  });
+
+  it('resets global regex state before route exclusion matching', () => {
+    const dashboardPattern = /\/dashboard/g;
+    const routeFiles = [
+      '/src/routes/about/+page.svelte',
+      '/src/routes/dashboard/+page.svelte',
+      '/src/routes/dashboard/profile/+page.svelte',
+    ];
+
+    for (let i = 0; i < 2; i++) {
+      expect(
+        createSvelteKitNormalizedRoutes({
+          excludeRoutePatterns: [dashboardPattern],
+          routeFiles,
+        }).map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+      ).toEqual(['/about']);
+    }
   });
 
   it('expands optional params while preserving matcher syntax for route keys', () => {
@@ -217,7 +235,7 @@ describe('SvelteKit routes', () => {
 
   it('returns normalized syntax-free normalizedRoutes from SvelteKit route files', () => {
     const normalizedRoutes = createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns: ['\\(authenticated\\)'],
+      excludeRoutePatterns: [/\(authenticated\)/],
       lang: { alternates: ['zh'], default: 'en' },
       routeFiles: [
         '/src/routes/(public)/[[lang]]/about/+page.svelte',

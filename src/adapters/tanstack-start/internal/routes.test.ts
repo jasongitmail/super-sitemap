@@ -213,7 +213,7 @@ describe('TanStack Start adapter route parser', () => {
 
   it('allows optional route variants to be excluded explicitly', () => {
     const normalizedRoutes = createTanStackStartNormalizedRoutes({
-      excludeRoutePatterns: ['/blog/\\{\\-\\$category\\}'],
+      excludeRoutePatterns: [/\/blog\/\{-\$category\}/],
       router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
 
@@ -364,7 +364,7 @@ describe('TanStack Start adapter route sources', () => {
 
   it('applies exclusions before emitting normalizedRoutes and before requiring param values', () => {
     const normalizedRoutes = createTanStackStartNormalizedRoutes({
-      excludeRoutePatterns: ['/blog/\\$slug'],
+      excludeRoutePatterns: [/\/blog\/\$slug/],
       router,
     });
 

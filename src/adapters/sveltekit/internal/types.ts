@@ -10,7 +10,7 @@ export type { GetHeadersOptions };
  * Options for creating normalized routes from SvelteKit page route files.
  */
 export type CreateSvelteKitNormalizedRoutesOptions = {
-  excludeRoutePatterns?: string[];
+  excludeRoutePatterns?: RegExp[];
   lang?: LangConfig;
   routeFiles?: string[];
 };

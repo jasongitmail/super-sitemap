@@ -1,4 +1,5 @@
 import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
+import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
 import type {
   CreateTanStackStartNormalizedRoutesOptions,
@@ -57,7 +58,7 @@ export function createTanStackStartNormalizedRoutes({
     const normalizedRoutes = parseTanStackStartNormalizedRoutes(route, { langParam }).filter(
       (normalizedRoute) =>
         !excludeRoutePatterns.some((pattern) =>
-          new RegExp(pattern).test(normalizedRoute.source.compatibilityKey)
+          routeMatchesPattern(pattern, normalizedRoute.source.compatibilityKey)
         )
     );
 

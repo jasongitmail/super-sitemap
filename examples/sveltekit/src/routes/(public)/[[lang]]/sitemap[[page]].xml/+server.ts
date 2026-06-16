@@ -23,12 +23,12 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. a file in the `static` dir
     excludeRoutePatterns: [
-      '/dashboard.*',
-      '/to-exclude',
-      '(secret-group)',
+      /^\/dashboard/,
+      /^\/to-exclude$/,
+      /\(secret-group\)/,
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
-      `.*\\[page=integer\\].*`,
+      /\[page=integer\]/,
     ],
     // maxPerPage: 20,
     origin: 'https://example.com',
