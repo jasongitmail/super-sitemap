@@ -27,22 +27,22 @@
   - [Optional Params](#optional-params)
   - [`processPaths()` callback](#processpaths-callback)
   - [i18n](#i18n)
-  - [Sample Paths](#sample-paths)
+  - [Get Sample Paths](#get-sample-paths)
 - [Robots.txt](#robotstxt)
 - [Playwright test](#playwright-test)
 - [Tip: Querying your database to get param values](#tip-querying-your-database-to-get-param-values)
 - [Example sitemap output](#example-sitemap-output)
-- [Migrating from v1](#migrating-from-v1)
+- [Migrating from v1 to v2](#migrating-from-v1)
 - [Changelog](#changelog)
 
 ## Features
 
 - 🤓 Supports any rendering method.
-- 🪄 Automatically gathered routes + data for route parameters provided by you.
+- 🪄 Automatically gathers routes + data for route parameters provided by you.
+- 👻 Exclude routes via `excludeRoutePatterns` (e.g. `/^\/dashboard/`, paginated routes, etc)
 - 🧠 Easy maintenance. Accidental omission of data for a parameterized route
   throws an error until either, a.) the route excluded via
   `excludeRoutePatterns`, or b.) data is provided for its param value(s).
-- 👻 Exclude routes via `excludeRoutePatterns` (e.g. `/^\/dashboard/`, paginated routes, etc)
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override default headers: `sitemap.response({ headers: { 'cache-control': 'max-age=0, s-maxage=60' } })`.
 - 💡 Google, and other modern search engines, [ignore `priority` and
@@ -118,7 +118,7 @@ export const GET: RequestHandler = async () => {
 - Automatic route discovery:
   - The SvelteKit adapter discovers routes using Vite's `import.meta.glob`.
   - The TanStack Start adapter discovers routes via TanStack Start's official
-    `getRouter`, which is derived from generated route manifest file. This means
+    `getRouter`, which is derived from its generated route manifest file. This means
     that _all_ TanStack Start routing methods are fully supported: file-based
     routing, code-based routing, or virtual file routes.
 - For all frameworks: server-only routes are excluded automatically and do not
@@ -215,6 +215,7 @@ export const Route = createFileRoute('/sitemap.xml')({
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import * as blog from '$lib/data/blog';
 import * as sitemap from 'super-sitemap/sveltekit';
@@ -287,8 +288,8 @@ export const GET: RequestHandler = async () => {
 
 ## Sitemap Index
 
-_**You only need to enable or read this if you will have >=50,000 URLs in your sitemap, which is the number
-recommended by Google.**_
+_You only need to enable, or read, this if you have >50,000 URLs in your sitemap, which is the number
+recommended by [sitemaps.org](https://www.sitemaps.org/protocol.html)._
 
 You can enable sitemap index support with just two changes:
 
@@ -298,18 +299,21 @@ You can enable sitemap index support with just two changes:
 <details>
 <summary>View TanStack Start example</summary>
 
-Name the route file `sitemap{-$page}[.]xml.ts` — an optional `page` param with
-a `sitemap` prefix and an escaped-dot `.xml` suffix:
-
 ```ts
 // /src/routes/sitemap{-$page}[.]xml.ts
+import { createFileRoute } from '@tanstack/react-router';
+import { response } from 'super-sitemap/tanstack-start';
+import { getRouter } from '../router';
+
 export const Route = createFileRoute('/sitemap{-$page}.xml')({
   server: {
     handlers: {
       GET: ({ params }) =>
         response({
           origin: 'https://example.com',
+          router: getRouter,
           page: params.page,
+          // maxPerPage: 45_000 // optional; default 50_000
         }),
     },
   },
@@ -330,19 +334,20 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     origin: 'https://example.com',
     page: params.page,
-    // maxPerPage: 45_000 // optional; default is 50_000
+    // maxPerPage: 45_000 // optional; default 50_000
   });
 };
 ```
 
 </details>
 
-**Feel free to always set up your sitemap as a sitemap index, given it will work
-optimally whether you have few or many URLs.**
+Your `sitemap.xml` route will now return a sitemap index automatically if it contains more URLs than the optional `maxPerPage` value or its default of 50,000. Your sitemap will be a non-index, regular sitemap when fewer URLs than `maxPerPage` are present.
 
-Your `sitemap.xml` route will now return a sitemap index when it contains more URLs than the `maxPerPage` setting (optional & defaults to 50,000 as recommended by [sitemaps.org](https://www.sitemaps.org/protocol.html)). Your sitemap will be a non-index, regular sitemap when fewer URLs than `maxPerPage` are present.
+Feel free to always set up your sitemap as a sitemap index, given it will work
+optimally whether you have few or many URLs.
 
-Example sitemap index:
+<details>
+<summary>Example sitemap index</summary>
 
 ```xml
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -358,27 +363,58 @@ Example sitemap index:
 </sitemapindex>
 ```
 
+</details>
+
 ## Param Values
 
 When specifying values for the params of your parameterized routes,
 you can use any of the following types:
-`string[]`, `string[][]`, or `ParamValue[]`.
+`string[]`, `string[][]`, or `ParamValue[]`. See examples below.
 
-Property names use your framework's own route syntax: SvelteKit routes use
-square brackets (`/blog/[slug]`, `/[[lang]]/about`) and TanStack Start routes
-use TanStack syntax (`/blog/$slug`, `/docs/$`, `/blog/{-$category}`). Values
-work identically for both adapters.
+Note: Syntax differs between frameworks to mirror how each framework specifies required params and optional params.
+
+_Author's note: I'm still deciding if the better library DX is to use framework-specific or framework-agnostic syntax to specify required params & optional params in the keys for paramValues. So this may change before 2.0 lands._
 
 <details>
 <summary>View TanStack Start example</summary>
 
 ```ts
 paramValues: {
+  // Required params use TanStack's `$param` syntax.
   '/blog/$slug': ['hello-world', 'another-post'],
+
+  // Optional params use TanStack's `{-$param}` syntax.
+  '/blog/{-$category}': ['tech', 'design'],
+
+  // Multiple params use a 2D array, matched positionally.
   '/campsites/$country/$state': [
     ['usa', 'colorado'],
-    ['canada', 'toronto']
+    ['canada', 'toronto'],
   ],
+
+  // Splat/rest params use TanStack's bare `$` segment.
+  '/docs/$': ['intro/getting-started'],
+
+  // Locale params can appear in keys, but locale values come from `lang`
+  // and `langParam`; only non-locale params are provided here.
+  '/$locale/blog/$slug': ['hello-world'],
+  '/{-$locale}/docs/$slug': ['intro'],
+
+  // Pathless layout segments and route group directories are omitted from keys.
+  // For example, `/_layout/(dashboard)/users/$id` is keyed as:
+  '/users/$id': ['42'],
+
+  // Optional params expand into route variants. The base route (`/something`)
+  // needs no values, but dynamic variants need values unless excluded. For
+  // multiple optional params, provide values for each emitted dynamic variant
+  // that you keep.
+  '/something/{-$paramA}': ['foo', 'bar'],
+  '/something/{-$paramA}/{-$paramB}': [
+    ['foo', 'one'],
+    ['bar', 'two'],
+  ],
+
+  // If you need per-entry metadata, use ParamValue objects.
   '/athlete-rankings/$country/$state': [
     {
       values: ['usa', 'new-york'], // required
@@ -403,11 +439,43 @@ paramValues: {
 
 ```ts
 paramValues: {
-  '/blog/[slug]': ['hello-world', 'another-post']
+  // Required params use SvelteKit's `[param]` syntax.
+  '/blog/[slug]': ['hello-world', 'another-post'],
+
+  // Optional params use SvelteKit's `[[param]]` syntax.
+  '/blog/[[category]]': ['tech', 'design'],
+
+  // Matcher params preserve the matcher name in the key.
+  '/blog/[page=integer]': ['2', '3'],
+  '/archive/[[year=integer]]': ['2024', '2025'],
+
+  // Multiple params use a 2D array, matched positionally.
   '/campsites/[country]/[state]': [
     ['usa', 'colorado'],
-    ['canada', 'toronto']
+    ['canada', 'toronto'],
   ],
+
+  // Rest params use SvelteKit's `[...rest]` syntax.
+  '/docs/[...rest]': ['intro/getting-started'],
+
+  // Locale params can appear in keys, but locale values come from `lang`;
+  // only non-locale params are provided here.
+  '/[[lang]]/blog/[slug]': ['hello-world'],
+  '/[lang]/docs/[slug]': ['intro'],
+
+  // Route groups are omitted from keys.
+  // For example, `/(dashboard)/users/[id]` is keyed as:
+  '/users/[id]': ['42'],
+
+  // Optional params expand into route variants. The base route (`/something`)
+  // needs no values, but dynamic variants need values unless excluded.
+  '/something/[[paramA]]': ['foo', 'bar'],
+  '/something/[[paramA]]/[[paramB]]': [
+    ['foo', 'one'],
+    ['bar', 'two'],
+  ],
+
+  // If you need per-entry metadata, use ParamValue objects.
   '/athlete-rankings/[country]/[state]': [
     {
       values: ['usa', 'new-york'], // required
@@ -427,9 +495,33 @@ paramValues: {
 
 </details>
 
-If any of the optional properties of `ParamValue` are not provided (`lastmod`,
-`changefreq`, `priority`), the sitemap will use the default
-value. If a default value is not defined, the property will be excluded from that sitemap entry.
+`paramValues` keys must match Super Sitemap's framework-specific route
+compatibility keys, not the generated URL paths. In most cases, that means using
+the same route param syntax your framework uses.
+
+| Route feature                  | TanStack Start key                                                 | SvelteKit key                                                      |
+| ------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Required param                 | `'/blog/$slug'`                                                    | `'/blog/[slug]'`                                                   |
+| Optional param                 | `'/blog/{-$category}'`                                             | `'/blog/[[category]]'`                                             |
+| Multiple params                | `'/campsites/$country/$state'`                                     | `'/campsites/[country]/[state]'`                                   |
+| Rest / splat param             | `'/docs/$'`                                                        | `'/docs/[...rest]'`                                                |
+| Param matcher                  | No route-key equivalent                                            | `'/blog/[page=integer]'`                                           |
+| Optional matcher               | No route-key equivalent                                            | `'/archive/[[year=integer]]'`                                      |
+| Optional locale param          | `'/{-$locale}/blog/$slug'` with `langParam`                        | `'/[[lang]]/blog/[slug]'`                                          |
+| Required locale param          | `'/$locale/docs/$slug'` with `langParam`                           | `'/[lang]/docs/[slug]'`                                            |
+| Route group / pathless segment | Omitted: `/_layout/(dashboard)/users/$id` → `'/users/$id'`         | Omitted: `/(dashboard)/users/[id]` → `'/users/[id]'`               |
+| Optional route expansion       | `'/something/{-$paramA}'` and `'/something/{-$paramA}/{-$paramB}'` | `'/something/[[paramA]]'` and `'/something/[[paramA]]/[[paramB]]'` |
+
+TanStack Start supports multiple optional params in one route. Super Sitemap
+requires values for each generated dynamic optional variant that remains after
+`excludeRoutePatterns`. If you only want some variants in your sitemap, exclude
+the route variants you do not want.
+
+If your data does not provide values for `lastmod`,
+`changefreq`, `priority` (i.e. ParamValue's optional properties), the default value for these defined in your
+sitemap config will be used. If you also did not define a default value, then the property will be excluded from that entry.
+
+Hint: it's usually acceptable to exclude these 3 properties because modern search engines defer to their own heuristics to schedule crawls anyway, especially if a developer specifies `lastmod` but doesn't update it consistently with changes to that same content.
 
 ## Optional Params
 
@@ -519,344 +611,34 @@ only the specific desired versions of that route.
 
 ## processPaths() callback
 
-_**The `processPaths()` callback is powerful, but rarely needed.**_
+The `processPaths()` callback is powerful, but rarely needed.
 
-It allows you to arbitrarily process the path objects for your site before they become XML, with the
-only requirement that your callback function must return the expected `PathObj[]`
-shape.
+It allows you to arbitrarily process the path objects for your site before they become XML.
 
-This can be useful to do something bespoke that would not otherwise be possible. For example:
-
-1. Excluding a specific path, when `excludeRoutePatterns` based on the _route
-   pattern_ would be too broad. (For example, you might want to exclude a path
-   when you have not yet translated its content into one or more of your site’s
-   supported languages; e.g. to exclude only `/zh/about`, but retain all others
-   like `/about`, `/es/about`, etc.)
-2. Adding a trailing slash to URLs (not a recommended style, but possible).
-3. Appending paths from an external sitemap, like from a hosted headless blog
-   backend. However, you can also accomplish this by providing these within the
-   `additionalPaths` array in your super sitemap config, which is a more concise approach.
-
-`processPaths()` runs after all paths have been generated for your site, but prior to de-duplication
-of paths based on unique path names, sorting (if enabled by your config), and creation of XML.
-
-Note that `processPaths()` is intentionally NOT async. This design decision is
-to encourage a consistent pattern within the sitemap request handler where all HTTP
-requests, including any to fetch param values from a database, [occur
-together using `Promise.all()`](<https://github.com/jasongitmail/super-sitemap/blob/main/src/routes/(public)/%5B%5Blang%5D%5D/sitemap%5B%5Bpage%5D%5D.xml/%2Bserver.ts#L14-L20>), for best performance and consistent code pattern
-among super sitemap users for best DX.
-
-### Example code - to remove specific paths
-
-```ts
-return await sitemap.response({
-  // ...
-  processPaths: (paths: sitemap.PathObj[]) => {
-    const pathsToExclude = ['/zh/about', '/de/team'];
-    return paths.filter(({ path }) => !pathsToExclude.includes(path));
-  },
-});
-```
-
-Note: If using `excludeRoutePatterns`–which matches again the _route_ pattern–would
-be sufficient for your needs, you should prefer it for performance reasons. This
-is because a site will have fewer routes than paths, consequently route-based
-exclusions are more performant than path-based exclusions. Although, the
-difference will be inconsequential in virtually all cases, unless you have a
-very large number of excluded paths and many millions of generated paths to
-search within.
-
-### Example code - to add trailing slashes
-
-```ts
-return await sitemap.response({
-  // ...
-  processPaths: (paths: sitemap.PathObj[]) => {
-    // Add trailing slashes to all paths. (This is just an example and not
-    // actually recommended. Using SvelteKit's default of no trailing slash is
-    // preferable because it provides consistency among all possible paths,
-    // even files like `/foo.pdf`.)
-    return paths.map(({ path, alternates, ...rest }) => {
-      const rtrn = { path: path === '/' ? path : `${path}/`, ...rest };
-
-      if (alternates) {
-        rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
-          ...alternate,
-          path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
-        }));
-      }
-
-      return rtrn;
-    });
-  },
-});
-```
+See the [Process Paths docs](./docs/readme-details/process-paths.md).
 
 ## i18n
 
 Super Sitemap supports [multilingual site
-annotations](https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site)
-within your sitemap. This allows search engines to be aware of alternate
+annotations](https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site). This allows search engines to be aware of alternate
 language versions of your pages.
 
-<details>
-<summary>View TanStack Start example</summary>
+See the [i18n docs](./docs/readme-details/i18n.md).
 
-TanStack Start has no equivalent of SvelteKit's `[[lang]]` convention, so the
-TanStack adapter never infers a language param. Instead, declare which route
-param holds the language value using the `langParam` config property, alongside
-the same `lang` config described above:
+## Get Sample Paths
 
-```ts
-// Routes like /{-$locale}/about (optional) or /$locale/about (required)
-const sitemapConfig = {
-  origin: 'https://example.com',
-  router: getRouter,
-  lang: {
-    default: 'en', // e.g. /about
-    alternates: ['zh', 'de'], // e.g. /zh/about, /de/about
-  },
-  langParam: {
-    paramName: 'locale', // your route param's name, without TanStack syntax
-    mode: 'optional', // 'optional' for {-$locale}, 'required' for $locale
-  },
-} satisfies SitemapConfig;
-```
+`getSamplePaths()` is useful when you want one visitable path for each public route shape, usually for testing or monitoring purposes.
 
-</details>
-
-<details>
-<summary>View SvelteKit example</summary>
-
-### Set up
-
-1. Create a directory named `[[lang]]` at `src/routes/[[lang]]`. Place any
-   routes that you intend to translate inside here.
-   - **This parameter must be named `lang`.**
-   - This parameter can specify a [param
-     matcher](https://kit.svelte.dev/docs/advanced-routing#matching), if
-     desired. For example: `src/routes/(public)/[[lang=lang]]`, when you defined
-     a param matcher at `src/params/lang.js`. The param matcher can have any
-     name as long as it uses only lowercase letters.
-   - This directory can be located within a route group, if desired, e.g.
-     `src/routes/(public)/[[lang]]`.
-   - Advanced: If you want to _require_ a language parameter as part of _all_
-     your urls, use single square brackets like `src/routes/[lang]` or
-     `src/routes/[lang=lang]`. Importantly, **if you take this approach, you
-     should redirect your index route (`/`) to one of your language-specific
-     index paths (e.g. `/en`, `/es`, etc)**, because a root url of `/` will not be
-     included in the sitemap when you have _required_ the language param to
-     exist. (The remainder of these docs will assume you are using an
-     _optional_ lang parameter.)
-
-2. Within your `sitemap.xml` route, update your Super Sitemap config object to
-   add a `lang` property specifying your desired languages.
-
-   ```js
-   lang: {
-     default: 'en',           // e.g. /about
-     alternates: ['zh', 'de'] // e.g. /zh/about, /de/about
-   }
-   ```
-
-   The default language will not appear in your URLs (e.g. `/about`). Alternate
-   languages will appear as part of the URLs within your sitemap (e.g.
-   `/zh/about`, `/de/about`).
-
-   These language properties accept any string value, but choose a valid
-   language code. They will appear in two places: 1.) as a slug within your
-   paths (e.g. `/zh/about`), and 2.) as `hreflang` attributes within the sitemap
-   output.
-
-   Note: If you used a _required_ lang param (e.g. `[lang]`), you can set
-   _any_ of your desired languages as the `default` and the rest as the `alternates`; they will _all_ be
-   processed in the same way though.
-
-3. Within your `sitemap.xml` route again, update your Super Sitemap config
-   object's `paramValues` to prepend `/[[lang]]` (or `/[[lang=lang]]`, `[lang]`, etc–whatever you used earlier) onto the property names of all routes you moved
-   into your `/src/routes/[[lang]]` directory, e.g.:
-
-   ```js
-   paramValues: {
-     '/[[lang]]/blog/[slug]': ['hello-world', 'post-2'], // was '/blog/[slug]'
-     '/[[lang]]/campsites/[country]/[state]': [ // was '/campsites/[country]/[state]'
-       ['usa', 'new-york'],
-       ['canada', 'toronto'],
-     ],
-   },
-   ```
-
-### Example
-
-1. Create `/src/routes/[[lang]]/about/+page.svelte` with any content.
-2. Assuming you have a [basic sitemap](#basic-example) set up at
-   `/src/routes/sitemap.xml/+server.ts`, add a `lang` property to your sitemap's
-   config object, as described in Step 2 in the previous section.
-3. Your `sitemap.xml` will then include the following:
-
-```xml
-  ...
-  <url>
-    <loc>https://example.com/about</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
-    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
-  </url>
-  <url>
-    <loc>https://example.com/de/about</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
-    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
-  </url>
-  <url>
-    <loc>https://example.com/zh/about</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/about" />
-    <xhtml:link rel="alternate" hreflang="zh" href="https://example.com/zh/about" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/about" />
-  </url>
-  ...
-```
-
-</details>
-
-### Note on i18n
-
-- Super Sitemap handles creation of URLs within your sitemap, but it is
-  _not_ an i18n library.
-
-You need a separate i18n library to translate strings within your app. Just
-ensure the library you choose allows a similar URL pattern as described here,
-with a default language (e.g. `/about`) and lang slugs for alternate languages
-(e.g. `/zh/about`, `/de/about`).
-
-- Using [Paraglide](https://github.com/opral/paraglide-js)? See the [example code here](https://github.com/jasongitmail/super-sitemap/issues/24#issuecomment-2813870191) if you use Paraglide to localize path names on your site.
-
-### Q&A on i18n
-
-- **What about translated paths like `/about` (English), `/acerca` (Spanish), `/uber` (German)?**
-
-  Realistically, this would break the route patterns and assumptions that Super
-  Sitemap relies on to identify your routes, to know what language to use, and
-  to build the sitemap. "Never say never", but there are no plans to support this.
-
-## Sample Paths
-
-_**`getSamplePaths()` is optional. It is useful when you want one visitable path for each public route shape.**_
-
-Sample paths are root-relative paths generated from the same sitemap config you
-use for `sitemap.xml`. Static routes return themselves, e.g. `/about`.
-Parameterized routes return one concrete path, e.g. `/blog/hello-world` for
-`/blog/[slug]` or `/blog/$slug`.
-
-This is useful for overview routes or tests that fetch representative pages to
-inspect SEO metadata, OG images, status codes, and other route-level behavior.
-
-`getSamplePaths()` samples from final public sitemap paths after `processPaths`.
-It does not fetch or parse `sitemap.xml`, and it does not expose paths beyond
-what your sitemap config already exposes. If you publish `/sample-paths`
-publicly, keep private or authenticated routes excluded in your sitemap config.
-
-`additionalPaths` that do not match an app route, such as PDFs, are ignored.
-
-<details>
-<summary>View TanStack Start example</summary>
-
-```ts
-// /src/routes/sample-paths.ts
-import { createFileRoute } from '@tanstack/react-router';
-import { getSamplePaths } from 'super-sitemap/tanstack-start';
-import { getRouter } from '../router';
-
-export const Route = createFileRoute('/sample-paths')({
-  server: {
-    handlers: {
-      GET: () => {
-        const samplePaths = getSamplePaths({
-          sitemapConfig: {
-            origin: 'https://example.com',
-            router: getRouter,
-            excludeRoutePatterns: [/^\/dashboard/, /^\/admin\//],
-            paramValues: {
-              '/blog/$slug': ['hello-world', 'another-post'],
-              '/campsites/$country/$state': [
-                ['usa', 'new-york'],
-                ['canada', 'ontario'],
-              ],
-            },
-          },
-        });
-
-        return Response.json(samplePaths);
-      },
-    },
-  },
-});
-```
-
-</details>
-
-<details>
-<summary>View SvelteKit example</summary>
-
-```ts
-// /src/lib/sitemap-config.ts
-import type { SitemapConfig } from 'super-sitemap/sveltekit';
-import * as blog from '$lib/data/blog';
-
-export async function getSitemapConfig(): Promise<SitemapConfig> {
-  return {
-    origin: 'https://example.com',
-    excludeRoutePatterns: [/^\/dashboard/, /\(authenticated\)/],
-    paramValues: {
-      '/blog/[slug]': await blog.getSlugs(),
-    },
-  };
-}
-```
-
-```ts
-// /src/routes/sitemap.xml/+server.ts
-import * as sitemap from 'super-sitemap/sveltekit';
-import { getSitemapConfig } from '$lib/sitemap-config';
-
-export async function GET(): Promise<Response> {
-  return sitemap.response(await getSitemapConfig());
-}
-```
-
-```ts
-// /src/routes/sample-paths/+server.ts
-import { getSamplePaths } from 'super-sitemap/sveltekit';
-import { getSitemapConfig } from '$lib/sitemap-config';
-
-export async function GET(): Promise<Response> {
-  const samplePaths = getSamplePaths({
-    sitemapConfig: await getSitemapConfig(),
-  });
-
-  return Response.json(samplePaths);
-}
-```
-
-</details>
-
-Both adapters support an optional `getCanonicalPath` callback. Use it when your
-final sitemap paths contain localized variants that should collapse into one
-sample before route matching:
-
-```ts
-getSamplePaths({
-  sitemapConfig,
-  getCanonicalPath: (path) => path.replace(/^\/(de|es|zh)(?=\/|$)/, '') || '/',
-});
-```
+See the [Get Sample Paths docs](./docs/readme-details/sample-paths.md).
 
 ## Robots.txt
 
-It's important to create a `robots.txt` so search engines know where to find your sitemap.
+Create a `robots.txt` so search engines know where to find your sitemap.
 
-You can create it at `/static/robots.txt` (SvelteKit) or `/public/robots.txt`
-(TanStack Start):
+You can create it at:
+
+- SvelteKit: `/static/robots.txt`
+- TanStack Start: `/public/robots.txt`
 
 ```text
 User-agent: *
@@ -864,68 +646,6 @@ Allow: /
 
 Sitemap: https://example.com/sitemap.xml
 ```
-
-Or, if you have defined `PUBLIC_ORIGIN` within your project's `.env` and want
-to access it, you can generate `robots.txt` from a route:
-
-<details>
-<summary>View TanStack Start example</summary>
-
-```ts
-// /src/routes/robots[.]txt.ts
-import { createFileRoute } from '@tanstack/react-router';
-
-export const Route = createFileRoute('/robots.txt')({
-  server: {
-    handlers: {
-      GET: () => {
-        // prettier-ignore
-        const body = [
-          'User-agent: *',
-          'Allow: /',
-          '',
-          `Sitemap: ${process.env.PUBLIC_ORIGIN}/sitemap.xml`
-        ].join('\n').trim();
-
-        const headers = {
-          'Content-Type': 'text/plain',
-        };
-
-        return new Response(body, { headers });
-      },
-    },
-  },
-});
-```
-
-</details>
-
-<details>
-<summary>View SvelteKit example</summary>
-
-```ts
-import * as env from '$env/static/public';
-
-export const prerender = true;
-
-export async function GET(): Promise<Response> {
-  // prettier-ignore
-  const body = [
-    'User-agent: *',
-    'Allow: /',
-    '',
-    `Sitemap: ${env.PUBLIC_ORIGIN}/sitemap.xml`
-  ].join('\n').trim();
-
-  const headers = {
-    'Content-Type': 'text/plain',
-  };
-
-  return new Response(body, { headers });
-}
-```
-
-</details>
 
 ## Playwright Test
 
@@ -939,7 +659,7 @@ important to confirm you have not misconfigured data for your param values.
 Feel free to use or adapt this example test:
 
 <details>
-  <summary>Click to expand</summary>
+  <summary>View PlayWright example</summary>
 
 ```js
 // /src/tests/sitemap.test.js
@@ -977,8 +697,8 @@ test('/sitemap.xml is valid', async ({ page }) => {
 
 ## Tip: Querying your database to get param values
 
-Below are a few examples demonstrating how to query an SQL database to obtain
-data to provide as `paramValues` for your routes:
+Examples of how to query an SQL database to obtain data to provide as
+`paramValues` for your routes:
 
 ```SQL
 -- Route: /blog/[slug]
@@ -991,12 +711,12 @@ SELECT DISTINCT LOWER(category) FROM blog_posts WHERE status = 'published';
 SELECT DISTINCT LOWER(country), LOWER(state) FROM campsites;
 ```
 
-Using `DISTINCT` will prevent duplicates in your result set. Use this when your
+Using `DISTINCT` prevents duplicates in your result set. Use this when your
 table could contain multiple rows with the same params, like in the 2nd and 3rd
-examples. This will be the case for routes that show a list of items.
+examples.
 
-Then if your result is an array of objects, convert into a 2D array containing
-string values:
+Then if your result is an array of objects, convert into a 2D array of string
+values:
 
 ```js
 const arrayOfArrays = resultFromDB.map((row) => Object.values(row));
