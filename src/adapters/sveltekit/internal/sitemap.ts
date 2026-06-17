@@ -37,15 +37,19 @@ export function prepareSitemapPaths(
  */
 function createNormalizedRoutes({
   excludeRoutePatterns,
-  lang,
+  locales,
   paramValues,
   routeFiles,
 }: Pick<
   SitemapConfig,
-  'excludeRoutePatterns' | 'lang' | 'paramValues' | 'routeFiles'
+  'excludeRoutePatterns' | 'locales' | 'paramValues' | 'routeFiles'
 >): NormalizedRoute[] {
   return orderSvelteKitNormalizedRoutesForCompatibility({
-    normalizedRoutes: createSvelteKitNormalizedRoutes({ excludeRoutePatterns, lang, routeFiles }),
+    normalizedRoutes: createSvelteKitNormalizedRoutes({
+      excludeRoutePatterns,
+      locales,
+      routeFiles,
+    }),
     paramValues,
   });
 }

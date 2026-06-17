@@ -20,7 +20,7 @@ export function deduplicatePaths(pathObjs: PathObj[]): PathObj[] {
  * Converts the user-provided `additionalPaths` into `PathObj[]` type, ensuring each path starts
  * with a forward slash and each PathObj contains default changefreq and priority.
  *
- * - `additionalPaths` are never translated based on the lang config because they could be something
+ * - `additionalPaths` are never translated based on the locales config because they could be something
  *   like a PDF within the user's static dir.
  */
 export function generateAdditionalPaths({

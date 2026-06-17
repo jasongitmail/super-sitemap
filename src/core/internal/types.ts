@@ -11,13 +11,13 @@ export type ParamValues = Record<string, ParamValue[] | never | string[] | strin
 
 export type Priority = 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
 
-export type LangConfig = {
+export type LocalesConfig = {
   default: string;
   alternates: string[];
 };
 
 export type Alternate = {
-  lang: string;
+  hreflang: string;
   path: string;
 };
 
@@ -78,7 +78,7 @@ export type SitemapConfig = {
   additionalPaths?: string[];
   excludeRoutePatterns?: RegExp[];
   headers?: Record<string, string>;
-  lang?: LangConfig;
+  locales?: LocalesConfig;
   maxPerPage?: number;
   origin: string;
   page?: string;

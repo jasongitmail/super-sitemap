@@ -123,17 +123,17 @@ describe('SvelteKit adapter sample paths', () => {
   it('supports optional and required locale route mappings while sampling once per route', () => {
     const optionalLocalePaths = getSamplePaths({
       sitemapConfig: {
-        lang: { alternates: ['de'], default: 'en' },
+        locales: { alternates: ['de'], default: 'en' },
         origin: 'https://example.com',
-        routeFiles: ['/src/routes/[[lang]]/about/+page.svelte'],
+        routeFiles: ['/src/routes/[[locale]]/about/+page.svelte'],
       },
     });
     const requiredLocalePaths = getSamplePaths({
       getCanonicalPath: (path) => path.replace(/^\/(?:de|en)(?=\/|$)/, '') || '/',
       sitemapConfig: {
-        lang: { alternates: ['de'], default: 'en' },
+        locales: { alternates: ['de'], default: 'en' },
         origin: 'https://example.com',
-        routeFiles: ['/src/routes/[lang]/docs/+page.svelte'],
+        routeFiles: ['/src/routes/[locale]/docs/+page.svelte'],
       },
     });
 

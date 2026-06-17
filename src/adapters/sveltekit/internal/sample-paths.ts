@@ -43,7 +43,7 @@ export function getSamplePaths({
     getCanonicalPath,
     normalizedRoutes: createSvelteKitNormalizedRoutes({
       excludeRoutePatterns: sitemapConfig.excludeRoutePatterns,
-      lang: sitemapConfig.lang,
+      locales: sitemapConfig.locales,
       routeFiles: sitemapConfig.routeFiles,
     }),
     paths: prepareSitemapPaths(sitemapConfig),

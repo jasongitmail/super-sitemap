@@ -85,8 +85,8 @@ describe('TanStack Start adapter route parser', () => {
     const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
-    const langNormalizedRoutes = createTanStackStartNormalizedRoutes({
-      router: routerFromRoutes([{ fullPath: '/{-$lang}/about' }]),
+    const languageNormalizedRoutes = createTanStackStartNormalizedRoutes({
+      router: routerFromRoutes([{ fullPath: '/{-$language}/about' }]),
     });
 
     expect(normalizedRoutes).toMatchObject([
@@ -104,13 +104,13 @@ describe('TanStack Start adapter route parser', () => {
         source: { compatibilityKey: '/blog/{-$category}' },
       },
     ]);
-    expect(langNormalizedRoutes[0]?.locale).toBeUndefined();
-    expect(langNormalizedRoutes[1]?.locale).toBeUndefined();
+    expect(languageNormalizedRoutes[0]?.locale).toBeUndefined();
+    expect(languageNormalizedRoutes[1]?.locale).toBeUndefined();
     expect(
-      langNormalizedRoutes.find((normalizedRoute) =>
+      languageNormalizedRoutes.find((normalizedRoute) =>
         normalizedRoute.source.compatibilityKey.includes('$')
       )?.params
-    ).toEqual([{ name: 'lang', rest: false, segmentIndex: 0 }]);
+    ).toEqual([{ name: 'language', rest: false, segmentIndex: 0 }]);
   });
 
   it('omits pathless and group-like segments and respects canonical fullPath over path', () => {
@@ -225,13 +225,11 @@ describe('TanStack Start adapter route parser', () => {
     );
   });
 
-  it('supports explicit locale mapping without leaking TanStack syntax into normalized IR', () => {
+  it('infers locale mapping from TanStack route syntax without leaking syntax into normalized IR', () => {
     const [optionalLocale] = createTanStackStartNormalizedRoutes({
-      langParam: { mode: 'optional', paramName: 'locale' },
       router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
     const [requiredLocale] = createTanStackStartNormalizedRoutes({
-      langParam: { mode: 'required', paramName: 'locale' },
       router: routerFromRoutes([{ fullPath: '/$locale/docs/$slug' }]),
     });
 

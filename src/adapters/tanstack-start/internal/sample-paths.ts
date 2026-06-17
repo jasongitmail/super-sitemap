@@ -43,7 +43,6 @@ export function getSamplePaths({
     getCanonicalPath,
     normalizedRoutes: createTanStackStartNormalizedRoutes({
       excludeRoutePatterns: sitemapConfig.excludeRoutePatterns,
-      langParam: sitemapConfig.langParam,
       router: sitemapConfig.router,
     }),
     paths: prepareSitemapPaths(sitemapConfig),

@@ -170,9 +170,9 @@ describe('SvelteKit adapter response wrapper', () => {
     expect(await invalidRes.text()).toBe('Invalid page param');
 
     const localeRes = await response({
-      lang: { alternates: ['de'], default: 'en' },
+      locales: { alternates: ['de'], default: 'en' },
       origin: 'https://example.com',
-      routeFiles: ['/src/routes/[[lang]]/about/+page.svelte'],
+      routeFiles: ['/src/routes/[[locale]]/about/+page.svelte'],
     });
     expect(locsFromXml(await localeRes.text())).toEqual(['/about', '/de/about']);
   });

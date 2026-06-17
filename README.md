@@ -129,7 +129,7 @@ _All config properties shown here are optional, except for `origin` and
 // /src/routes/sitemap[.]xml.ts
 import { createFileRoute } from '@tanstack/react-router';
 import * as blog from '../lib/data/blog';
-import { response, type PathObj } from 'super-sitemap/tanstack-start';
+import * as sitemap from 'super-sitemap/tanstack-start';
 import { getRouter } from '../router';
 
 export const Route = createFileRoute('/sitemap.xml')({
@@ -145,9 +145,13 @@ export const Route = createFileRoute('/sitemap.xml')({
           throw new Error('Could not load data for param values.');
         }
 
-        return await response({
+        return await sitemap.response({
           origin: 'https://example.com',
           router: getRouter,
+          locales: {
+            default: 'en',
+            alternates: ['de', 'pt-br'],
+          },
           excludeRoutePatterns: [
             /^\/dashboard/, // i.e. routes starting with `/dashboard`
             /\{\-\$page\}/, // i.e. routes containing `{-$page}`–e.g. `/blog/2`
@@ -190,7 +194,7 @@ export const Route = createFileRoute('/sitemap.xml')({
           defaultChangefreq: 'daily',
           defaultPriority: 0.7,
           sort: 'alpha', // default is false; 'alpha' sorts paths alphabetically.
-          processPaths: (paths: PathObj[]) => {
+          processPaths: (paths) => {
             // Optional callback to allow arbitrary processing of your path objects. See the
             // processPaths() section of the README.
             return paths;
@@ -228,6 +232,10 @@ export const GET: RequestHandler = async () => {
 
   return await sitemap.response({
     origin: 'https://example.com',
+    locales: {
+      default: 'en',
+      alternates: ['de', 'pt-br'],
+    },
     excludeRoutePatterns: [
       /^\/dashboard/, // i.e. routes starting with `/dashboard`
       /\[page=integer\]/, // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
@@ -270,7 +278,7 @@ export const GET: RequestHandler = async () => {
     defaultChangefreq: 'daily',
     defaultPriority: 0.7,
     sort: 'alpha', // default is false; 'alpha' sorts paths alphabetically.
-    processPaths: (paths: sitemap.PathObj[]) => {
+    processPaths: (paths) => {
       // Optional callback to allow arbitrary processing of your path objects. See the
       // processPaths() section of the README.
       return paths;
@@ -294,7 +302,7 @@ See the [Sitemap Index docs](./docs/readme-details/sitemap-index.md).
 
 When specifying values for the params of your parameterized routes,
 you can use any of the following types:
-`string[]`, `string[][]`, or `ParamValue[]`. See examples below.
+`string[]`, `string[][]`, or [`ParamValue[]`](./src/core/internal/types.ts#L3-L8). See examples below.
 
 <details>
 <summary>TanStack Start example</summary>
@@ -316,8 +324,8 @@ paramValues: {
   // Splat/rest params use TanStack's bare `$` segment.
   '/docs/$': ['intro/getting-started'],
 
-  // Locale params can appear in keys, but locale values come from `lang`
-  // and `langParam`; only non-locale params are provided here.
+  // Locale params can appear in keys, but locale values come from `locales`;
+  // only non-locale params are provided here.
   '/$locale/blog/$slug': ['hello-world'],
   '/{-$locale}/docs/$slug': ['intro'],
 
@@ -379,10 +387,10 @@ paramValues: {
   // Rest params use SvelteKit's `[...rest]` syntax.
   '/docs/[...rest]': ['intro/getting-started'],
 
-  // Locale params can appear in keys, but locale values come from `lang`;
+  // Locale params can appear in keys, but locale values come from `locales`;
   // only non-locale params are provided here.
-  '/[[lang]]/blog/[slug]': ['hello-world'],
-  '/[lang]/docs/[slug]': ['intro'],
+  '/[[locale]]/blog/[slug]': ['hello-world'],
+  '/[locale]/docs/[slug]': ['intro'],
 
   // Route groups are omitted from keys.
   // For example, `/(dashboard)/users/[id]` is keyed as:
@@ -418,9 +426,9 @@ paramValues: {
 
 If your data does not provide values for `lastmod`,
 `changefreq`, `priority` (i.e. ParamValue's optional properties), the default value for these defined in your
-sitemap config will be used. If you also did not define a default value, then the property will be excluded from that entry.
+sitemap config will be used. If you also did not define a default value, then the property will be excluded for that entry.
 
-Hint: it's acceptable to exclude these 3 properties because modern search engines defer to their own heuristics to schedule crawls anyway, especially if you specify `lastmod` but don't update it consistently with changes to that same content.
+Hint: it's acceptable to exclude these 3 properties because modern search engines prefer their own heuristics to schedule crawls anyway, especially if you specify `lastmod` but don't update it consistently with changes to the associated content.
 
 ### Allowed keys in `paramValues`
 
@@ -429,6 +437,8 @@ Keys in `paramValues` must match Super Sitemap's expected syntax; see the table 
 In most cases, this matches your frameworks route syntax.
 
 **This means syntax differs by framework adapter (TanStack Start, SvelteKit, etc) to stay close to how each framework defines its routes and to support framework-specific features (like SvelteKit's param matchers or TanStack Start's pathless layout segments).**
+
+If in doubt, enable prerendering for your sitemap route and build your app; you'll see build errors if you're missing any required `paramValues` keys or defined any that differ from what super sitemap expects.
 
 <details>
 <summary>View keys allowed in paramValues</summary>
@@ -444,14 +454,11 @@ In most cases, this matches your frameworks route syntax.
 | Param matcher                         | (No equivalent)                                          | `'/blog/[page=integer]'`                                   |
 | Optional matcher                      | (No equivalent)                                          | `'/archive/[[year=integer]]'`                              |
 | Route groups are omitted              | On disk: `/(dashboard)/users/$id`<br>Use: `'/users/$id'` | On disk: `/(dashboard)/users/[id]`<br>Use: `'/users/[id]'` |
-| Pathless layout segments, on disk     | `/_layout/users/$id`                                     | (No equivalent.)                                           |
-| Pathless layout segments, use         | `'/users/$id'`                                           | (No equivalent.)                                           |
-| Optional locale param                 | `'/{-$locale}/blog/$slug'` with `langParam`              | `'/[[lang]]/blog/[slug]'`                                  |
-| Required locale param                 | `'/$locale/docs/$slug'` with `langParam`                 | `'/[lang]/docs/[slug]'`                                    |
+| Pathless layout segments are omitted  | On disk: `/_layout/users/$id`<br>Use: `'/users/$id'`     | (No equivalent)                                            |
+| Optional locale param                 | `'/{-$locale}/blog/$slug'`                               | `'/[[locale]]/blog/[slug]'`                                |
+| Required locale param                 | `'/$locale/docs/$slug'`                                  | `'/[locale]/docs/[slug]'`                                  |
 
 </details>
-
-If in doubt, enable prerendering for your sitemap and build your app; you'll see build errors if you're missing any required paramValues keys or if yours are differ from what super sitemap expects.
 
 ## Optional Params
 
@@ -690,6 +697,12 @@ That's it.
 - **Use the new, framework-specific import:**
   - `import * as sitemap from 'super-sitemap/sveltekit'`, or
   - `import * as sitemap from 'super-sitemap/tanstack-start'`
+
+- **`lang` was renamed to `locales`.**
+  - Use `locales: { default: 'en', alternates: ['de'] }`.
+- **Locale route params must be named `locale`.**
+  - SvelteKit: use `[[locale]]`, not `[[lang]]`.
+  - TanStack Start: use `{-$locale}`.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
   - E.g. Use `/^\/dashboard/`, not `"^/dashboard"`.
 - **`sampledUrls()` and `sampledPaths()` were removed.**
@@ -697,7 +710,7 @@ That's it.
 
 ## Changelog
 
-- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: TanStack Start's `locale` config property renamed to `langParam`; `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
+- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`; TanStack Start now infers `{-$locale}` vs `$locale` directly from route syntax. `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.

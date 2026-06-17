@@ -23,8 +23,8 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. a file in the `static` dir
     excludeRoutePatterns: [
-      /^\/dashboard/,
-      /^\/to-exclude$/,
+      /dashboard/,
+      /to-exclude/,
       /\(secret-group\)/,
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
@@ -35,20 +35,20 @@ export const GET: RequestHandler = async ({ params }) => {
     page: params.page,
 
     paramValues: {
-      '/[[lang]]/[foo]': ['foo-path-1'],
-      '/[[lang]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
-      '/[[lang]]/optionals/many/[[paramA]]': ['data-a1', 'data-a2'],
-      '/[[lang]]/optionals/many/[[paramA]]/[[paramB]]': [
+      '/[[locale]]/[foo]': ['foo-path-1'],
+      '/[[locale]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
+      '/[[locale]]/optionals/many/[[paramA]]': ['data-a1', 'data-a2'],
+      '/[[locale]]/optionals/many/[[paramA]]/[[paramB]]': [
         ['data-a1', 'data-b1'],
         ['data-a2', 'data-b2'],
       ],
-      '/[[lang]]/optionals/many/[[paramA]]/[[paramB]]/foo': [
+      '/[[locale]]/optionals/many/[[paramA]]/[[paramB]]/foo': [
         ['data-a1', 'data-b1'],
         ['data-a2', 'data-b2'],
       ],
-      '/[[lang]]/blog/[slug]': slugs,
-      '/[[lang]]/blog/tag/[tag]': tags,
-      '/[[lang]]/campsites/[country]/[state]': [
+      '/[[locale]]/blog/[slug]': slugs,
+      '/[[locale]]/blog/tag/[tag]': tags,
+      '/[[locale]]/campsites/[country]/[state]': [
         {
           values: ['usa', 'new-york'],
           lastmod: '2025-01-01T00:00:00Z',
@@ -70,7 +70,7 @@ export const GET: RequestHandler = async ({ params }) => {
     defaultPriority: 0.7,
     defaultChangefreq: 'daily',
     sort: 'alpha', // helps predictability of test data
-    lang: {
+    locales: {
       default: 'en',
       alternates: ['zh'],
     },

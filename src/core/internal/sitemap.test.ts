@@ -41,6 +41,16 @@ describe('core sitemap preparePaths', () => {
     ]);
   });
 
+  it('throws a migration error for the v1 lang config property', () => {
+    expect(() =>
+      preparePaths({
+        // @ts-expect-error - runtime validation covers JavaScript callers.
+        lang: { alternates: ['de'], default: 'en' },
+        normalizedRoutes: [staticNormalizedRoute('/about')],
+      })
+    ).toThrow('super-sitemap: `lang` was renamed to `locales` in v2.');
+  });
+
   it('formats route param errors with the adapter name and remediation guidance', () => {
     expect(() => preparePaths({ normalizedRoutes: [blogSlugNormalizedRoute] })).toThrow(
       "super-sitemap: paramValues not provided for route: '/blog/[slug]'. Update excludeRoutePatterns to exclude this route or add data for this route's params to paramValues."

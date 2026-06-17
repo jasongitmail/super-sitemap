@@ -1,7 +1,7 @@
 export type {
   Alternate,
   Changefreq,
-  LangConfig,
+  LocalesConfig,
   ParamValue,
   ParamValues,
   PathObj,
@@ -13,7 +13,6 @@ export type {
   GetHeadersOptions,
   GetSamplePathsOptions,
   SitemapConfig,
-  TanStackStartLangParamConfig,
   TanStackStartRouter,
   TanStackStartRouterFactory,
 } from './internal/types.js';

@@ -1,6 +1,6 @@
 import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type {
-  LangConfig,
+  LocalesConfig,
   NormalizedRoute,
   ParamValues,
   RouteLocaleSlot,
@@ -9,7 +9,8 @@ import type {
 } from '../../../core/internal/types.js';
 import type { CreateSvelteKitNormalizedRoutesOptions } from './types.js';
 
-const LANG_TOKEN_REGEX = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
+const LOCALE_TOKEN_REGEX = /\/?\[(\[locale(=[a-z]+)?\]|locale(=[a-z]+)?)\]/;
+const LEGACY_LANG_TOKEN_REGEX = /\/?\[(\[lang(=[a-z]+)?\]|lang(=[a-z]+)?)\]/;
 const PAGE_ROUTE_FILE_REGEX = /\/\+page.*\.(svelte|md|svx)$/;
 const PARAM_SEGMENT_REGEX = /^\[(\[?)(\.\.\.)?([^\]=]+)(?:=([^\]]+))?\]?\]$/;
 const ROUTE_GROUP_REGEX = /\/\([^)]+\)/g;
@@ -32,10 +33,10 @@ type ParsedSvelteKitParamSegment = {
  */
 export function createSvelteKitNormalizedRoutes({
   excludeRoutePatterns = [],
-  lang = { alternates: [], default: 'en' },
+  locales = { alternates: [], default: 'en' },
   routeFiles = discoverSvelteKitPageRouteFiles(),
 }: CreateSvelteKitNormalizedRoutesOptions): NormalizedRoute[] {
-  validateSvelteKitLocaleConfig(routeFiles, lang);
+  validateSvelteKitLocaleConfig(routeFiles, locales);
 
   const routeEntries = routeFiles
     .map((filePath) => ({
@@ -107,8 +108,8 @@ export function removeSvelteKitRouteGroups(route: string): string {
  */
 export function expandSvelteKitOptionalRoutes(routes: string[]): string[] {
   const processedRoutes = routes.flatMap((route) => {
-    const routeWithoutLangIfAny = route.replace(findSvelteKitLangToken(), '');
-    return /\[\[.*\]\]/.test(routeWithoutLangIfAny) ? expandSvelteKitOptionalRoute(route) : route;
+    const routeWithoutLocaleIfAny = route.replace(findSvelteKitLocaleToken(), '');
+    return /\[\[.*\]\]/.test(routeWithoutLocaleIfAny) ? expandSvelteKitOptionalRoute(route) : route;
   });
 
   return Array.from(new Set(processedRoutes));
@@ -119,8 +120,8 @@ export function expandSvelteKitOptionalRoutes(routes: string[]): string[] {
  * variants SvelteKit considers valid.
  */
 export function expandSvelteKitOptionalRoute(originalRoute: string): string[] {
-  const hasLang = findSvelteKitLangToken().exec(originalRoute);
-  const route = hasLang ? originalRoute.replace(findSvelteKitLangToken(), '') : originalRoute;
+  const hasLocale = findSvelteKitLocaleToken().exec(originalRoute);
+  const route = hasLocale ? originalRoute.replace(findSvelteKitLocaleToken(), '') : originalRoute;
 
   let results: string[] = [];
 
@@ -140,10 +141,10 @@ export function expandSvelteKitOptionalRoute(originalRoute: string): string[] {
     }
   }
 
-  if (hasLang) {
-    const lang = hasLang[0];
+  if (hasLocale) {
+    const locale = hasLocale[0];
     results = results.map(
-      (result) => `${result.slice(0, hasLang.index)}${lang}${result.slice(hasLang.index)}`
+      (result) => `${result.slice(0, hasLocale.index)}${locale}${result.slice(hasLocale.index)}`
     );
   }
 
@@ -153,10 +154,10 @@ export function expandSvelteKitOptionalRoute(originalRoute: string): string[] {
 }
 
 /**
- * Creates a regex matching SvelteKit optional or required lang route tokens.
+ * Creates a regex matching SvelteKit optional or required locale route tokens.
  */
-export function findSvelteKitLangToken(): RegExp {
-  return new RegExp(LANG_TOKEN_REGEX);
+export function findSvelteKitLocaleToken(): RegExp {
+  return new RegExp(LOCALE_TOKEN_REGEX);
 }
 
 /**
@@ -180,7 +181,7 @@ export function parseSvelteKitNormalizedRoute({
       return;
     }
 
-    if (parsedParam.name === 'lang') {
+    if (parsedParam.name === 'locale') {
       segments.push({
         kind: 'locale',
         matcher: parsedParam.matcher,
@@ -289,16 +290,32 @@ export function orderSvelteKitNormalizedRoutesForCompatibility({
 }
 
 /**
- * Requires explicit locale config when SvelteKit routes contain a lang token.
+ * Requires explicit locale config when SvelteKit routes contain a locale token.
  */
-export function validateSvelteKitLocaleConfig(routeFiles: string[], lang: LangConfig): void {
-  const routesContainLangParam = routeFiles.some((route) => findSvelteKitLangToken().test(route));
+export function validateSvelteKitLocaleConfig(routeFiles: string[], locales: LocalesConfig): void {
+  const routesContainLegacyLangParam = routeFiles.some((route) =>
+    findSvelteKitLegacyLangToken().test(route)
+  );
 
-  if (routesContainLangParam && (!lang?.default || !lang?.alternates.length)) {
+  if (routesContainLegacyLangParam) {
     throw new Error(
-      'super-sitemap: `lang` property is required in sitemap config because one or more routes contain [[lang]].'
+      'super-sitemap: v2 recognizes locale routes by a param named `locale`. Rename `[lang]`/`[[lang]]` to `[locale]`/`[[locale]]`.'
     );
   }
+
+  const routesContainLocaleParam = routeFiles.some((route) =>
+    findSvelteKitLocaleToken().test(route)
+  );
+
+  if (routesContainLocaleParam && (!locales?.default || !locales?.alternates.length)) {
+    throw new Error(
+      'super-sitemap: `locales` property is required in sitemap config because one or more routes contain [[locale]].'
+    );
+  }
+}
+
+function findSvelteKitLegacyLangToken(): RegExp {
+  return new RegExp(LEGACY_LANG_TOKEN_REGEX);
 }
 
 /**

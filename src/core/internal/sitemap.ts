@@ -15,7 +15,7 @@ export type PreparePathsOptions = Pick<
   | 'additionalPaths'
   | 'defaultChangefreq'
   | 'defaultPriority'
-  | 'lang'
+  | 'locales'
   | 'paramValues'
   | 'processPaths'
   | 'sort'
@@ -39,21 +39,25 @@ type RenderSitemapResult =
  * normalized-route interpolation, additional paths, `processPaths`,
  * deduplication, and optional sorting.
  */
-export function preparePaths({
-  additionalPaths = [],
-  defaultChangefreq,
-  defaultPriority,
-  lang,
-  normalizedRoutes,
-  paramValues,
-  processPaths,
-  sort = false,
-}: PreparePathsOptions): PathObj[] {
+export function preparePaths(options: PreparePathsOptions): PathObj[] {
+  validateNoLegacyLangConfig(options);
+
+  const {
+    additionalPaths = [],
+    defaultChangefreq,
+    defaultPriority,
+    locales,
+    normalizedRoutes,
+    paramValues,
+    processPaths,
+    sort = false,
+  } = options;
+
   let paths = [
     ...generateNormalizedRoutePaths({
       defaultChangefreq,
       defaultPriority,
-      lang,
+      locales,
       normalizedRoutes,
       paramValues,
     }),
@@ -161,18 +165,18 @@ function renderSitemap({
 function generateNormalizedRoutePaths({
   defaultChangefreq,
   defaultPriority,
-  lang,
+  locales,
   normalizedRoutes,
   paramValues,
 }: Pick<
   PreparePathsOptions,
-  'defaultChangefreq' | 'defaultPriority' | 'lang' | 'normalizedRoutes' | 'paramValues'
+  'defaultChangefreq' | 'defaultPriority' | 'locales' | 'normalizedRoutes' | 'paramValues'
 >): PathObj[] {
   try {
     return generatePathsFromNormalizedRoutes({
       defaultChangefreq,
       defaultPriority,
-      lang,
+      locales,
       normalizedRoutes,
       paramValues,
     }).map(stripUndefinedPathMetadata);
@@ -196,6 +200,12 @@ function formatRouteParamErrorMessage(error: SitemapRouteParamError): string {
 function validateOrigin(origin: string): void {
   if (!origin) {
     throw new Error('super-sitemap: `origin` property is required in sitemap config.');
+  }
+}
+
+function validateNoLegacyLangConfig(options: object): void {
+  if ('lang' in options) {
+    throw new Error('super-sitemap: `lang` was renamed to `locales` in v2.');
   }
 }
 

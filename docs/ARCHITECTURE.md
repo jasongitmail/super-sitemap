@@ -36,11 +36,12 @@ Each adapter owns exactly one job beyond re-exporting: producing ordered
 - **SvelteKit** discovers page files via Vite's `import.meta.glob('/src/routes/**/+page*.{svelte,md,svx}')`
   (a build-time manifest, so it works for prerendered and runtime sitemaps),
   then parses SvelteKit conventions: route groups `(group)`, `[param]`,
-  `[[optional]]`, `[param=matcher]`, `[...rest]`, and the `[[lang]]`/`[lang]`
+  `[[optional]]`, `[param=matcher]`, `[...rest]`, and the `[[locale]]`/`[locale]`
   locale convention.
 - **TanStack Start** never reads files. The consumer passes their app's
   `getRouter` function and the adapter reads the resolved `router.routesByPath`
-  map, parsing TanStack syntax: `$param`, `{-$optional}`, `$` (splat).
+  map, parsing TanStack syntax: `$param`, `{-$optional}`, `$` (splat), and
+  `$locale`/`{-$locale}` locale routes.
   Server-only routes are excluded automatically (see
   [Server route exclusion](#server-route-exclusion-pages-only-endpoints-never)).
 
@@ -83,7 +84,7 @@ out.
 
 ```text
 adapter route source ──parse──▶ NormalizedRoute[] ─┐
-paramValues, lang, defaults ───────────────────────┼──▶ core.preparePaths()
+paramValues, locales, defaults ────────────────────┼──▶ core.preparePaths()
 additionalPaths, processPaths, sort ───────────────┘         │
                                                              ▼
                                                          PathObj[]
@@ -104,13 +105,13 @@ wins) → sort (only when `sort: 'alpha'`).
 | Term                                              | Meaning                                                                                                                                                                                                                                                   |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Normalized route** (`NormalizedRoute`)          | The IR: one routable URL pattern, normalized out of framework syntax. Ordered `segments`, optional `params` metadata, optional `locale` slot, and a `source`. Adapters produce them; core consumes them.                                                  |
-| **Segment** (`RouteSegment`)                      | One path segment of a normalized route. Discriminated union: `static` (literal text), `param` (placeholder, optionally `rest` for splats), `locale` (the language slot).                                                                                  |
+| **Segment** (`RouteSegment`)                      | One path segment of a normalized route. Discriminated union: `static` (literal text), `param` (placeholder, optionally `rest` for splats), `locale` (the locale slot).                                                                                    |
 | **Compatibility key** (`source.compatibilityKey`) | The framework-native route string users write in `paramValues` and see in error messages — `/blog/[slug]` for SvelteKit, `/blog/$slug` for TanStack. The external contract is framework-native; the IR is internal.                                       |
 | **`paramValues`**                                 | User-supplied data for parameterized routes, keyed by compatibility key. Values: `string[]` (one param), `string[][]` (multi param), or `ParamValue[]` (values + per-path `lastmod`/`changefreq`/`priority`).                                             |
 | **`PathObj`**                                     | One concrete sitemap entry: `path` plus optional `lastmod`, `changefreq`, `priority`, `alternates`.                                                                                                                                                       |
-| **Alternate**                                     | One hreflang variant (`lang` + `path`) emitted as `<xhtml:link rel="alternate">`.                                                                                                                                                                         |
-| **`lang`**                                        | Config declaring _which languages the site has_: `{ default, alternates }`. Shared by both adapters; consumed by core.                                                                                                                                    |
-| **`langParam`** (TanStack only)                   | Config declaring _which route param is the language slot_: `{ paramName, mode, matcher? }`. SvelteKit doesn't need it because a param literally named `lang` is the slot by convention, and `[[lang]]` vs `[lang]` implies the mode.                      |
+| **Alternate**                                     | One hreflang variant (`hreflang` + `path`) emitted as `<xhtml:link rel="alternate">`.                                                                                                                                                                     |
+| **`locales`**                                     | Config declaring _which locales the site has_: `{ default, alternates }`. Shared by both adapters; consumed by core.                                                                                                                                      |
+| **Locale route param**                            | A route param named `locale`. SvelteKit uses `[[locale]]`/`[locale]`; TanStack Start uses `{-$locale}`/`$locale`. Optional vs required behavior is inferred from route syntax.                                                                            |
 | **`SitemapRouteParamError`**                      | Structured error thrown by core path generation (`code` + `route`) so callers never parse message strings. `preparePaths` formats it into the user-facing message.                                                                                        |
 | **`error` discriminant**                          | Result types that represent success-or-failure (`PaginatedPathsResult`, render results) discriminate on `error: null \| '<code>'` — machine-readable codes, never display strings, so callers can map them to statuses (400/404) without string matching. |
 | **`kind` discriminant**                           | Variant-tag unions that are not success/failure (`RouteSegment`, `ParsedSitemapXml`) discriminate on `kind`.                                                                                                                                              |

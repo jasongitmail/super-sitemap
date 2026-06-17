@@ -1,7 +1,7 @@
 export type {
   Alternate,
   Changefreq,
-  LangConfig,
+  LocalesConfig,
   ParamValue,
   ParamValues,
   PathObj,

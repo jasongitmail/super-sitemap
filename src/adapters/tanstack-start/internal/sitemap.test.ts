@@ -315,16 +315,25 @@ describe('TanStack Start adapter response wrapper', () => {
     expect(await notFoundRes.text()).toBe('Page does not exist');
   });
 
-  it('supports explicit optional and required locale route mappings', async () => {
+  it('requires locale config when localized TanStack routes exist', async () => {
+    await expect(
+      response({
+        origin: 'https://example.com',
+        router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
+      })
+    ).rejects.toThrow(
+      'super-sitemap: `locales` property is required in sitemap config because one or more routes contain a locale param.'
+    );
+  });
+
+  it('infers optional and required locale route mappings', async () => {
     const optionalLocaleRes = await response({
-      lang: { alternates: ['de'], default: 'en' },
-      langParam: { mode: 'optional', paramName: 'locale' },
+      locales: { alternates: ['de'], default: 'en' },
       origin: 'https://example.com',
       router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
     });
     const requiredLocaleRes = await response({
-      lang: { alternates: ['de'], default: 'en' },
-      langParam: { mode: 'required', paramName: 'locale' },
+      locales: { alternates: ['de'], default: 'en' },
       origin: 'https://example.com',
       router: routerFromRoutes([{ fullPath: '/$locale/docs' }]),
     });

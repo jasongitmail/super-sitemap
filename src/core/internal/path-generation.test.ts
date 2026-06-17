@@ -169,15 +169,15 @@ describe('core normalized routes', () => {
 
     expect(
       generatePathsFromNormalizedRoutes({
-        lang: { alternates: ['de', 'fr'], default: 'en' },
+        locales: { alternates: ['de', 'fr'], default: 'en' },
         normalizedRoutes,
       })
     ).toEqual([
       {
         alternates: [
-          { lang: 'en', path: '/about' },
-          { lang: 'de', path: '/de/about' },
-          { lang: 'fr', path: '/fr/about' },
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
         ],
         changefreq: undefined,
         lastmod: undefined,
@@ -186,9 +186,9 @@ describe('core normalized routes', () => {
       },
       {
         alternates: [
-          { lang: 'en', path: '/about' },
-          { lang: 'de', path: '/de/about' },
-          { lang: 'fr', path: '/fr/about' },
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
         ],
         changefreq: undefined,
         lastmod: undefined,
@@ -197,9 +197,9 @@ describe('core normalized routes', () => {
       },
       {
         alternates: [
-          { lang: 'en', path: '/about' },
-          { lang: 'de', path: '/de/about' },
-          { lang: 'fr', path: '/fr/about' },
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
         ],
         changefreq: undefined,
         lastmod: undefined,
@@ -208,9 +208,9 @@ describe('core normalized routes', () => {
       },
       {
         alternates: [
-          { lang: 'en', path: '/en' },
-          { lang: 'de', path: '/de' },
-          { lang: 'fr', path: '/fr' },
+          { hreflang: 'en', path: '/en' },
+          { hreflang: 'de', path: '/de' },
+          { hreflang: 'fr', path: '/fr' },
         ],
         changefreq: undefined,
         lastmod: undefined,
@@ -219,9 +219,9 @@ describe('core normalized routes', () => {
       },
       {
         alternates: [
-          { lang: 'en', path: '/en' },
-          { lang: 'de', path: '/de' },
-          { lang: 'fr', path: '/fr' },
+          { hreflang: 'en', path: '/en' },
+          { hreflang: 'de', path: '/de' },
+          { hreflang: 'fr', path: '/fr' },
         ],
         changefreq: undefined,
         lastmod: undefined,
@@ -230,9 +230,9 @@ describe('core normalized routes', () => {
       },
       {
         alternates: [
-          { lang: 'en', path: '/en' },
-          { lang: 'de', path: '/de' },
-          { lang: 'fr', path: '/fr' },
+          { hreflang: 'en', path: '/en' },
+          { hreflang: 'de', path: '/de' },
+          { hreflang: 'fr', path: '/fr' },
         ],
         changefreq: undefined,
         lastmod: undefined,

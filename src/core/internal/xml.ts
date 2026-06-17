@@ -41,8 +41,8 @@ export function renderSitemapXml(origin: string, pathObjs: PathObj[]): string {
       if (alternates) {
         url += alternates
           .map(
-            ({ lang, path }) =>
-              `    <xhtml:link rel="alternate" hreflang="${lang}" href="${origin}${path}" />\n`
+            ({ hreflang, path }) =>
+              `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${origin}${path}" />\n`
           )
           .join('');
       }

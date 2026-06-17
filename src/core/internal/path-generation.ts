@@ -1,7 +1,7 @@
 import { toPath } from './paths.js';
 import type {
   Alternate,
-  LangConfig,
+  LocalesConfig,
   NormalizedRoute,
   ParamValue,
   ParamValues,
@@ -14,7 +14,7 @@ import type {
 type GenerateNormalizedRoutePathsOptions = {
   defaultChangefreq?: SitemapConfig['defaultChangefreq'];
   defaultPriority?: SitemapConfig['defaultPriority'];
-  lang?: LangConfig;
+  locales?: LocalesConfig;
   normalizedRoutes: NormalizedRoute[];
   paramValues?: ParamValues;
 };
@@ -43,11 +43,14 @@ export class SitemapRouteParamError extends Error {
 export function generatePathsFromNormalizedRoutes({
   defaultChangefreq,
   defaultPriority,
-  lang = { alternates: [], default: 'en' },
+  locales,
   normalizedRoutes,
   paramValues = {},
 }: GenerateNormalizedRoutePathsOptions): PathObj[] {
+  validateLocaleConfig(normalizedRoutes, locales);
   validateKnownParamValueKeys(normalizedRoutes, paramValues);
+
+  const resolvedLocales = locales ?? { alternates: [], default: 'en' };
 
   const defaults = {
     changefreq: defaultChangefreq,
@@ -72,7 +75,7 @@ export function generatePathsFromNormalizedRoutes({
         paths,
         normalizedRoute,
         { ...defaults, path: buildPath(normalizedRoute.segments) },
-        lang,
+        resolvedLocales,
         new Map()
       );
       continue;
@@ -90,7 +93,7 @@ export function generatePathsFromNormalizedRoutes({
             path: buildPath(normalizedRoute.segments, paramValueMap),
             priority: item.priority ?? defaults.priority,
           },
-          lang,
+          resolvedLocales,
           paramValueMap
         );
       }
@@ -107,7 +110,7 @@ export function generatePathsFromNormalizedRoutes({
             ...defaults,
             path: buildPath(normalizedRoute.segments, paramValueMap),
           },
-          lang,
+          resolvedLocales,
           paramValueMap
         );
       }
@@ -123,13 +126,28 @@ export function generatePathsFromNormalizedRoutes({
           ...defaults,
           path: buildPath(normalizedRoute.segments, paramValueMap),
         },
-        lang,
+        resolvedLocales,
         paramValueMap
       );
     }
   }
 
   return paths;
+}
+
+function validateLocaleConfig(
+  normalizedRoutes: NormalizedRoute[],
+  locales: LocalesConfig | undefined
+): void {
+  const routesContainLocaleParam = normalizedRoutes.some(
+    (normalizedRoute) => normalizedRoute.locale
+  );
+
+  if (routesContainLocaleParam && (!locales?.default || !locales.alternates.length)) {
+    throw new Error(
+      'super-sitemap: `locales` property is required in sitemap config because one or more routes contain a locale param.'
+    );
+  }
 }
 
 function validateKnownParamValueKeys(
@@ -221,7 +239,7 @@ function pushLocalizedPaths(
   paths: PathObj[],
   normalizedRoute: NormalizedRoute,
   pathObj: PathObj,
-  lang: LangConfig,
+  locales: LocalesConfig,
   paramValues: Map<string, string>
 ) {
   if (!normalizedRoute.locale) {
@@ -229,7 +247,7 @@ function pushLocalizedPaths(
     return;
   }
 
-  const variations = getLocaleVariations(normalizedRoute, pathObj.path, lang, paramValues);
+  const variations = getLocaleVariations(normalizedRoute, pathObj.path, locales, paramValues);
 
   for (const variation of variations) {
     paths.push({
@@ -243,23 +261,23 @@ function pushLocalizedPaths(
 function getLocaleVariations(
   normalizedRoute: NormalizedRoute,
   defaultPath: string,
-  lang: LangConfig,
+  locales: LocalesConfig,
   paramValues: Map<string, string>
 ): Alternate[] {
   const variations: Alternate[] = [];
   const defaultLocalePath =
     normalizedRoute.locale?.mode === 'required'
-      ? buildPath(normalizedRoute.segments, paramValues, lang.default)
+      ? buildPath(normalizedRoute.segments, paramValues, locales.default)
       : defaultPath;
 
   variations.push({
-    lang: lang.default,
+    hreflang: locales.default,
     path: defaultLocalePath,
   });
 
-  for (const alternate of lang.alternates) {
+  for (const alternate of locales.alternates) {
     variations.push({
-      lang: alternate,
+      hreflang: alternate,
       path: buildPath(normalizedRoute.segments, paramValues, alternate),
     });
   }

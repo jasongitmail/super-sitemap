@@ -3,8 +3,6 @@ import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
 import type {
   CreateTanStackStartNormalizedRoutesOptions,
-  ParseTanStackStartNormalizedRoutesOptions,
-  TanStackStartLangParamConfig,
   TanStackStartNormalizedRoute,
   TanStackStartResolvedRoute,
   TanStackStartRouteInput,
@@ -43,19 +41,19 @@ type ParsedSegment =
 
 type SegmentVariant = {
   compatibilityKeySegment?: string;
+  localeMode?: RouteLocaleSlot['mode'];
   segment?: RouteSegment;
 };
 
 export function createTanStackStartNormalizedRoutes({
   excludeRoutePatterns = [],
-  langParam,
   ...routeInput
 }: CreateTanStackStartNormalizedRoutesOptions): TanStackStartNormalizedRoute[] {
   const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
   const normalizedRoutesByCompatibilityKey = new Map<string, TanStackStartNormalizedRoute>();
 
   for (const route of routeRecords) {
-    const normalizedRoutes = parseTanStackStartNormalizedRoutes(route, { langParam }).filter(
+    const normalizedRoutes = parseTanStackStartNormalizedRoutes(route).filter(
       (normalizedRoute) =>
         !excludeRoutePatterns.some((pattern) =>
           routeMatchesPattern(pattern, normalizedRoute.source.compatibilityKey)
@@ -153,43 +151,41 @@ function getOptionalStringRouteField(
 }
 
 function parseTanStackStartNormalizedRoutes(
-  route: TanStackStartRouteRecord | string,
-  options: ParseTanStackStartNormalizedRoutesOptions = {}
+  route: TanStackStartRouteRecord | string
 ): TanStackStartNormalizedRoute[] {
   const routeRecord = typeof route === 'string' ? { fullPath: route } : route;
   const sourcePath = getCompatibilityPath(routeRecord);
   const parsedSegments = splitPath(sourcePath).map(parseTanStackStartSegment);
-  const variants = expandSegmentVariants(parsedSegments, options.langParam);
+  const variants = expandSegmentVariants(parsedSegments);
 
   return variants.map((segments) =>
     createNormalizedRoute({
       compatibilityKey: toPath(segments.map((segment) => segment.compatibilityKeySegment)),
-      langParam: options.langParam,
       routeRecord,
-      routeSegments: segments.flatMap((segment) => (segment.segment ? [segment.segment] : [])),
+      routeSegmentVariants: segments,
     })
   );
 }
 
 function createNormalizedRoute({
   compatibilityKey,
-  langParam,
   routeRecord,
-  routeSegments,
+  routeSegmentVariants,
 }: {
   compatibilityKey: string;
-  langParam?: TanStackStartLangParamConfig;
   routeRecord: TanStackStartRouteRecord;
-  routeSegments: RouteSegment[];
+  routeSegmentVariants: SegmentVariant[];
 }): TanStackStartNormalizedRoute {
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
+  const routeSegmentEntries = routeSegmentVariants.filter(hasRouteSegment);
+  const routeSegments = routeSegmentEntries.map(({ segment }) => segment);
 
-  routeSegments.forEach((segment, segmentIndex) => {
+  routeSegmentEntries.forEach(({ localeMode, segment }, segmentIndex) => {
     if (segment.kind === 'locale') {
       locale = {
         matcher: segment.matcher,
-        mode: langParam?.mode ?? 'required',
+        mode: localeMode ?? 'required',
         paramName: segment.name,
         segmentIndex,
       };
@@ -250,14 +246,11 @@ function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
   );
 }
 
-function expandSegmentVariants(
-  segments: ParsedSegment[],
-  langParam: TanStackStartLangParamConfig | undefined
-): SegmentVariant[][] {
+function expandSegmentVariants(segments: ParsedSegment[]): SegmentVariant[][] {
   let variants: SegmentVariant[][] = [[]];
 
   for (const segment of segments) {
-    const additions = getSegmentVariants(segment, langParam);
+    const additions = getSegmentVariants(segment);
     variants = variants.flatMap((variant) =>
       additions.map((addition) => (addition ? [...variant, addition] : variant))
     );
@@ -266,10 +259,7 @@ function expandSegmentVariants(
   return variants.length ? variants : [[]];
 }
 
-function getSegmentVariants(
-  segment: ParsedSegment,
-  langParam: TanStackStartLangParamConfig | undefined
-): Array<SegmentVariant | undefined> {
+function getSegmentVariants(segment: ParsedSegment): Array<SegmentVariant | undefined> {
   if (segment.kind === 'omit') {
     return [undefined];
   }
@@ -288,13 +278,13 @@ function getSegmentVariants(
   const optionalCompatibilityKeySegment =
     segment.kind === 'optional-param' ? `{-$${segment.name}}` : compatibilityKeySegment;
 
-  if (langParam?.paramName === segment.name) {
+  if (segment.name === 'locale') {
     return [
       {
         compatibilityKeySegment: optionalCompatibilityKeySegment,
+        localeMode: segment.kind === 'optional-param' ? 'optional' : 'required',
         segment: {
           kind: 'locale',
-          matcher: langParam.matcher,
           name: segment.name,
         },
       },
@@ -315,6 +305,12 @@ function getSegmentVariants(
   }
 
   return [paramVariant];
+}
+
+function hasRouteSegment(
+  variant: SegmentVariant
+): variant is SegmentVariant & { segment: RouteSegment } {
+  return variant.segment !== undefined;
 }
 
 function getCompatibilityPath(route: TanStackStartRouteRecord): string {

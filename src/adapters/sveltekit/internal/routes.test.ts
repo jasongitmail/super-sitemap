@@ -13,7 +13,7 @@ import {
   createSvelteKitNormalizedRoutes,
   expandSvelteKitOptionalRoute,
   expandSvelteKitOptionalRoutes,
-  findSvelteKitLangToken,
+  findSvelteKitLocaleToken,
   normalizeSvelteKitRouteFile,
   orderSvelteKitNormalizedRoutesForCompatibility,
   parseSvelteKitNormalizedRoute,
@@ -147,39 +147,39 @@ describe('SvelteKit routes', () => {
   it('expands optional params while preserving matcher syntax for route keys', () => {
     expect(
       expandSvelteKitOptionalRoutes([
-        '/[[lang]]/blog/[page=integer]',
-        '/[[lang]]/optionals/[[optional]]',
+        '/[[locale]]/blog/[page=integer]',
+        '/[[locale]]/optionals/[[optional]]',
       ])
     ).toEqual([
-      '/[[lang]]/blog/[page=integer]',
-      '/[[lang]]/optionals',
-      '/[[lang]]/optionals/[[optional]]',
+      '/[[locale]]/blog/[page=integer]',
+      '/[[locale]]/optionals',
+      '/[[locale]]/optionals/[[optional]]',
     ]);
   });
 
   it('expands a single optional route and preserves optional locale position', () => {
-    expect(expandSvelteKitOptionalRoute('/[[lang]]/docs/[[section]]/[[slug]]')).toEqual([
-      '/[[lang]]/docs',
-      '/[[lang]]/docs/[[section]]',
-      '/[[lang]]/docs/[[section]]/[[slug]]',
+    expect(expandSvelteKitOptionalRoute('/[[locale]]/docs/[[section]]/[[slug]]')).toEqual([
+      '/[[locale]]/docs',
+      '/[[locale]]/docs/[[section]]',
+      '/[[locale]]/docs/[[section]]/[[slug]]',
     ]);
   });
 
   it('matches optional and required SvelteKit locale route tokens', () => {
-    const regex = findSvelteKitLangToken();
+    const regex = findSvelteKitLocaleToken();
 
-    expect(regex.test('/[[lang]]/about')).toBe(true);
-    expect(findSvelteKitLangToken().test('/[lang=lang]/about')).toBe(true);
-    expect(findSvelteKitLangToken().test('/blog/[slug]')).toBe(false);
+    expect(regex.test('/[[locale]]/about')).toBe(true);
+    expect(findSvelteKitLocaleToken().test('/[locale=locale]/about')).toBe(true);
+    expect(findSvelteKitLocaleToken().test('/blog/[slug]')).toBe(false);
   });
 
   it('maps locale, matcher, rest, source, and compatibility metadata into normalized normalizedRoutes', () => {
     const optionalLocale = parseSvelteKitNormalizedRoute({
-      filePath: '/src/routes/(public)/[[lang=lang]]/blog/[slug]/+page.svelte',
-      route: '/[[lang=lang]]/blog/[slug]',
+      filePath: '/src/routes/(public)/[[locale=locale]]/blog/[slug]/+page.svelte',
+      route: '/[[locale=locale]]/blog/[slug]',
     });
     const requiredLocale = parseSvelteKitNormalizedRoute({
-      route: '/[lang]/campsites/[country]/[state]',
+      route: '/[locale]/campsites/[country]/[state]',
     });
     const matcherParam = parseSvelteKitNormalizedRoute({
       route: '/blog/[page=integer]',
@@ -189,22 +189,22 @@ describe('SvelteKit routes', () => {
     });
 
     expect(optionalLocale).toMatchObject({
-      locale: { matcher: 'lang', mode: 'optional', paramName: 'lang', segmentIndex: 0 },
+      locale: { matcher: 'locale', mode: 'optional', paramName: 'locale', segmentIndex: 0 },
       params: [{ name: 'slug', segmentIndex: 2 }],
       segments: [
-        { kind: 'locale', matcher: 'lang', name: 'lang' },
+        { kind: 'locale', matcher: 'locale', name: 'locale' },
         { kind: 'static', value: 'blog' },
         { kind: 'param', name: 'slug' },
       ],
       source: {
         adapter: 'sveltekit',
-        compatibilityKey: '/[[lang=lang]]/blog/[slug]',
-        filePath: '/src/routes/(public)/[[lang=lang]]/blog/[slug]/+page.svelte',
+        compatibilityKey: '/[[locale=locale]]/blog/[slug]',
+        filePath: '/src/routes/(public)/[[locale=locale]]/blog/[slug]/+page.svelte',
       },
     });
     expect(requiredLocale.locale).toEqual({
       mode: 'required',
-      paramName: 'lang',
+      paramName: 'locale',
       segmentIndex: 0,
     });
     expect(matcherParam.params).toEqual([
@@ -225,34 +225,45 @@ describe('SvelteKit routes', () => {
   it('requires locale config when localized SvelteKit routes exist', () => {
     expect(() =>
       createSvelteKitNormalizedRoutes({
-        lang: { alternates: [], default: 'en' },
+        locales: { alternates: [], default: 'en' },
+        routeFiles: ['/src/routes/(public)/[[locale]]/about/+page.svelte'],
+      })
+    ).toThrow(
+      'super-sitemap: `locales` property is required in sitemap config because one or more routes contain [[locale]].'
+    );
+  });
+
+  it('throws a migration error when localized SvelteKit routes use the v1 lang param', () => {
+    expect(() =>
+      createSvelteKitNormalizedRoutes({
+        locales: { alternates: ['de'], default: 'en' },
         routeFiles: ['/src/routes/(public)/[[lang]]/about/+page.svelte'],
       })
     ).toThrow(
-      'super-sitemap: `lang` property is required in sitemap config because one or more routes contain [[lang]].'
+      'super-sitemap: v2 recognizes locale routes by a param named `locale`. Rename `[lang]`/`[[lang]]` to `[locale]`/`[[locale]]`.'
     );
   });
 
   it('returns normalized syntax-free normalizedRoutes from SvelteKit route files', () => {
     const normalizedRoutes = createSvelteKitNormalizedRoutes({
       excludeRoutePatterns: [/\(authenticated\)/],
-      lang: { alternates: ['zh'], default: 'en' },
+      locales: { alternates: ['zh'], default: 'en' },
       routeFiles: [
-        '/src/routes/(public)/[[lang]]/about/+page.svelte',
+        '/src/routes/(public)/[[locale]]/about/+page.svelte',
         '/src/routes/(authenticated)/dashboard/+page.svelte',
       ],
     });
 
     expect(normalizedRoutes).toHaveLength(1);
     expect(normalizedRoutes[0]).toMatchObject({
-      locale: { mode: 'optional', paramName: 'lang' },
+      locale: { mode: 'optional', paramName: 'locale' },
       segments: [
-        { kind: 'locale', name: 'lang' },
+        { kind: 'locale', name: 'locale' },
         { kind: 'static', value: 'about' },
       ],
       source: {
-        compatibilityKey: '/[[lang]]/about',
-        filePath: '/src/routes/(public)/[[lang]]/about/+page.svelte',
+        compatibilityKey: '/[[locale]]/about',
+        filePath: '/src/routes/(public)/[[locale]]/about/+page.svelte',
       },
     });
     expect(normalizedRoutes[0]?.segments).not.toContainEqual(

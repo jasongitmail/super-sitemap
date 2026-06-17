@@ -144,8 +144,7 @@ describe('TanStack Start adapter sample paths', () => {
   it('supports explicit locale route mappings while sampling once per route', () => {
     const optionalLocalePaths = getSamplePaths({
       sitemapConfig: {
-        lang: { alternates: ['de'], default: 'en' },
-        langParam: { mode: 'optional', paramName: 'locale' },
+        locales: { alternates: ['de'], default: 'en' },
         origin: 'https://example.com',
         router: routerFromRoutes([{ fullPath: '/{-$locale}/about' }]),
       },
@@ -153,8 +152,7 @@ describe('TanStack Start adapter sample paths', () => {
     const requiredLocalePaths = getSamplePaths({
       getCanonicalPath: (path) => path.replace(/^\/(?:de|en)(?=\/|$)/, '') || '/',
       sitemapConfig: {
-        lang: { alternates: ['de'], default: 'en' },
-        langParam: { mode: 'required', paramName: 'locale' },
+        locales: { alternates: ['de'], default: 'en' },
         origin: 'https://example.com',
         router: routerFromRoutes([{ fullPath: '/$locale/docs' }]),
       },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { GET } from './(public)/[[lang]]/sitemap[[page]].xml/+server.js';
+import { GET } from './(public)/[[locale]]/sitemap[[page]].xml/+server.js';
 
 type RequestEvent = Parameters<typeof GET>[0];
 
@@ -19,7 +19,7 @@ describe('demo app sitemap endpoint (end to end)', () => {
 
     // Static route with the trailing slash added by the demo's processPaths.
     expect(xml).toContain('https://example.com/about/');
-    // Localized alternate from the [[lang]] route and lang config.
+    // Localized alternate from the [[locale]] route and locales config.
     expect(xml).toContain('https://example.com/zh/about/');
     // Parameterized route interpolated from paramValues.
     expect(xml).toContain('https://example.com/campsites/usa/new-york/');

@@ -1,7 +1,7 @@
 import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
 import type {
   SitemapConfig as BaseSitemapConfig,
-  LangConfig,
+  LocalesConfig,
 } from '../../../core/internal/types.js';
 
 export type { GetHeadersOptions };
@@ -11,7 +11,7 @@ export type { GetHeadersOptions };
  */
 export type CreateSvelteKitNormalizedRoutesOptions = {
   excludeRoutePatterns?: RegExp[];
-  lang?: LangConfig;
+  locales?: LocalesConfig;
   routeFiles?: string[];
 };
 

@@ -33,11 +33,7 @@ export function prepareSitemapPaths(
  */
 function createNormalizedRoutes({
   excludeRoutePatterns,
-  langParam,
   router,
-}: Pick<
-  SitemapConfig,
-  'excludeRoutePatterns' | 'langParam' | 'router'
->): TanStackStartNormalizedRoute[] {
-  return createTanStackStartNormalizedRoutes({ excludeRoutePatterns, langParam, router });
+}: Pick<SitemapConfig, 'excludeRoutePatterns' | 'router'>): TanStackStartNormalizedRoute[] {
+  return createTanStackStartNormalizedRoutes({ excludeRoutePatterns, router });
 }

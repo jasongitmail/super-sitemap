@@ -12,8 +12,8 @@ describe('core XML helpers', () => {
     const xml = renderSitemapXml('https://example.com', [
       {
         alternates: [
-          { lang: 'en', path: '/about' },
-          { lang: 'de', path: '/de/about' },
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
         ],
         changefreq: 'weekly',
         lastmod: '2026-01-02',
