@@ -1,4 +1,4 @@
-## processPaths() callback
+# processPaths() callback
 
 _**The `processPaths()` callback is powerful, but rarely needed.**_
 
@@ -27,7 +27,7 @@ requests, including any to fetch param values from a database, [occur
 together using `Promise.all()`](<https://github.com/jasongitmail/super-sitemap/blob/main/src/routes/(public)/%5B%5Blang%5D%5D/sitemap%5B%5Bpage%5D%5D.xml/%2Bserver.ts#L14-L20>), for best performance and consistent code pattern
 among super sitemap users for best DX.
 
-### Example code - to remove specific paths
+## Example code - to remove specific paths
 
 ```ts
 return await sitemap.response({
