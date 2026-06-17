@@ -71,8 +71,7 @@ Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#pla
 
 ## Basic example
 
-<details>
-<summary>View TanStack Start example</summary>
+### TanStack Start
 
 ```ts
 // /src/routes/sitemap[.]xml.ts
@@ -93,10 +92,7 @@ export const Route = createFileRoute('/sitemap.xml')({
 });
 ```
 
-</details>
-
-<details>
-<summary>View SvelteKit example</summary>
+### SvelteKit
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -109,8 +105,6 @@ export const GET: RequestHandler = async () => {
   });
 };
 ```
-
-</details>
 
 - Always include the `.xml` extension on your route name–e.g. `sitemap.xml`.
   This ensures your web server sends the correct `application/xml` content type
@@ -126,11 +120,11 @@ export const GET: RequestHandler = async () => {
 
 ## The "everything" example
 
-_**All aspects of the below example are optional, except for `origin` and
+_**All config properties shown here are optional, except for `origin` and
 `paramValues` to provide data for parameterized routes.**_
 
 <details>
-<summary>View TanStack Start example</summary>
+<summary>TanStack Start example</summary>
 
 ```ts
 // /src/routes/sitemap[.]xml.ts
@@ -211,7 +205,7 @@ export const Route = createFileRoute('/sitemap.xml')({
 </details>
 
 <details>
-<summary>View SvelteKit example</summary>
+<summary>SvelteKit example</summary>
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
@@ -291,13 +285,13 @@ export const GET: RequestHandler = async () => {
 _You only need to enable, or read, this if you have >50,000 URLs in your sitemap, which is the number
 recommended by [sitemaps.org](https://www.sitemaps.org/protocol.html)._
 
-You can enable sitemap index support with just two changes:
+Enable sitemap index support with just two changes:
 
 1. Rename your route so it serves `/sitemap.xml` and `/sitemap1.xml`, `/sitemap2.xml`, etc.
 2. Pass the page param via your sitemap config
 
 <details>
-<summary>View TanStack Start example</summary>
+<summary>TanStack Start example</summary>
 
 ```ts
 // /src/routes/sitemap{-$page}[.]xml.ts
@@ -323,7 +317,7 @@ export const Route = createFileRoute('/sitemap{-$page}.xml')({
 </details>
 
 <details>
-<summary>View SvelteKit example</summary>
+<summary>SvelteKit example</summary>
 
 ```ts
 // /src/routes/sitemap[[page]].xml/+server.ts
@@ -341,7 +335,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
 </details>
 
-Your `sitemap.xml` route will now return a sitemap index automatically if it contains more URLs than the optional `maxPerPage` value or its default of 50,000. Your sitemap will be a non-index, regular sitemap when fewer URLs than `maxPerPage` are present.
+Your `sitemap.xml` route will now return a sitemap index automatically when it contains more URLs than the optional `maxPerPage` value (default 50,000). Your sitemap will be a non-index, regular sitemap when fewer URLs than that are present.
 
 Feel free to always set up your sitemap as a sitemap index, given it will work
 optimally whether you have few or many URLs.
@@ -376,7 +370,7 @@ Note: Syntax differs between frameworks to mirror how each framework specifies r
 _Author's note: I'm still deciding if the better library DX is to use framework-specific or framework-agnostic syntax to specify required params & optional params in the keys for paramValues. So this may change before 2.0 lands._
 
 <details>
-<summary>View TanStack Start example</summary>
+<summary>TanStack Start example</summary>
 
 ```ts
 paramValues: {
@@ -435,7 +429,7 @@ paramValues: {
 </details>
 
 <details>
-<summary>View SvelteKit example</summary>
+<summary>SvelteKit example</summary>
 
 ```ts
 paramValues: {
@@ -499,18 +493,19 @@ paramValues: {
 compatibility keys, not the generated URL paths. In most cases, that means using
 the same route param syntax your framework uses.
 
-| Route feature                  | TanStack Start key                                                 | SvelteKit key                                                      |
-| ------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Required param                 | `'/blog/$slug'`                                                    | `'/blog/[slug]'`                                                   |
-| Optional param                 | `'/blog/{-$category}'`                                             | `'/blog/[[category]]'`                                             |
-| Multiple params                | `'/campsites/$country/$state'`                                     | `'/campsites/[country]/[state]'`                                   |
-| Rest / splat param             | `'/docs/$'`                                                        | `'/docs/[...rest]'`                                                |
-| Param matcher                  | No route-key equivalent                                            | `'/blog/[page=integer]'`                                           |
-| Optional matcher               | No route-key equivalent                                            | `'/archive/[[year=integer]]'`                                      |
-| Optional locale param          | `'/{-$locale}/blog/$slug'` with `langParam`                        | `'/[[lang]]/blog/[slug]'`                                          |
-| Required locale param          | `'/$locale/docs/$slug'` with `langParam`                           | `'/[lang]/docs/[slug]'`                                            |
-| Route group / pathless segment | Omitted: `/_layout/(dashboard)/users/$id` → `'/users/$id'`         | Omitted: `/(dashboard)/users/[id]` → `'/users/[id]'`               |
-| Optional route expansion       | `'/something/{-$paramA}'` and `'/something/{-$paramA}/{-$paramB}'` | `'/something/[[paramA]]'` and `'/something/[[paramA]]/[[paramB]]'` |
+| Route feature                         | TanStack Start key                                                              | SvelteKit key                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Required param                        | `'/blog/$slug'`                                                                 | `'/blog/[slug]'`                                                                                                             |
+| Optional param                        | `'/blog/{-$category}'`                                                          | `'/blog/[[category]]'`                                                                                                       |
+| Multiple params                       | `'/campsites/$country/$state'`                                                  | `'/campsites/[country]/[state]'`                                                                                             |
+| Rest / splat param                    | `'/docs/$'`                                                                     | `'/docs/[...rest]'`                                                                                                          |
+| Param matcher                         | No route-key equivalent                                                         | `'/blog/[page=integer]'`                                                                                                     |
+| Optional matcher                      | No route-key equivalent                                                         | `'/archive/[[year=integer]]'`                                                                                                |
+| Optional locale param                 | `'/{-$locale}/blog/$slug'` with `langParam`                                     | `'/[[lang]]/blog/[slug]'`                                                                                                    |
+| Required locale param                 | `'/$locale/docs/$slug'` with `langParam`                                        | `'/[lang]/docs/[slug]'`                                                                                                      |
+| Route groups are ommitted             | On disk: `/(dashboard)/users/$id` → Use `'/users/$id'`                          | On disk: `/(dashboard)/users/[id]` → Use `'/users/[id]'`                                                                     |
+| Layout / pathless layout are ommitted | Pathless layout segments are omitted: `/_layout/users/$id` → Use `'/users/$id'` | Layout files do not create route-key segments: `/users/[id]/+page.svelte` with `/users/+layout.svelte` → Use `'/users/[id]'` |
+| Optional route expansion              | `'/something/{-$paramA}'` and `'/something/{-$paramA}/{-$paramB}'`              | `'/something/[[paramA]]'` and `'/something/[[paramA]]/[[paramB]]'`                                                           |
 
 TanStack Start supports multiple optional params in one route. Super Sitemap
 requires values for each generated dynamic optional variant that remains after
@@ -533,7 +528,7 @@ path variation and will require you to either exclude those route patterns using
 within your sitemap config object.
 
 <details>
-<summary>View TanStack Start example</summary>
+<summary>TanStack Start example</summary>
 
 TanStack Start optional params like `/posts/{-$category}` expand the same
 way — use TanStack syntax in your `paramValues` keys and JavaScript `RegExp`
@@ -560,7 +555,7 @@ keys before matching, so exclude the resulting public route key, such as
 </details>
 
 <details>
-<summary>View SvelteKit example</summary>
+<summary>SvelteKit example</summary>
 
 SvelteKit allows you to create a route with one or more optional parameters like this:
 
@@ -635,7 +630,7 @@ See the [Get Sample Paths docs](./docs/readme-details/sample-paths.md).
 
 Create a `robots.txt` so search engines know where to find your sitemap.
 
-You can create it at:
+Create it at:
 
 - SvelteKit: `/static/robots.txt`
 - TanStack Start: `/public/robots.txt`
@@ -649,17 +644,15 @@ Sitemap: https://example.com/sitemap.xml
 
 ## Playwright Test
 
-It's recommended to add a Playwright test that calls your sitemap.
+It's recommended to have an e2e test, like Playwright, that calls your sitemap.
 
-For pre-rendered sitemaps, you'll receive an error _at build time_ if your data
+Why? For pre-rendered sitemaps, you'll receive an error _at build time_ if your data
 param values are misconfigured. But for non-prerendered sitemaps, your data is
 loaded when the sitemap is loaded, and consequently a functional test is more
 important to confirm you have not misconfigured data for your param values.
 
-Feel free to use or adapt this example test:
-
 <details>
-  <summary>View PlayWright example</summary>
+  <summary>PlayWright example</summary>
 
 ```js
 // /src/tests/sitemap.test.js

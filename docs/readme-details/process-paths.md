@@ -39,8 +39,7 @@ return await sitemap.response({
 });
 ```
 
-Note: If using `excludeRoutePatterns`–which matches again the _route_ pattern–would
-be sufficient for your needs, you should prefer it for performance reasons. This
+Note: If using `excludeRoutePatterns` (which matches again the _route_ pattern) is sufficient for your needs, you should prefer it for performance reasons. This
 is because a site will have fewer routes than paths, consequently route-based
 exclusions are more performant than path-based exclusions. Although, the
 difference will be inconsequential in virtually all cases, unless you have a
