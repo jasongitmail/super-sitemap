@@ -136,7 +136,8 @@ export const Route = createFileRoute('/sitemap.xml')({
   server: {
     handlers: {
       GET: async () => {
-        // Get data for parameterized routes however you need to; this is only an example.
+        // Get data for parameterized routes however you need to; this is only
+        // an example.
         let blogSlugs, blogTags;
         try {
           [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
@@ -216,7 +217,8 @@ import * as sitemap from 'super-sitemap/sveltekit';
 export const prerender = true; // optional
 
 export const GET: RequestHandler = async () => {
-  // Get data for parameterized routes however you need to; this is only an example.
+  // Get data for parameterized routes however you need to; this is only an
+  // example.
   let blogSlugs, blogTags;
   try {
     [blogSlugs, blogTags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
@@ -293,10 +295,6 @@ See the [Sitemap Index docs](./docs/readme-details/sitemap-index.md).
 When specifying values for the params of your parameterized routes,
 you can use any of the following types:
 `string[]`, `string[][]`, or `ParamValue[]`. See examples below.
-
-Note: Syntax differs between frameworks to mirror how each framework specifies required params and optional params.
-
-_Author's note: I'm still deciding if the better library DX is to use framework-specific or framework-agnostic syntax to specify required params & optional params in the keys for paramValues. So this may change before 2.0 lands._
 
 <details>
 <summary>TanStack Start example</summary>
@@ -424,11 +422,16 @@ sitemap config will be used. If you also did not define a default value, then th
 
 Hint: it's acceptable to exclude these 3 properties because modern search engines defer to their own heuristics to schedule crawls anyway, especially if you specify `lastmod` but don't update it consistently with changes to that same content.
 
-### Allowed `paramValues` keys
+### Allowed keys in `paramValues`
 
-`paramValues` keys must match Super Sitemap's framework-specific route
-compatibility keys. In most cases, that means using the same route param syntax
-your framework uses. See examples:
+Keys in `paramValues` must match Super Sitemap's expected syntax; see the table below.
+
+In most cases, this matches your frameworks route syntax.
+
+**This means syntax differs by framework adapter (TanStack Start, SvelteKit, etc) to stay close to how each framework defines its routes and to support framework-specific features (like SvelteKit's param matchers or TanStack Start's pathless layout segments).**
+
+<details>
+<summary>View keys allowed in paramValues</summary>
 
 | Route feature                         | TanStack Start key                                       | SvelteKit key                                              |
 | ------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
@@ -446,93 +449,22 @@ your framework uses. See examples:
 | Optional locale param                 | `'/{-$locale}/blog/$slug'` with `langParam`              | `'/[[lang]]/blog/[slug]'`                                  |
 | Required locale param                 | `'/$locale/docs/$slug'` with `langParam`                 | `'/[lang]/docs/[slug]'`                                    |
 
-If in doubt, enable prerendering for your sitemap and build your app; you'll see build errors if you're missing any required paramValues keys or if yours are different from what super sitemap expects.
+</details>
+
+If in doubt, enable prerendering for your sitemap and build your app; you'll see build errors if you're missing any required paramValues keys or if yours are differ from what super sitemap expects.
 
 ## Optional Params
 
-_**You only need to read this if you want to understand how super sitemap handles optional params and why.**_
+_**You only need to read this if you want to understand how super sitemap
+handles optional params and why.**_
 
-Optional params expand into route variants. Super Sitemap will include each
-path variation and will require you to either exclude those route patterns using
+Optional params expand into route variants. Super Sitemap will include each path
+variation and will require you to either exclude those route patterns using
 `excludeRoutePatterns` or provide param values for them using `paramValues`,
 within your sitemap config object.
 
-<details>
-<summary>TanStack Start example</summary>
-
-TanStack Start optional params like `/posts/{-$category}` expand the same
-way — use TanStack syntax in your `paramValues` keys and JavaScript `RegExp`
-objects in `excludeRoutePatterns`.
-
-For example, these `excludeRoutePatterns` patterns match TanStack Start route
-keys, not generated URLs:
-
-```ts
-excludeRoutePatterns: [
-  /^\/blog\/\$slug$/, // dynamic route such as `/blog/$slug`
-  /^\/posts$/, // only `/posts`, not `/posts/{-$category}`
-  /^\/posts\/\{-\$category\}$/, // only `/posts/{-$category}`
-  /^\/posts(?:$|\/)/, // `/posts` and `/posts/{-$category}`
-  /^\/docs\/\$$/, // splat route such as `/docs/$`
-  /^\/dashboard(?:$|\/)/, // `/dashboard` and nested dashboard routes
-];
-```
-
-Route groups and pathless layout segments are omitted from TanStack compatibility
-keys before matching, so exclude the resulting public route key, such as
-`/^\/dashboard(?:$|\/)/`, instead of the group folder name.
-
-</details>
-
-<details>
-<summary>SvelteKit example</summary>
-
-SvelteKit allows you to create a route with one or more optional parameters like this:
-
-```text
-src/
-  routes/
-    something/
-      [[paramA]]/
-        [[paramB]]/
-          +page.svelte
-          +page.ts
-```
-
-Your app would then respond to HTTP requests for all of the following:
-
-- `/something`
-- `/something/foo`
-- `/something/foo/bar`
-
-Consequently, Super Sitemap will include all such path variations in your
-sitemap and will require you to either exclude these using
-`excludeRoutePatterns` or provide param values for them using `paramValues`,
-within your sitemap config object.
-
-For example:
-
-- `/something` will exist in your sitemap unless excluded with a `RegExp` like
-  `/\/something$/`.
-- `/something/[[paramA]]` must be either excluded using an `excludeRoutePatterns`
-  entry like `/\/something\/\[\[paramA\]\]$/` _or_ appear within your config's
-  `paramValues` like this: `'/something/[[paramA]]': ['foo', 'foo2', 'foo3']`.
-- And `/something/[[paramA]]/[[paramB]]` must be either excluded using an
-  `excludeRoutePatterns` entry like `/\/something\/\[\[paramA\]\]\/\[\[paramB\]\]$/`
-  _or_ appear within your config's `paramValues` like this:
-  `'/something/[[paramA]]/[[paramB]]': [['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
-
-Alternatively, you can exclude ALL versions of this route by providing a single
-`RegExp` object within `excludeRoutePatterns` that matches all of them, such as
-`/\/something/`; notice this does NOT end with a `$`, thereby allowing this
-pattern to match all 3 versions of this route.
-
-If you plan to mix and match use of `excludeRoutePatterns` and `paramValues` for
-a given route that contains optional params, terminate all of your
-`excludeRoutePatterns` regular expressions for that route with `$`, to target
-only the specific desired versions of that route.
-
-</details>
+See the [Optional Params docs](./docs/readme-details/optional-params.md) to
+learn more.
 
 ## processPaths() callback
 
