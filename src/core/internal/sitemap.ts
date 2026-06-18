@@ -81,6 +81,7 @@ export function getBody({
   ...prepareOptions
 }: GetBodyOptions): string {
   validateOrigin(origin);
+  validateMaxPerPage(maxPerPage);
 
   const result = renderSitemap({ maxPerPage, origin, page, paths: preparePaths(prepareOptions) });
 
@@ -115,6 +116,7 @@ export function response({
   ...prepareOptions
 }: ResponseOptions): Response {
   validateOrigin(origin);
+  validateMaxPerPage(maxPerPage);
 
   const result = renderSitemap({ maxPerPage, origin, page, paths: preparePaths(prepareOptions) });
 
@@ -200,6 +202,15 @@ function formatRouteParamErrorMessage(error: SitemapRouteParamError): string {
 function validateOrigin(origin: string): void {
   if (!origin) {
     throw new Error('super-sitemap: `origin` property is required in sitemap config.');
+  }
+}
+
+/**
+ * Validates sitemap page size before pagination math can produce invalid page counts.
+ */
+function validateMaxPerPage(maxPerPage: number): void {
+  if (!Number.isInteger(maxPerPage) || maxPerPage < 1 || maxPerPage > DEFAULT_MAX_PER_PAGE) {
+    throw new Error('maxPerPage must be an integer between 1 and 50_000.');
   }
 }
 

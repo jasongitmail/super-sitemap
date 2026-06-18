@@ -101,6 +101,30 @@ describe('core sitemap getBody and response', () => {
     ).toThrow('super-sitemap: `origin` property is required in sitemap config.');
   });
 
+  it('requires maxPerPage to be a supported sitemap page size', () => {
+    const invalidMaxPerPageValues = [0, -1, 50_001, 1.5, Number.NaN, '2'];
+
+    for (const maxPerPage of invalidMaxPerPageValues) {
+      expect(() =>
+        getBody({
+          // @ts-expect-error - runtime validation covers JavaScript callers.
+          maxPerPage,
+          normalizedRoutes,
+          origin: 'https://example.com',
+        })
+      ).toThrow('maxPerPage must be an integer between 1 and 50_000.');
+
+      expect(() =>
+        response({
+          // @ts-expect-error - runtime validation covers JavaScript callers.
+          maxPerPage,
+          normalizedRoutes,
+          origin: 'https://example.com',
+        })
+      ).toThrow('maxPerPage must be an integer between 1 and 50_000.');
+    }
+  });
+
   it('renders a sitemap index when paths exceed one page and pages on request', async () => {
     const indexBody = getBody({
       maxPerPage: 2,
