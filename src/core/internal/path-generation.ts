@@ -19,23 +19,43 @@ type GenerateNormalizedRoutePathsOptions = {
   paramValues?: ParamValues;
 };
 
+type ParamValueCountMismatchDetails = {
+  expectedValueCount: number;
+  paramNames: string[];
+  receivedValueCount: number;
+};
+
+type ParamValueEntryShape = 'param-value' | 'string' | 'string-array';
+
+type SitemapRouteParamErrorCode =
+  | 'invalid-param-values-shape'
+  | 'missing-param-values'
+  | 'param-value-count-mismatch'
+  | 'unknown-param-values-route';
+
 /**
  * Raised when paramValues and discovered routes disagree. Carries the route's
  * compatibility key so adapters can rethrow with framework-specific guidance
  * instead of parsing error message strings.
  */
 export class SitemapRouteParamError extends Error {
-  readonly code: 'missing-param-values' | 'unknown-param-values-route';
+  readonly code: SitemapRouteParamErrorCode;
+  readonly expectedValueCount?: number;
+  readonly paramNames?: string[];
+  readonly receivedValueCount?: number;
   readonly route: string;
 
-  constructor(code: SitemapRouteParamError['code'], route: string) {
-    super(
-      code === 'missing-param-values'
-        ? `paramValues not provided for route: '${route}'.`
-        : `paramValues were provided for a route that does not exist: '${route}'.`
-    );
+  constructor(
+    code: SitemapRouteParamError['code'],
+    route: string,
+    details?: ParamValueCountMismatchDetails
+  ) {
+    super(formatRouteParamErrorMessage({ code, details, route }));
     this.code = code;
+    this.expectedValueCount = details?.expectedValueCount;
     this.name = 'SitemapRouteParamError';
+    this.paramNames = details?.paramNames;
+    this.receivedValueCount = details?.receivedValueCount;
     this.route = route;
   }
 }
@@ -48,7 +68,7 @@ export function generatePathsFromNormalizedRoutes({
   paramValues = {},
 }: GenerateNormalizedRoutePathsOptions): PathObj[] {
   validateLocaleConfig(normalizedRoutes, locales);
-  validateKnownParamValueKeys(normalizedRoutes, paramValues);
+  validateParamValueRouteKeys(normalizedRoutes, paramValues);
 
   const resolvedLocales = locales ?? { alternates: [], default: 'en' };
 
@@ -81,9 +101,15 @@ export function generatePathsFromNormalizedRoutes({
       continue;
     }
 
+    validateParamValueShape(normalizedRoute.source.compatibilityKey, paramValue);
+
     if (isParamValueArray(paramValue)) {
       for (const item of paramValue) {
-        const paramValueMap = valuesByParamName(params, item.values);
+        const paramValueMap = valuesByParamName(
+          normalizedRoute.source.compatibilityKey,
+          params,
+          item.values
+        );
         pushLocalizedPaths(
           paths,
           normalizedRoute,
@@ -102,7 +128,11 @@ export function generatePathsFromNormalizedRoutes({
 
     if (isStringTupleArray(paramValue)) {
       for (const values of paramValue) {
-        const paramValueMap = valuesByParamName(params, values);
+        const paramValueMap = valuesByParamName(
+          normalizedRoute.source.compatibilityKey,
+          params,
+          values
+        );
         pushLocalizedPaths(
           paths,
           normalizedRoute,
@@ -118,7 +148,9 @@ export function generatePathsFromNormalizedRoutes({
     }
 
     for (const value of paramValue) {
-      const paramValueMap = valuesByParamName(params, [value]);
+      const paramValueMap = valuesByParamName(normalizedRoute.source.compatibilityKey, params, [
+        value,
+      ]);
       pushLocalizedPaths(
         paths,
         normalizedRoute,
@@ -150,17 +182,33 @@ function validateLocaleConfig(
   }
 }
 
-function validateKnownParamValueKeys(
+/**
+ * Validates that every paramValues key targets a route that accepts param data.
+ */
+function validateParamValueRouteKeys(
   normalizedRoutes: NormalizedRoute[],
   paramValues: ParamValues
 ) {
-  const knownCompatibilityKeys = new Set(
-    normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+  const paramsByCompatibilityKey = new Map(
+    normalizedRoutes.map((normalizedRoute) => [
+      normalizedRoute.source.compatibilityKey,
+      getNormalizedRouteParams(normalizedRoute),
+    ])
   );
 
   for (const paramValueKey in paramValues) {
-    if (!knownCompatibilityKeys.has(paramValueKey)) {
+    const params = paramsByCompatibilityKey.get(paramValueKey);
+
+    if (!params) {
       throw new SitemapRouteParamError('unknown-param-values-route', paramValueKey);
+    }
+
+    if (!params.length) {
+      throw new SitemapRouteParamError('param-value-count-mismatch', paramValueKey, {
+        expectedValueCount: 0,
+        paramNames: [],
+        receivedValueCount: getReceivedValueCount(paramValues[paramValueKey]),
+      });
     }
   }
 }
@@ -200,15 +248,141 @@ function isStringTupleArray(paramValue: ParamValues[string] | undefined): paramV
   return Array.isArray(paramValue) && Array.isArray(paramValue[0]);
 }
 
-function valuesByParamName(params: RouteParam[], values: string[]): Map<string, string> {
+/**
+ * Validates runtime paramValues shapes from JavaScript or untyped data sources.
+ */
+function validateParamValueShape(
+  route: string,
+  paramValue: unknown
+): asserts paramValue is ParamValues[string] {
+  if (!Array.isArray(paramValue) || !paramValue.length) {
+    throw new SitemapRouteParamError('invalid-param-values-shape', route);
+  }
+
+  const firstShape = getParamValueEntryShape(paramValue[0]);
+  if (!firstShape) {
+    throw new SitemapRouteParamError('invalid-param-values-shape', route);
+  }
+
+  for (const value of paramValue) {
+    if (getParamValueEntryShape(value) !== firstShape) {
+      throw new SitemapRouteParamError('invalid-param-values-shape', route);
+    }
+  }
+}
+
+/**
+ * Classifies one paramValues entry when it has a supported runtime shape.
+ */
+function getParamValueEntryShape(value: unknown): ParamValueEntryShape | undefined {
+  if (typeof value === 'string') return 'string';
+
+  if (Array.isArray(value)) {
+    return value.every(isString) ? 'string-array' : undefined;
+  }
+
+  if (isRecord(value) && Array.isArray(value['values']) && value['values'].every(isString)) {
+    return 'param-value';
+  }
+
+  return undefined;
+}
+
+/**
+ * Checks whether a value is a string.
+ */
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+/**
+ * Checks whether a value can be inspected as a plain object shape.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Maps ordered param values to their route param names after validating counts.
+ */
+function valuesByParamName(
+  route: string,
+  params: RouteParam[],
+  values: string[]
+): Map<string, string> {
+  if (values.length !== params.length) {
+    throw new SitemapRouteParamError('param-value-count-mismatch', route, {
+      expectedValueCount: params.length,
+      paramNames: params.map(({ name }) => name),
+      receivedValueCount: values.length,
+    });
+  }
+
   const valueMap = new Map<string, string>();
 
   for (let index = 0; index < params.length; index++) {
     const param = params[index];
-    if (param) valueMap.set(param.name, values[index] ?? '');
+    const value = values[index];
+    if (param && value !== undefined) valueMap.set(param.name, value);
   }
 
   return valueMap;
+}
+
+/**
+ * Estimates how many values a provided paramValues entry supplies per path.
+ */
+function getReceivedValueCount(paramValue: ParamValues[string] | undefined): number {
+  if (!Array.isArray(paramValue) || paramValue.length === 0) return 0;
+
+  const firstValue = paramValue[0];
+  if (Array.isArray(firstValue)) return firstValue.length;
+  if (typeof firstValue === 'object') return firstValue.values.length;
+  return 1;
+}
+
+/**
+ * Formats the core route param error before adapter-level sitemap guidance is added.
+ */
+function formatRouteParamErrorMessage({
+  code,
+  details,
+  route,
+}: {
+  code: SitemapRouteParamErrorCode;
+  details?: ParamValueCountMismatchDetails;
+  route: string;
+}): string {
+  if (code === 'missing-param-values') {
+    return `paramValues not provided for route: '${route}'.`;
+  }
+
+  if (code === 'unknown-param-values-route') {
+    return `paramValues were provided for a route that does not exist: '${route}'.`;
+  }
+
+  if (code === 'invalid-param-values-shape') {
+    return `paramValues for route '${route}' must be string[], string[][], or ParamValue[].`;
+  }
+
+  if (!details || details.expectedValueCount === 0) {
+    return `Route key '${route}' expects no params. Remove this key from paramValues.`;
+  }
+
+  return `paramValues for route '${route}' must provide ${formatCount(
+    details.expectedValueCount,
+    'value'
+  )} per path: ${details.paramNames.join(', ')}. Received ${formatCount(
+    details.receivedValueCount,
+    'value'
+  )}.`;
+}
+
+/**
+ * Formats singular and plural count labels for error messages.
+ */
+function formatCount(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
 function buildPath(

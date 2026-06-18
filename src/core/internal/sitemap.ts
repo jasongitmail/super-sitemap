@@ -198,7 +198,11 @@ function formatRouteParamErrorMessage(error: SitemapRouteParamError): string {
     return `super-sitemap: paramValues not provided for route: '${error.route}'. Update excludeRoutePatterns to exclude this route or add data for this route's params to paramValues.`;
   }
 
-  return `super-sitemap: paramValues were provided for a route that does not exist: '${error.route}'. Remove this property from paramValues or update your route source.`;
+  if (error.code === 'unknown-param-values-route') {
+    return `super-sitemap: paramValues were provided for a route that does not exist: '${error.route}'. Remove this property from paramValues or update your route source.`;
+  }
+
+  return `super-sitemap: ${error.message}`;
 }
 
 function validateOrigin(origin: unknown): asserts origin is string {

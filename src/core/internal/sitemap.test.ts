@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getBody, getHeaders, preparePaths, response } from './sitemap.js';
-import type { NormalizedRoute } from './types.js';
+import type { NormalizedRoute, ParamValues } from './types.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',
@@ -63,6 +63,28 @@ describe('core sitemap preparePaths', () => {
       })
     ).toThrow(
       "super-sitemap: paramValues were provided for a route that does not exist: '/missing/[slug]'. Remove this property from paramValues or update your route source."
+    );
+  });
+
+  it('formats param value count mismatch errors with plain-language guidance', () => {
+    expect(() =>
+      preparePaths({
+        normalizedRoutes: [blogSlugNormalizedRoute],
+        paramValues: { '/blog/[slug]': [['hello-world', 'extra']] },
+      })
+    ).toThrow(
+      "super-sitemap: paramValues for route '/blog/[slug]' must provide 1 value per path: slug. Received 2 values."
+    );
+  });
+
+  it('formats unsupported param value shape errors with supported TypeScript forms', () => {
+    expect(() =>
+      preparePaths({
+        normalizedRoutes: [blogSlugNormalizedRoute],
+        paramValues: { '/blog/[slug]': [{ values: 'hello-world' }] } as unknown as ParamValues,
+      })
+    ).toThrow(
+      "super-sitemap: paramValues for route '/blog/[slug]' must be string[], string[][], or ParamValue[]."
     );
   });
 });
