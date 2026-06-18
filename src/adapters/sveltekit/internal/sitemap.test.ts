@@ -34,7 +34,9 @@ describe('SvelteKit adapter response wrapper', () => {
         // @ts-expect-error - runtime validation covers JavaScript callers.
         origin: undefined,
       })
-    ).rejects.toThrow('super-sitemap: `origin` property is required in sitemap config.');
+    ).rejects.toThrow(
+      'super-sitemap: `origin` must be an absolute URL origin, e.g. "https://example.com".'
+    );
 
     const res = await response({
       additionalPaths: ['/', '/about'],

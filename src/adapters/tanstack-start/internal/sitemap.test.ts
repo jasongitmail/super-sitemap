@@ -93,7 +93,9 @@ describe('TanStack Start adapter response wrapper', () => {
         origin: undefined,
         router: routerFromRoutes([{ fullPath: '/about' }]),
       })
-    ).rejects.toThrow('super-sitemap: `origin` property is required in sitemap config.');
+    ).rejects.toThrow(
+      'super-sitemap: `origin` must be an absolute URL origin, e.g. "https://example.com".'
+    );
 
     const res = await response({
       origin: 'https://example.com',
