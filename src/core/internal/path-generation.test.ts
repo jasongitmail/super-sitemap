@@ -242,6 +242,61 @@ describe('core normalized routes', () => {
     ]);
   });
 
+  it('deduplicates locale alternates without throwing', () => {
+    const normalizedRoutes: NormalizedRoute[] = [
+      {
+        id: 'optional-locale-about',
+        locale: { mode: 'optional', paramName: 'locale', segmentIndex: 0 },
+        segments: [
+          { kind: 'locale', name: 'locale' },
+          { kind: 'static', value: 'about' },
+        ],
+        source: source('optional-locale-about'),
+      },
+    ];
+
+    expect(
+      generatePathsFromNormalizedRoutes({
+        locales: { alternates: ['de', 'de', 'en', 'fr', 'de'], default: 'en' },
+        normalizedRoutes,
+      })
+    ).toEqual([
+      {
+        alternates: [
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
+        ],
+        changefreq: undefined,
+        lastmod: undefined,
+        path: '/about',
+        priority: undefined,
+      },
+      {
+        alternates: [
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
+        ],
+        changefreq: undefined,
+        lastmod: undefined,
+        path: '/de/about',
+        priority: undefined,
+      },
+      {
+        alternates: [
+          { hreflang: 'en', path: '/about' },
+          { hreflang: 'de', path: '/de/about' },
+          { hreflang: 'fr', path: '/fr/about' },
+        ],
+        changefreq: undefined,
+        lastmod: undefined,
+        path: '/fr/about',
+        priority: undefined,
+      },
+    ]);
+  });
+
   it('uses source metadata for core validation errors', () => {
     const normalizedRoutes: NormalizedRoute[] = [
       {

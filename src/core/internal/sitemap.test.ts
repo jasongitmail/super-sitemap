@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getBody, getHeaders, preparePaths, response } from './sitemap.js';
-import type { NormalizedRoute, ParamValues } from './types.js';
+import type { NormalizedRoute, ParamValues, PathObj } from './types.js';
 
 const source = (compatibilityKey: string) => ({
   adapter: 'unit',
@@ -49,6 +49,41 @@ describe('core sitemap preparePaths', () => {
         normalizedRoutes: [staticNormalizedRoute('/about')],
       })
     ).toThrow('super-sitemap: `lang` was renamed to `locales` in v2.');
+  });
+
+  it('requires sort to be a supported mode', () => {
+    expect(() =>
+      preparePaths({
+        normalizedRoutes: [staticNormalizedRoute('/about')],
+        sort: 'alphabetical' as unknown as false,
+      })
+    ).toThrow('super-sitemap: `sort` must be "alpha" or false.');
+  });
+
+  it('requires processPaths to be a function that returns valid path objects', () => {
+    expect(() =>
+      preparePaths({
+        normalizedRoutes: [staticNormalizedRoute('/about')],
+        processPaths: true as unknown as (paths: PathObj[]) => PathObj[],
+      })
+    ).toThrow('super-sitemap: `processPaths` must be a function.');
+
+    const invalidReturnValues = [
+      undefined,
+      Promise.resolve([]),
+      [{ path: 'about' }],
+      [{}],
+      [null],
+    ] as unknown as PathObj[][];
+
+    for (const invalidReturnValue of invalidReturnValues) {
+      expect(() =>
+        preparePaths({
+          normalizedRoutes: [staticNormalizedRoute('/about')],
+          processPaths: () => invalidReturnValue,
+        })
+      ).toThrow(/super-sitemap: `processPaths` must return|super-sitemap: `processPaths` returned/);
+    }
   });
 
   it('formats route param errors with the adapter name and remediation guidance', () => {

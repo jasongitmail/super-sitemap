@@ -70,7 +70,7 @@ export function generatePathsFromNormalizedRoutes({
   validateLocaleConfig(normalizedRoutes, locales);
   validateParamValueRouteKeys(normalizedRoutes, paramValues);
 
-  const resolvedLocales = locales ?? { alternates: [], default: 'en' };
+  const resolvedLocales = normalizeLocalesConfig(locales ?? { alternates: [], default: 'en' });
 
   const defaults = {
     changefreq: defaultChangefreq,
@@ -180,6 +180,18 @@ function validateLocaleConfig(
       'super-sitemap: `locales` property is required in sitemap config because one or more routes contain a locale param.'
     );
   }
+}
+
+/**
+ * Deduplicates locale alternates while preserving default locale semantics.
+ */
+function normalizeLocalesConfig(locales: LocalesConfig): LocalesConfig {
+  return {
+    default: locales.default,
+    alternates: [...new Set(locales.alternates)].filter(
+      (alternate) => alternate !== locales.default
+    ),
+  };
 }
 
 /**

@@ -55,6 +55,8 @@ export function preparePaths(options: PreparePathsOptions): PathObj[] {
     sort = false,
   } = options;
 
+  validateSort(sort);
+
   let paths = [
     ...generateNormalizedRoutePaths({
       defaultChangefreq,
@@ -66,8 +68,10 @@ export function preparePaths(options: PreparePathsOptions): PathObj[] {
     ...generateAdditionalPaths({ additionalPaths, defaultChangefreq, defaultPriority }),
   ];
 
-  if (processPaths) {
+  if (processPaths !== undefined) {
+    validateProcessPaths(processPaths);
     paths = processPaths(paths);
+    validateProcessedPaths(paths);
   }
 
   return sortPaths(deduplicatePaths(paths), sort);
@@ -232,6 +236,49 @@ function validateOrigin(origin: unknown): asserts origin is string {
 function validateMaxPerPage(maxPerPage: number): void {
   if (!Number.isInteger(maxPerPage) || maxPerPage < 1 || maxPerPage > DEFAULT_MAX_PER_PAGE) {
     throw new Error('maxPerPage must be an integer between 1 and 50_000.');
+  }
+}
+
+/**
+ * Validates optional path post-processing before calling user code.
+ */
+function validateProcessPaths(processPaths: unknown): asserts processPaths is NonNullable<
+  PreparePathsOptions['processPaths']
+> {
+  if (typeof processPaths !== 'function') {
+    throw new Error('super-sitemap: `processPaths` must be a function.');
+  }
+}
+
+/**
+ * Validates path objects returned by user post-processing.
+ */
+function validateProcessedPaths(paths: unknown): asserts paths is PathObj[] {
+  if (!Array.isArray(paths)) {
+    throw new Error('super-sitemap: `processPaths` must return an array of path objects.');
+  }
+
+  for (const [index, pathObj] of paths.entries()) {
+    if (
+      typeof pathObj !== 'object' ||
+      pathObj === null ||
+      !('path' in pathObj) ||
+      typeof pathObj.path !== 'string' ||
+      !pathObj.path.startsWith('/')
+    ) {
+      throw new Error(
+        `super-sitemap: \`processPaths\` returned an invalid path object at index ${index}. Each path object must include a root-relative string \`path\`, e.g. "/about".`
+      );
+    }
+  }
+}
+
+/**
+ * Validates path sorting mode from untyped JavaScript config.
+ */
+function validateSort(sort: unknown): asserts sort is PreparePathsOptions['sort'] {
+  if (sort !== false && sort !== 'alpha') {
+    throw new Error('super-sitemap: `sort` must be "alpha" or false.');
   }
 }
 
