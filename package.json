@@ -1,6 +1,6 @@
 {
   "name": "super-sitemap",
-  "version": "1.0.13-tanstack.3",
+  "version": "1.0.13-tanstack.4",
   "description": "Sitemap library for TanStack Start and SvelteKit, focused on ease of use and making it impossible to forget to add your paths.",
   "keywords": [
     "react",
