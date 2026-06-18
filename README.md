@@ -96,10 +96,10 @@ export const Route = createFileRoute('/sitemap.xml')({
 ```ts
 // /src/routes/sitemap.xml/+server.ts
 import type { RequestHandler } from '@sveltejs/kit';
-import * as sitemap from 'super-sitemap/sveltekit';
+import { response } from 'super-sitemap/sveltekit';
 
 export const GET: RequestHandler = async () => {
-  return await sitemap.response({
+  return await response({
     origin: 'https://example.com',
   });
 };
@@ -300,9 +300,9 @@ See the [Sitemap Index docs](./docs/readme-details/sitemap-index.md).
 
 ## Param Values
 
-When specifying values for the params of your parameterized routes,
-you can use any of the following types:
-`string[]`, `string[][]`, or [`ParamValue[]`](./src/core/internal/types.ts#L3-L8). See examples below.
+Routes that contain parameters need to have their values defined. You can
+provide these values as: `string[]`, `string[][]`, or
+[`ParamValue[]`](./src/core/internal/types.ts#L3-L8).
 
 <details>
 <summary>TanStack Start example</summary>
@@ -424,21 +424,19 @@ paramValues: {
 
 </details>
 
-If your data does not provide values for `lastmod`,
-`changefreq`, `priority` (i.e. ParamValue's optional properties), the default value for these defined in your
-sitemap config will be used. If you also did not define a default value, then the property will be excluded for that entry.
+### Keys for Param Values
 
-Hint: it's acceptable to exclude these 3 properties because modern search engines prefer their own heuristics to schedule crawls anyway, especially if you specify `lastmod` but don't update it consistently with changes to the associated content.
+Keys in the `paramValues` object must match Super Sitemap's expected syntax; see
+table below.
 
-### Allowed keys in `paramValues`
+**Syntax differs between framework adapters (TanStack Start, SvelteKit), a.) to
+support framework-specific features (like SvelteKit's param matchers or TanStack
+Start's pathless layout segments), and b.) to remain close to how each framework
+defines its routes.**
 
-Keys in `paramValues` must match Super Sitemap's expected syntax; see the table below.
-
-In most cases, this matches your frameworks route syntax.
-
-**This means syntax differs by framework adapter (TanStack Start, SvelteKit, etc) to stay close to how each framework defines its routes and to support framework-specific features (like SvelteKit's param matchers or TanStack Start's pathless layout segments).**
-
-If in doubt, enable prerendering for your sitemap route and build your app; you'll see build errors if you're missing any required `paramValues` keys or defined any that differ from what super sitemap expects.
+If in doubt, enable prerendering for your sitemap route and build your app;
+you'll see build errors for any keys that are missing or don't match what Super
+Sitemap expects, so you can correct them.
 
 <details>
 <summary>View keys allowed in paramValues</summary>
