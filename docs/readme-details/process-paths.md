@@ -2,72 +2,86 @@
 
 _**The `processPaths()` callback is powerful, but rarely needed.**_
 
-It allows you to arbitrarily process the path objects for your site before they become XML, with the
-only requirement that your callback function must return the expected `PathObj[]`
-shape.
+Use `processPaths()` when you need to transform the final sitemap path objects
+before XML is rendered. It is an escape hatch for path-level changes that cannot
+be expressed cleanly with `excludeRoutePatterns`, `additionalPaths`,
+`paramValues`, or default sitemap metadata.
 
-This can be useful to do something bespoke that would not otherwise be possible. For example:
+Your callback receives `PathObj[]` and must return `PathObj[]`.
 
-1. Excluding a specific path, when `excludeRoutePatterns` based on the _route
-   pattern_ would be too broad. (For example, you might want to exclude a path
-   when you have not yet translated its content into one or more of your site’s
-   supported languages; e.g. to exclude only `/zh/about`, but retain all others
-   like `/about`, `/es/about`, etc.)
-2. Adding a trailing slash to URLs (not a recommended style, but possible).
-3. Appending paths from an external sitemap, like from a hosted headless blog
-   backend. However, you can also accomplish this by providing these within the
-   `additionalPaths` array in your super sitemap config, which is a more concise approach.
+```ts
+processPaths: (paths: sitemap.PathObj[]) => {
+  return paths;
+};
+```
 
-`processPaths()` runs after all paths have been generated for your site, but prior to de-duplication
-of paths based on unique path names, sorting (if enabled by your config), and creation of XML.
+## When It Runs
 
-Note that `processPaths()` is intentionally NOT async. This design decision is
-to encourage a consistent pattern within the sitemap request handler where all HTTP
-requests, including any to fetch param values from a database, [occur
-together using `Promise.all()`](<https://github.com/jasongitmail/super-sitemap/blob/main/src/routes/(public)/%5B%5Blang%5D%5D/sitemap%5B%5Bpage%5D%5D.xml/%2Bserver.ts#L14-L20>), for best performance and consistent code pattern
-among super sitemap users for best DX.
+The path pipeline is:
 
-## Example code - to remove specific paths
+1. Generate route paths from your framework routes and `paramValues`.
+2. Append `additionalPaths`.
+3. Run `processPaths()`.
+4. Deduplicate paths.
+5. Sort paths, if `sort: 'alpha'` is enabled.
+6. Render XML.
+
+Because deduplication happens after `processPaths()`, a callback can append or
+replace paths and still rely on Super Sitemap to remove duplicates.
+
+## Prefer Built-In Options First
+
+Use built-in config when it fits:
+
+- Use `excludeRoutePatterns` to exclude whole route patterns.
+- Use `additionalPaths` to append known extra paths.
+- Use `paramValues` objects to set per-path `lastmod`, `changefreq`, or
+  `priority`.
+
+Use `processPaths()` for path-specific logic after paths have been expanded,
+such as excluding only `/zh/about` while keeping `/about`, `/de/about`, and
+other locale variants.
+
+## Sync by Design
+
+`processPaths()` is intentionally synchronous. Fetch data before calling
+`sitemap.response()`, ideally alongside your other sitemap data with
+`Promise.all()`, then use `processPaths()` for the final in-memory transform.
+
+## Remove Specific Paths
 
 ```ts
 return await sitemap.response({
   // ...
   processPaths: (paths: sitemap.PathObj[]) => {
-    const pathsToExclude = ['/zh/about', '/de/team'];
-    return paths.filter(({ path }) => !pathsToExclude.includes(path));
+    const pathsToExclude = new Set(['/zh/about', '/de/team']);
+    return paths.filter(({ path }) => !pathsToExclude.has(path));
   },
 });
 ```
 
-Note: If using `excludeRoutePatterns` (which matches again the _route_ pattern) is sufficient for your needs, you should prefer it for performance reasons. This
-is because a site will have fewer routes than paths, consequently route-based
-exclusions are more performant than path-based exclusions. Although, the
-difference will be inconsequential in virtually all cases, unless you have a
-very large number of excluded paths and many millions of generated paths to
-search within.
+Prefer `excludeRoutePatterns` when you can exclude by route key instead of final
+path. Route-based exclusions run before path generation and are easier to reason
+about when they match your intent.
 
-### Example code - to add trailing slashes
+## Transform Paths
+
+This example adds trailing slashes to generated paths and locale alternates.
+Trailing slashes are not recommended, but this shows how to keep alternates in
+sync when transforming paths.
 
 ```ts
 return await sitemap.response({
   // ...
   processPaths: (paths: sitemap.PathObj[]) => {
-    // Add trailing slashes to all paths. (This is just an example and not
-    // actually recommended. Using SvelteKit's default of no trailing slash is
-    // preferable because it provides consistency among all possible paths,
-    // even files like `/foo.pdf`.)
-    return paths.map(({ path, alternates, ...rest }) => {
-      const rtrn = { path: path === '/' ? path : `${path}/`, ...rest };
-
-      if (alternates) {
-        rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
-          ...alternate,
-          path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
-        }));
-      }
-
-      return rtrn;
-    });
+    return paths.map(({ alternates, path, ...rest }) => ({
+      ...rest,
+      path: path === '/' ? path : `${path}/`,
+      alternates: alternates?.map((alternate) => ({
+        ...alternate,
+        path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
+      })),
+    }));
   },
 });
 ```
