@@ -113,6 +113,33 @@ describe('TanStack Start adapter route parser', () => {
     ).toEqual([{ name: 'language', rest: false, segmentIndex: 0 }]);
   });
 
+  it('expands consecutive optional params with TanStack prefix-only semantics', () => {
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
+      router: routerFromRoutes([{ fullPath: '/something/{-$paramA}/{-$paramB}' }]),
+    });
+
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/something', '/something/{-$paramA}', '/something/{-$paramA}/{-$paramB}']);
+    expect(normalizedRoutes.map((normalizedRoute) => normalizedRoute.params)).toEqual([
+      [],
+      [{ name: 'paramA', rest: false, segmentIndex: 1 }],
+      [
+        { name: 'paramA', rest: false, segmentIndex: 1 },
+        { name: 'paramB', rest: false, segmentIndex: 2 },
+      ],
+    ]);
+    expect(
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
+        paramValues: {
+          '/something/{-$paramA}': ['a'],
+          '/something/{-$paramA}/{-$paramB}': [['a', 'b']],
+        },
+      }).map(({ path }) => path)
+    ).toEqual(['/something', '/something/a', '/something/a/b']);
+  });
+
   it('omits pathless and group-like segments and respects canonical fullPath over path', () => {
     const [normalizedRoute] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([

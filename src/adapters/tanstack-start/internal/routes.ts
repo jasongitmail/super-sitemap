@@ -39,7 +39,7 @@ type ParsedSegment =
       value: string;
     };
 
-type SegmentVariant = {
+type RouteSegmentVariant = {
   compatibilityKeySegment?: string;
   localeMode?: RouteLocaleSlot['mode'];
   segment?: RouteSegment;
@@ -174,7 +174,7 @@ function createNormalizedRoute({
 }: {
   compatibilityKey: string;
   routeRecord: TanStackStartRouteRecord;
-  routeSegmentVariants: SegmentVariant[];
+  routeSegmentVariants: RouteSegmentVariant[];
 }): TanStackStartNormalizedRoute {
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
@@ -246,31 +246,68 @@ function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
   );
 }
 
-function expandSegmentVariants(segments: ParsedSegment[]): SegmentVariant[][] {
-  let variants: SegmentVariant[][] = [[]];
+function expandSegmentVariants(segments: ParsedSegment[]): RouteSegmentVariant[][] {
+  let routeVariants: RouteSegmentVariant[][] = [[]];
+  let pendingOptionalPathParams: RouteSegmentVariant[] = [];
 
   for (const segment of segments) {
-    const additions = getSegmentVariants(segment);
-    variants = variants.flatMap((variant) =>
-      additions.map((addition) => (addition ? [...variant, addition] : variant))
-    );
+    if (segment.kind === 'omit') {
+      continue;
+    }
+
+    if (isOptionalPathParam(segment)) {
+      pendingOptionalPathParams.push(toRouteSegmentVariant(segment));
+      continue;
+    }
+
+    routeVariants = addOptionalPathParamVariants(routeVariants, pendingOptionalPathParams);
+    pendingOptionalPathParams = [];
+
+    routeVariants = routeVariants.map((variant) => [...variant, toRouteSegmentVariant(segment)]);
   }
 
-  return variants.length ? variants : [[]];
+  return addOptionalPathParamVariants(routeVariants, pendingOptionalPathParams);
 }
 
-function getSegmentVariants(segment: ParsedSegment): Array<SegmentVariant | undefined> {
-  if (segment.kind === 'omit') {
-    return [undefined];
+/**
+ * Adds TanStack's valid route variants for consecutive optional path params.
+ */
+function addOptionalPathParamVariants(
+  routeVariants: RouteSegmentVariant[][],
+  optionalPathParams: RouteSegmentVariant[]
+): RouteSegmentVariant[][] {
+  if (!optionalPathParams.length) {
+    return routeVariants;
   }
 
+  return routeVariants.flatMap((variant) =>
+    Array.from({ length: optionalPathParams.length + 1 }, (_, prefixLength) => [
+      ...variant,
+      ...optionalPathParams.slice(0, prefixLength),
+    ])
+  );
+}
+
+/**
+ * Detects optional route params that consume ordered URL path segments.
+ */
+function isOptionalPathParam(
+  segment: ParsedSegment
+): segment is Extract<ParsedSegment, { kind: 'optional-param' }> {
+  return segment.kind === 'optional-param' && segment.name !== 'locale';
+}
+
+/**
+ * Converts an emitted TanStack segment into a normalized route segment variant.
+ */
+function toRouteSegmentVariant(
+  segment: Exclude<ParsedSegment, { kind: 'omit' }>
+): RouteSegmentVariant {
   if (segment.kind === 'static') {
-    return [
-      {
-        compatibilityKeySegment: segment.value,
-        segment: { kind: 'static', value: segment.value },
-      },
-    ];
+    return {
+      compatibilityKeySegment: segment.value,
+      segment: { kind: 'static', value: segment.value },
+    };
   }
 
   const isRestParam = segment.kind === 'param' && segment.rest;
@@ -279,37 +316,29 @@ function getSegmentVariants(segment: ParsedSegment): Array<SegmentVariant | unde
     segment.kind === 'optional-param' ? `{-$${segment.name}}` : compatibilityKeySegment;
 
   if (segment.name === 'locale') {
-    return [
-      {
-        compatibilityKeySegment: optionalCompatibilityKeySegment,
-        localeMode: segment.kind === 'optional-param' ? 'optional' : 'required',
-        segment: {
-          kind: 'locale',
-          name: segment.name,
-        },
+    return {
+      compatibilityKeySegment: optionalCompatibilityKeySegment,
+      localeMode: segment.kind === 'optional-param' ? 'optional' : 'required',
+      segment: {
+        kind: 'locale',
+        name: segment.name,
       },
-    ];
+    };
   }
 
-  const paramVariant = {
+  return {
     compatibilityKeySegment: optionalCompatibilityKeySegment,
     segment: {
       kind: 'param',
       name: segment.name,
       rest: segment.kind === 'param' ? segment.rest : false,
     },
-  } satisfies SegmentVariant;
-
-  if (segment.kind === 'optional-param') {
-    return [undefined, paramVariant];
-  }
-
-  return [paramVariant];
+  } satisfies RouteSegmentVariant;
 }
 
 function hasRouteSegment(
-  variant: SegmentVariant
-): variant is SegmentVariant & { segment: RouteSegment } {
+  variant: RouteSegmentVariant
+): variant is RouteSegmentVariant & { segment: RouteSegment } {
   return variant.segment !== undefined;
 }
 
