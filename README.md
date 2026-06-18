@@ -718,9 +718,8 @@ the appropriate route.
   - TanStack Start: use `{-$locale}`.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
   - E.g. Use `/^\/dashboard/`, not `"^/dashboard"`.
-- **`excludeRoutePatterns` now matches against route keys, not route groups.**
-  - Match valid `paramValues` keys, such as `/dashboard`; route groups like
-    `(authenticated)` cannot be matched against.
+- **`excludeRoutePatterns` now matches against valid `paramValues` keys.**
+  - route groups like `(authenticated)` cannot be matched against.
 - **`sampledUrls()` and `sampledPaths()` were removed.**
   - Use [`getSamplePaths()`](#get-sample-paths) instead.
 
