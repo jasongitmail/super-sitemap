@@ -118,6 +118,17 @@ describe('SvelteKit routes', () => {
     ).toEqual(['/', '/break', '/break-dynamic', '/break-group', '/content', '/terms', '/visible']);
   });
 
+  it('throws a helpful error when route exclusions use strings', () => {
+    expect(() =>
+      createSvelteKitNormalizedRoutes({
+        excludeRoutePatterns: ['/dashboard'] as unknown as RegExp[],
+        routeFiles: ['/src/routes/dashboard/+page.svelte'],
+      })
+    ).toThrow(
+      'super-sitemap: `excludeRoutePatterns[0]` must be a RegExp, not a string. Use a regex literal like /dashboard/ instead of "/dashboard".'
+    );
+  });
+
   it('resets global regex state before route exclusion matching', () => {
     const dashboardPattern = /\/dashboard/g;
     const routeFiles = [

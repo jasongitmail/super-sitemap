@@ -1,6 +1,9 @@
 import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
 import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
-import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
+import {
+  routeMatchesPattern,
+  validateExcludeRoutePatterns,
+} from '../../../core/internal/route-exclusion.js';
 import type {
   NormalizedRoute,
   RouteLocaleSlot,
@@ -53,6 +56,7 @@ export function createTanStackStartNormalizedRoutes({
   excludeRoutePatterns = [],
   ...routeInput
 }: CreateTanStackStartNormalizedRoutesOptions): NormalizedRoute[] {
+  validateExcludeRoutePatterns(excludeRoutePatterns);
   const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
   const normalizedRoutes: NormalizedRoute[] = [];
 

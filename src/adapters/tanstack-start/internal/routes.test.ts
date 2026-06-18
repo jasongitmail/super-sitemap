@@ -400,4 +400,15 @@ describe('TanStack Start adapter route sources', () => {
       ['/about', '/about/company', '/about/team', '/blog', '/dashboard']
     );
   });
+
+  it('throws a helpful error when route exclusions use strings', () => {
+    expect(() =>
+      createTanStackStartNormalizedRoutes({
+        excludeRoutePatterns: ['/dashboard'] as unknown as RegExp[],
+        router,
+      })
+    ).toThrow(
+      'super-sitemap: `excludeRoutePatterns[0]` must be a RegExp, not a string. Use a regex literal like /dashboard/ instead of "/dashboard".'
+    );
+  });
 });
