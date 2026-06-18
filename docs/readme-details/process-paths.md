@@ -50,6 +50,8 @@ other locale variants.
 
 ## Remove Specific Paths
 
+Example:
+
 ```ts
 return await sitemap.response({
   // ...
@@ -61,14 +63,16 @@ return await sitemap.response({
 ```
 
 Prefer `excludeRoutePatterns` when you can exclude by route key instead of final
-path. Route-based exclusions run before path generation and are easier to reason
-about when they match your intent.
+path. Route-based exclusions run before path generation, which makes them more
+performant and preferable when route-level exclusion is sufficiently precise.
 
 ## Transform Paths
 
 This example adds trailing slashes to generated paths and locale alternates.
 Trailing slashes are not recommended, but this shows how to keep alternates in
 sync when transforming paths.
+
+Example:
 
 ```ts
 return await sitemap.response({
