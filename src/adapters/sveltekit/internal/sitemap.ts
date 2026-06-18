@@ -3,9 +3,9 @@ import {
   getFrameworkAdapterResponse,
   prepareFrameworkAdapterPaths,
 } from '../../../core/internal/framework-adapter.js';
-import type { PathObj, SitemapConfig } from '../../../core/internal/types.js';
+import type { PathObj } from '../../../core/internal/types.js';
 import { createSvelteKitNormalizedRoutes } from './routes.js';
-import type { InternalSvelteKitSitemapConfig } from './types.js';
+import type { InternalSvelteKitSitemapConfig, SitemapConfig } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
 
