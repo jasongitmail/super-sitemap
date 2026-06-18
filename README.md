@@ -23,6 +23,7 @@
   - [The "everything" example](#the-everything-example)
   - [Sitemap Index](#sitemap-index)
   - [Param Values](#param-values)
+  - [Keys for Param Values](#keys-for-param-values)
   - [Optional Params](#optional-params)
   - [`processPaths()` callback](#processpaths-callback)
   - [i18n](#i18n)
@@ -31,7 +32,7 @@
 - [Playwright test](#playwright-test)
 - [Tip: Querying your database to get param values](#tip-querying-your-database-to-get-param-values)
 - [Example sitemap output](#example-sitemap-output)
-- [Migrating from v1 to v2](#migrating-from-v1)
+- [Migrating from v1 to v2](#migrating-from-v1-to-v2)
 - [Changelog](#changelog)
 
 ## Features
@@ -40,7 +41,7 @@
 - 🪄 Automatically gathers routes + data for route parameters provided by you.
 - 👻 Exclude routes via `excludeRoutePatterns` (e.g. `/^\/dashboard/`, paginated routes, etc)
 - 🧠 Easy maintenance. Accidental omission of data for a parameterized route
-  throws an error until either, a.) the route excluded via
+  throws an error until either, a.) the route is excluded via
   `excludeRoutePatterns`, or b.) data is provided for its param value(s).
 - 🚀 Defaults to 1h CDN cache, no browser cache.
 - 💆 Set custom headers to override default headers: `sitemap.response({ headers: { 'cache-control': 'max-age=0, s-maxage=60' } })`.
@@ -154,7 +155,7 @@ export const Route = createFileRoute('/sitemap.xml')({
           },
           excludeRoutePatterns: [
             /^\/dashboard/, // i.e. routes starting with `/dashboard`
-            /\{\-\$page\}/, // i.e. routes containing `{-$page}`–e.g. `/blog/2`
+            /\{\-\$page\}/, // i.e. route keys containing `{-$page}`–e.g. `/blog/{-$page}`
             /^\/admin(?:$|\/)/, // i.e. routes within an admin section
           ],
           paramValues: {
@@ -238,7 +239,7 @@ export const GET: RequestHandler = async () => {
     },
     excludeRoutePatterns: [
       /^\/dashboard/, // i.e. routes starting with `/dashboard`
-      /\[page=integer\]/, // i.e. routes containing `[page=integer]`–e.g. `/blog/2`
+      /\[page=integer\]/, // i.e. route keys containing `[page=integer]`–e.g. `/blog/[page=integer]`
       /\(authenticated\)/, // i.e. routes within a group
     ],
     paramValues: {
@@ -302,7 +303,7 @@ See the [Sitemap Index docs](./docs/readme-details/sitemap-index.md).
 
 Routes that contain parameters need to have their values defined. You can
 provide these values as: `string[]`, `string[][]`, or
-[`ParamValue[]`](./src/core/internal/types.ts#L3-L8).
+[`ParamValue[]`](./src/core/internal/types.ts).
 
 <details>
 <summary>TanStack Start example</summary>
@@ -452,13 +453,13 @@ support framework-specific features (like SvelteKit's param matchers or TanStack
 Start's pathless layout segments), and b.) to remain close to how each framework
 defines its routes.
 
-If in doubt, enable prerendering for your sitemap route and build your app;
-you'll see build errors for any keys that are missing or don't match what Super
-Sitemap expects, so you can correct them.
+If in doubt, call your sitemap route in a test. For prerendered sitemaps, also
+build your app. You'll see errors for any keys that are missing or don't match
+what Super Sitemap expects, so you can correct them.
 
 ## Optional Params
 
-_**You only need to read this if you want to understand how super sitemap
+_**You only need to read this if you want to understand how Super Sitemap
 handles optional params and why.**_
 
 Optional params expand into route variants. Super Sitemap will include each path
@@ -517,7 +518,7 @@ misconfigurations fail during the build. But for _non-prerendered_ sitemaps,
 catch configuration mistakes before deployment.
 
 <details>
-  <summary>PlayWright example</summary>
+  <summary>Playwright example</summary>
 
 ```js
 // /src/tests/sitemap.test.js
@@ -562,7 +563,7 @@ Examples of how to query an SQL database to obtain data to provide as
 -- Route: /blog/[slug]
 SELECT slug FROM blog_posts WHERE status = 'published';
 
--- Route: /blog/category/[category]
+-- Route: /blog/tag/[tag]
 SELECT DISTINCT LOWER(category) FROM blog_posts WHERE status = 'published';
 
 -- Route: /campsites/[country]/[state]
@@ -573,7 +574,7 @@ Using `DISTINCT` prevents duplicates in your result set. Use this when your
 table could contain multiple rows with the same params, like in the 2nd and 3rd
 examples.
 
-Convert the result into a [supported param value type](#param-values), we'll use 2D array here:
+Convert the result into a [supported param value type](#param-values). This example uses a 2D array:
 
 ```js
 const arrayOfArrays = resultFromDB.map((row) => Object.values(row));
@@ -594,92 +595,92 @@ the appropriate route.
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
   >
     <url>
-        <loc>https://example/</loc>
+        <loc>https://example.com/</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/about</loc>
+        <loc>https://example.com/about</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog</loc>
+        <loc>https://example.com/blog</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/login</loc>
+        <loc>https://example.com/login</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/pricing</loc>
+        <loc>https://example.com/pricing</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/privacy</loc>
+        <loc>https://example.com/privacy</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/signup</loc>
+        <loc>https://example.com/signup</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/support</loc>
+        <loc>https://example.com/support</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/terms</loc>
+        <loc>https://example.com/terms</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/hello-world</loc>
+        <loc>https://example.com/blog/hello-world</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/another-post</loc>
+        <loc>https://example.com/blog/another-post</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/tag/red</loc>
+        <loc>https://example.com/blog/tag/red</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/tag/green</loc>
+        <loc>https://example.com/blog/tag/green</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/blog/tag/blue</loc>
+        <loc>https://example.com/blog/tag/blue</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/campsites/usa/new-york</loc>
+        <loc>https://example.com/campsites/usa/new-york</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/campsites/usa/california</loc>
+        <loc>https://example.com/campsites/usa/california</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/campsites/canada/toronto</loc>
+        <loc>https://example.com/campsites/canada/toronto</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://example/foo.pdf</loc>
+        <loc>https://example.com/foo.pdf</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
     </url>
@@ -702,17 +703,17 @@ the appropriate route.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
   - E.g. Use `/^\/dashboard/`, not `"^/dashboard"`.
 - **`sampledUrls()` and `sampledPaths()` were removed.**
-  - Use [`getSamplePaths()`](#sample-paths) instead.
+  - Use [`getSamplePaths()`](#get-sample-paths) instead.
 
 ## Changelog
 
 - `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`; TanStack Start now infers `{-$locale}` vs `$locale` directly from route syntax. `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
-- `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValueObj[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
+- `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValue[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
 - `0.14.20` - Adds [processPaths() callback](#processpaths-callback).
-- `0.14.19` - Support `.md` and `.svx` route extensions for msdvex users.
+- `0.14.19` - Support `.md` and `.svx` route extensions for mdsvex users.
 - `0.14.17` - Support for param matchers (e.g. `[[lang=lang]]`) &
   required lang params (e.g. `[lang]`). Thanks @JadedBlueEyes & @epoxide!
 - `0.14.13` - Support route files named to allow [breaking out of a layout](https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-breaking-out-of-layouts).
@@ -733,9 +734,7 @@ the appropriate route.
 ```bash
 git clone https://github.com/jasongitmail/super-sitemap.git
 bun install
-bun run test      # unit tests for src/core and src/adapters
-bun run check     # type checking
-bun run lint
+bun run ready     # lint, format, typecheck, and tests
 ```
 
 Runnable example apps live in `examples/sveltekit` and `examples/tanstack-start`.
@@ -767,4 +766,4 @@ npm run npm:publish:tanstack
 ## Credits
 
 - Built by [x.com/@zkjason\_](https://twitter.com/zkjason_)
-- Made possible by [SvelteKit](https://kit.svelte.dev/) & [Svelte](https://svelte.dev/).
+- Made possible by [TanStack Start](https://tanstack.com/start) and [SvelteKit](https://kit.svelte.dev/).

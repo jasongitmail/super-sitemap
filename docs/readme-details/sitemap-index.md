@@ -40,10 +40,10 @@ export const Route = createFileRoute('/sitemap{-$page}.xml')({
 ```ts
 // /src/routes/sitemap[[page]].xml/+server.ts
 import type { RequestHandler } from '@sveltejs/kit';
-import * as sitemap from 'super-sitemap/sveltekit';
+import { response } from 'super-sitemap/sveltekit';
 
 export const GET: RequestHandler = async ({ params }) => {
-  return await sitemap.response({
+  return await response({
     origin: 'https://example.com',
     page: params.page,
     // maxPerPage: 45_000 // optional; default 50_000

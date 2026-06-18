@@ -75,11 +75,11 @@ export async function getSitemapConfig(): Promise<SitemapConfig> {
 
 ```ts
 // /src/routes/sitemap.xml/+server.ts
-import * as sitemap from 'super-sitemap/sveltekit';
+import { response } from 'super-sitemap/sveltekit';
 import { getSitemapConfig } from '$lib/sitemap-config';
 
 export async function GET(): Promise<Response> {
-  return sitemap.response(await getSitemapConfig());
+  return response(await getSitemapConfig());
 }
 ```
 
