@@ -1,9 +1,7 @@
+import { orderNormalizedRoutes } from '../../../core/internal/route-ordering.js';
 import * as core from '../../../core/internal/sitemap.js';
 import type { NormalizedRoute, PathObj, SitemapConfig } from '../../../core/internal/types.js';
-import {
-  createSvelteKitNormalizedRoutes,
-  orderSvelteKitNormalizedRoutesForCompatibility,
-} from './routes.js';
+import { createSvelteKitNormalizedRoutes } from './routes.js';
 import type { InternalSvelteKitSitemapConfig } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
@@ -32,8 +30,7 @@ export function prepareSitemapPaths(
 }
 
 /**
- * Creates normalized routes from SvelteKit route files, ordered to
- * preserve the adapter's path output order.
+ * Creates normalized routes from SvelteKit route files, ordered before path generation.
  */
 function createNormalizedRoutes({
   excludeRoutePatterns,
@@ -44,7 +41,7 @@ function createNormalizedRoutes({
   InternalSvelteKitSitemapConfig,
   'excludeRoutePatterns' | 'locales' | 'paramValues' | 'routeFiles'
 >): NormalizedRoute[] {
-  return orderSvelteKitNormalizedRoutesForCompatibility({
+  return orderNormalizedRoutes({
     normalizedRoutes: createSvelteKitNormalizedRoutes({
       excludeRoutePatterns,
       locales,

@@ -4,7 +4,6 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import type { NormalizedRoute } from '../../../core/internal/types.js';
 import {
   discoverSvelteKitPageRouteFilesFromDirectory,
   listFilePathsRecursively,
@@ -15,15 +14,9 @@ import {
   expandSvelteKitOptionalRoutes,
   findSvelteKitLocaleToken,
   normalizeSvelteKitRouteFile,
-  orderSvelteKitNormalizedRoutesForCompatibility,
   parseSvelteKitNormalizedRoute,
   removeSvelteKitRouteGroups,
 } from './routes.js';
-
-const source = (compatibilityKey: string) => ({
-  adapter: 'sveltekit',
-  compatibilityKey,
-});
 
 describe('SvelteKit routes', () => {
   // Real import.meta.glob discovery is integration-tested in examples/sveltekit,
@@ -269,44 +262,5 @@ describe('SvelteKit routes', () => {
     expect(normalizedRoutes[0]?.segments).not.toContainEqual(
       expect.objectContaining({ value: expect.stringMatching(/\(|\)|\+page|\.svelte|\[/) })
     );
-  });
-
-  it('orders dynamic normalizedRoutes by paramValues while keeping static normalizedRoutes first', () => {
-    const paramValues = Object.fromEntries([
-      ['/tag/[tag]', ['red']],
-      ['/blog/[slug]', ['hello-world']],
-    ]);
-    const normalizedRoutes: NormalizedRoute[] = [
-      {
-        id: '/blog/[slug]',
-        params: [{ name: 'slug', segmentIndex: 1 }],
-        segments: [
-          { kind: 'static', value: 'blog' },
-          { kind: 'param', name: 'slug' },
-        ],
-        source: source('/blog/[slug]'),
-      },
-      {
-        id: '/about',
-        segments: [{ kind: 'static', value: 'about' }],
-        source: source('/about'),
-      },
-      {
-        id: '/tag/[tag]',
-        params: [{ name: 'tag', segmentIndex: 1 }],
-        segments: [
-          { kind: 'static', value: 'tag' },
-          { kind: 'param', name: 'tag' },
-        ],
-        source: source('/tag/[tag]'),
-      },
-    ];
-
-    expect(
-      orderSvelteKitNormalizedRoutesForCompatibility({
-        normalizedRoutes,
-        paramValues,
-      }).map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
-    ).toEqual(['/about', '/tag/[tag]', '/blog/[slug]']);
   });
 });

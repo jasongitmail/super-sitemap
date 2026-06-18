@@ -78,7 +78,7 @@ describe('TanStack Start adapter sample paths', () => {
     const sitemapConfig = {
       origin: 'https://example.com',
       processPaths: (paths: PathObj[]) => [...paths].reverse(),
-      router: routerFromRoutes([{ fullPath: '/zeta' }, { fullPath: '/alpha' }]),
+      router: routerFromRoutes([{ fullPath: '/alpha' }, { fullPath: '/zeta' }]),
     };
 
     expect(getSamplePaths({ sitemapConfig })).toEqual(['/zeta', '/alpha']);

@@ -70,9 +70,7 @@ export function createTanStackStartNormalizedRoutes({
     }
   }
 
-  return [...normalizedRoutesByCompatibilityKey.values()].sort((a, b) =>
-    a.source.compatibilityKey.localeCompare(b.source.compatibilityKey)
-  );
+  return [...normalizedRoutesByCompatibilityKey.values()];
 }
 
 function getTanStackStartRouteRecordsFromRoutesByPath(
@@ -90,8 +88,7 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
 
   return Object.entries(routesByPath)
     .map(([routesByPathKey, route]) => createTanStackStartRouteRecord(routesByPathKey, route))
-    .filter(isEmittableRouteRecord)
-    .sort((a, b) => getCompatibilityPath(a).localeCompare(getCompatibilityPath(b)));
+    .filter(isEmittableRouteRecord);
 }
 
 /**

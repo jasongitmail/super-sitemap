@@ -48,18 +48,21 @@ describe('TanStack Start adapter sitemap paths', () => {
   it('preserves deterministic default ordering without alpha sorting', () => {
     const paths = prepareSitemapPaths({
       paramValues: {
+        '/tag/$tag': ['red'],
         '/blog/$slug': ['hello-world', 'another-post'],
       },
       router: routerFromRoutes([
         { fullPath: '/blog/$slug' },
-        { fullPath: '/about' },
+        { fullPath: '/tag/$tag' },
         { fullPath: '/' },
+        { fullPath: '/about' },
       ]),
     });
 
     expect(paths.map(({ path }) => path)).toEqual([
       '/',
       '/about',
+      '/tag/red',
       '/blog/hello-world',
       '/blog/another-post',
     ]);
@@ -258,8 +261,8 @@ describe('TanStack Start adapter response wrapper', () => {
       },
       router: routerFromRoutes([
         { fullPath: '/blog/$slug' },
-        { fullPath: '/about' },
         { fullPath: '/' },
+        { fullPath: '/about' },
       ]),
       sort: false,
     });

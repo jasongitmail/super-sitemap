@@ -2,7 +2,6 @@ import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type {
   LocalesConfig,
   NormalizedRoute,
-  ParamValues,
   RouteLocaleSlot,
   RouteParam,
   RouteSegment,
@@ -224,72 +223,6 @@ export function parseSvelteKitNormalizedRoute({
 }
 
 /**
- * Orders SvelteKit normalized routes to preserve the SvelteKit adapter's path output order.
- */
-export function orderSvelteKitNormalizedRoutesForCompatibility({
-  normalizedRoutes,
-  paramValues = {},
-}: {
-  normalizedRoutes: NormalizedRoute[];
-  paramValues?: ParamValues;
-}): NormalizedRoute[] {
-  const normalizedRoutesByCompatibilityKey = new Map(
-    normalizedRoutes.map((normalizedRoute) => [
-      normalizedRoute.source.compatibilityKey,
-      normalizedRoute,
-    ])
-  );
-  const dynamicRoutesInParamValueOrderWithoutLocale: NormalizedRoute[] = [];
-  const dynamicRoutesInParamValueOrderWithLocale: NormalizedRoute[] = [];
-  const usedDynamicRouteKeys = new Set<string>();
-
-  for (const paramValueKey in paramValues) {
-    const normalizedRoute = normalizedRoutesByCompatibilityKey.get(paramValueKey);
-    if (normalizedRoute && hasNonLocaleParams(normalizedRoute)) {
-      if (normalizedRoute.locale) {
-        dynamicRoutesInParamValueOrderWithLocale.push(normalizedRoute);
-      } else {
-        dynamicRoutesInParamValueOrderWithoutLocale.push(normalizedRoute);
-      }
-      usedDynamicRouteKeys.add(paramValueKey);
-    }
-  }
-
-  const staticRoutesWithoutLocale: NormalizedRoute[] = [];
-  const staticRoutesWithLocale: NormalizedRoute[] = [];
-  const remainingDynamicRoutesWithoutLocale: NormalizedRoute[] = [];
-  const remainingDynamicRoutesWithLocale: NormalizedRoute[] = [];
-
-  for (const normalizedRoute of normalizedRoutes) {
-    if (!hasNonLocaleParams(normalizedRoute)) {
-      if (normalizedRoute.locale) {
-        staticRoutesWithLocale.push(normalizedRoute);
-      } else {
-        staticRoutesWithoutLocale.push(normalizedRoute);
-      }
-      continue;
-    }
-
-    if (!usedDynamicRouteKeys.has(normalizedRoute.source.compatibilityKey)) {
-      if (normalizedRoute.locale) {
-        remainingDynamicRoutesWithLocale.push(normalizedRoute);
-      } else {
-        remainingDynamicRoutesWithoutLocale.push(normalizedRoute);
-      }
-    }
-  }
-
-  return [
-    ...staticRoutesWithoutLocale,
-    ...dynamicRoutesInParamValueOrderWithoutLocale,
-    ...remainingDynamicRoutesWithoutLocale,
-    ...staticRoutesWithLocale,
-    ...dynamicRoutesInParamValueOrderWithLocale,
-    ...remainingDynamicRoutesWithLocale,
-  ];
-}
-
-/**
  * Requires explicit locale config when SvelteKit routes contain a locale token.
  */
 export function validateSvelteKitLocaleConfig(routeFiles: string[], locales: LocalesConfig): void {
@@ -331,11 +264,4 @@ function parseSvelteKitParamSegment(segment: string): ParsedSvelteKitParamSegmen
     optional: match[1] === '[',
     rest: match[2] === '...',
   };
-}
-
-/**
- * Checks whether a normalized route has params other than the locale slot.
- */
-function hasNonLocaleParams(normalizedRoute: NormalizedRoute): boolean {
-  return normalizedRoute.segments.some((segment) => segment.kind === 'param');
 }

@@ -1,3 +1,4 @@
+import { orderNormalizedRoutes } from '../../../core/internal/route-ordering.js';
 import * as core from '../../../core/internal/sitemap.js';
 import type { PathObj } from '../../../core/internal/types.js';
 import { createTanStackStartNormalizedRoutes } from './routes.js';
@@ -29,11 +30,18 @@ export function prepareSitemapPaths(
 }
 
 /**
- * Creates normalized routes from the app's TanStack Start router.
+ * Creates normalized routes from the app's TanStack Start router, ordered before path generation.
  */
 function createNormalizedRoutes({
   excludeRoutePatterns,
+  paramValues,
   router,
-}: Pick<SitemapConfig, 'excludeRoutePatterns' | 'router'>): TanStackStartNormalizedRoute[] {
-  return createTanStackStartNormalizedRoutes({ excludeRoutePatterns, router });
+}: Pick<
+  SitemapConfig,
+  'excludeRoutePatterns' | 'paramValues' | 'router'
+>): TanStackStartNormalizedRoute[] {
+  return orderNormalizedRoutes({
+    normalizedRoutes: createTanStackStartNormalizedRoutes({ excludeRoutePatterns, router }),
+    paramValues,
+  });
 }

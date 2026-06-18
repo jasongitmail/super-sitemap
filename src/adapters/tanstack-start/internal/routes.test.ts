@@ -350,7 +350,7 @@ describe('TanStack Start adapter route sources', () => {
     ).toContain('/dashboard');
   });
 
-  it('supports minimum route record source fields and returns deterministic order', () => {
+  it('supports minimum route record source fields and preserves route map order', () => {
     const normalizedRoutes = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([
         { id: '/id-only' },
@@ -362,7 +362,7 @@ describe('TanStack Start adapter route sources', () => {
 
     expect(
       normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
-    ).toEqual(['/full-path', '/id-only', '/path-only', '/to-only/$id']);
+    ).toEqual(['/id-only', '/path-only', '/to-only/$id', '/full-path']);
   });
 
   it('collapses duplicate route records deterministically', () => {
