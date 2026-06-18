@@ -88,6 +88,28 @@ describe('TanStack Start adapter sample paths', () => {
     ]);
   });
 
+  it('reads router routes once when sampling paths', () => {
+    let calls = 0;
+    const getRouter = () => {
+      calls += 1;
+      return {
+        routesByPath: {
+          '/about': { fullPath: '/about' },
+        },
+      };
+    };
+
+    expect(
+      getSamplePaths({
+        sitemapConfig: {
+          origin: 'https://example.com',
+          router: getRouter,
+        },
+      })
+    ).toEqual(['/about']);
+    expect(calls).toBe(1);
+  });
+
   it('canonicalizes paths before deduping and sampling localized variants', () => {
     const stripLocalePrefix = (path: string) => path.replace(/^\/(?:de|es)(?=\/|$)/, '') || '/';
 

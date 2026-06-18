@@ -1,6 +1,9 @@
-import { orderNormalizedRoutes } from '../../../core/internal/route-ordering.js';
-import * as core from '../../../core/internal/sitemap.js';
-import type { NormalizedRoute, PathObj, SitemapConfig } from '../../../core/internal/types.js';
+import {
+  getFrameworkAdapterBody,
+  getFrameworkAdapterResponse,
+  prepareFrameworkAdapterPaths,
+} from '../../../core/internal/framework-adapter.js';
+import type { PathObj, SitemapConfig } from '../../../core/internal/types.js';
 import { createSvelteKitNormalizedRoutes } from './routes.js';
 import type { InternalSvelteKitSitemapConfig } from './types.js';
 
@@ -10,14 +13,20 @@ export { getHeaders } from '../../../core/internal/sitemap.js';
  * Generates an XML sitemap or sitemap index response body from SvelteKit route files.
  */
 export function getBody(config: SitemapConfig): string {
-  return core.getBody({ normalizedRoutes: createNormalizedRoutes(config), ...config });
+  return getFrameworkAdapterBody({
+    config,
+    createNormalizedRoutes: createSvelteKitNormalizedRoutes,
+  });
 }
 
 /**
  * Generates a SvelteKit `Response` containing an XML sitemap.
  */
 export async function response(config: SitemapConfig): Promise<Response> {
-  return core.response({ normalizedRoutes: createNormalizedRoutes(config), ...config });
+  return getFrameworkAdapterResponse({
+    config,
+    createNormalizedRoutes: createSvelteKitNormalizedRoutes,
+  });
 }
 
 /**
@@ -26,27 +35,8 @@ export async function response(config: SitemapConfig): Promise<Response> {
 export function prepareSitemapPaths(
   config: Omit<InternalSvelteKitSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>
 ): PathObj[] {
-  return core.preparePaths({ normalizedRoutes: createNormalizedRoutes(config), ...config });
-}
-
-/**
- * Creates normalized routes from SvelteKit route files, ordered before path generation.
- */
-function createNormalizedRoutes({
-  excludeRoutePatterns,
-  locales,
-  paramValues,
-  routeFiles,
-}: Pick<
-  InternalSvelteKitSitemapConfig,
-  'excludeRoutePatterns' | 'locales' | 'paramValues' | 'routeFiles'
->): NormalizedRoute[] {
-  return orderNormalizedRoutes({
-    normalizedRoutes: createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns,
-      locales,
-      routeFiles,
-    }),
-    paramValues,
+  return prepareFrameworkAdapterPaths({
+    config,
+    createNormalizedRoutes: createSvelteKitNormalizedRoutes,
   });
 }

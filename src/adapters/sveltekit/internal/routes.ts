@@ -1,3 +1,4 @@
+import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
 import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type {
   LocalesConfig,
@@ -57,14 +58,9 @@ export function createSvelteKitNormalizedRoutes({
       }))
     );
 
-  const normalizedRoutesByRoute = new Map(
-    routeEntries.map(({ filePath, route }) => [
-      route,
-      parseSvelteKitNormalizedRoute({ filePath, route }),
-    ])
+  return deduplicateNormalizedRoutesByCompatibilityKey(
+    routeEntries.map(({ filePath, route }) => parseSvelteKitNormalizedRoute({ filePath, route }))
   );
-
-  return [...normalizedRoutesByRoute.values()];
 }
 
 /**

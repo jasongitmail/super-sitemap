@@ -1,3 +1,4 @@
+import type { GetSamplePathsOptions as BaseGetSamplePathsOptions } from '../../../core/internal/sample-paths.js';
 import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
 import type {
   SitemapConfig as BaseSitemapConfig,
@@ -48,10 +49,6 @@ export type CreateTanStackStartNormalizedRoutesOptions = TanStackStartRouteInput
   excludeRoutePatterns?: RegExp[];
 };
 
-export type SitemapConfig = Omit<BaseSitemapConfig, 'excludeRoutePatterns'> &
-  CreateTanStackStartNormalizedRoutesOptions;
+export type SitemapConfig = BaseSitemapConfig & TanStackStartRouteInput;
 
-export type GetSamplePathsOptions = {
-  getCanonicalPath?: (path: string) => string;
-  sitemapConfig: SitemapConfig;
-};
+export type GetSamplePathsOptions = BaseGetSamplePathsOptions<SitemapConfig>;

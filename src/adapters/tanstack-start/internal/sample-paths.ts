@@ -1,6 +1,5 @@
-import { selectSamplePaths } from '../../../core/internal/sample-paths.js';
+import { getFrameworkAdapterSamplePaths } from '../../../core/internal/framework-adapter.js';
 import { createTanStackStartNormalizedRoutes } from './routes.js';
-import { prepareSitemapPaths } from './sitemap.js';
 import type { GetSamplePathsOptions } from './types.js';
 
 /**
@@ -39,12 +38,9 @@ export function getSamplePaths({
   getCanonicalPath,
   sitemapConfig,
 }: GetSamplePathsOptions): string[] {
-  return selectSamplePaths({
+  return getFrameworkAdapterSamplePaths({
+    config: sitemapConfig,
+    createNormalizedRoutes: createTanStackStartNormalizedRoutes,
     getCanonicalPath,
-    normalizedRoutes: createTanStackStartNormalizedRoutes({
-      excludeRoutePatterns: sitemapConfig.excludeRoutePatterns,
-      router: sitemapConfig.router,
-    }),
-    paths: prepareSitemapPaths(sitemapConfig),
   });
 }

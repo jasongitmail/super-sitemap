@@ -1,6 +1,5 @@
-import { selectSamplePaths } from '../../../core/internal/sample-paths.js';
+import { getFrameworkAdapterSamplePaths } from '../../../core/internal/framework-adapter.js';
 import { createSvelteKitNormalizedRoutes } from './routes.js';
-import { prepareSitemapPaths } from './sitemap.js';
 import type { GetSamplePathsOptions, InternalSvelteKitSitemapConfig } from './types.js';
 
 /**
@@ -52,13 +51,9 @@ export function getSamplePathsFromRouteFiles({
   getCanonicalPath?: GetSamplePathsOptions['getCanonicalPath'];
   sitemapConfig: InternalSvelteKitSitemapConfig;
 }): string[] {
-  return selectSamplePaths({
+  return getFrameworkAdapterSamplePaths({
+    config: sitemapConfig,
+    createNormalizedRoutes: createSvelteKitNormalizedRoutes,
     getCanonicalPath,
-    normalizedRoutes: createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns: sitemapConfig.excludeRoutePatterns,
-      locales: sitemapConfig.locales,
-      routeFiles: sitemapConfig.routeFiles,
-    }),
-    paths: prepareSitemapPaths(sitemapConfig),
   });
 }

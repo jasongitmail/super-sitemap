@@ -1,8 +1,11 @@
-import { orderNormalizedRoutes } from '../../../core/internal/route-ordering.js';
-import * as core from '../../../core/internal/sitemap.js';
+import {
+  getFrameworkAdapterBody,
+  getFrameworkAdapterResponse,
+  prepareFrameworkAdapterPaths,
+} from '../../../core/internal/framework-adapter.js';
 import type { PathObj } from '../../../core/internal/types.js';
 import { createTanStackStartNormalizedRoutes } from './routes.js';
-import type { SitemapConfig, TanStackStartNormalizedRoute } from './types.js';
+import type { SitemapConfig } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
 
@@ -10,14 +13,20 @@ export { getHeaders } from '../../../core/internal/sitemap.js';
  * Generates an XML sitemap or sitemap index response body from TanStack Start routes.
  */
 export function getBody(config: SitemapConfig): string {
-  return core.getBody({ normalizedRoutes: createNormalizedRoutes(config), ...config });
+  return getFrameworkAdapterBody({
+    config,
+    createNormalizedRoutes: createTanStackStartNormalizedRoutes,
+  });
 }
 
 /**
  * Generates a TanStack Start `Response` containing an XML sitemap.
  */
 export async function response(config: SitemapConfig): Promise<Response> {
-  return core.response({ normalizedRoutes: createNormalizedRoutes(config), ...config });
+  return getFrameworkAdapterResponse({
+    config,
+    createNormalizedRoutes: createTanStackStartNormalizedRoutes,
+  });
 }
 
 /**
@@ -26,22 +35,8 @@ export async function response(config: SitemapConfig): Promise<Response> {
 export function prepareSitemapPaths(
   config: Omit<SitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>
 ): PathObj[] {
-  return core.preparePaths({ normalizedRoutes: createNormalizedRoutes(config), ...config });
-}
-
-/**
- * Creates normalized routes from the app's TanStack Start router, ordered before path generation.
- */
-function createNormalizedRoutes({
-  excludeRoutePatterns,
-  paramValues,
-  router,
-}: Pick<
-  SitemapConfig,
-  'excludeRoutePatterns' | 'paramValues' | 'router'
->): TanStackStartNormalizedRoute[] {
-  return orderNormalizedRoutes({
-    normalizedRoutes: createTanStackStartNormalizedRoutes({ excludeRoutePatterns, router }),
-    paramValues,
+  return prepareFrameworkAdapterPaths({
+    config,
+    createNormalizedRoutes: createTanStackStartNormalizedRoutes,
   });
 }

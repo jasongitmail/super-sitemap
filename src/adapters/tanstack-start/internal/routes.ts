@@ -1,3 +1,4 @@
+import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
 import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
 import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
@@ -50,27 +51,20 @@ export function createTanStackStartNormalizedRoutes({
   ...routeInput
 }: CreateTanStackStartNormalizedRoutesOptions): TanStackStartNormalizedRoute[] {
   const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
-  const normalizedRoutesByCompatibilityKey = new Map<string, TanStackStartNormalizedRoute>();
+  const normalizedRoutes: TanStackStartNormalizedRoute[] = [];
 
   for (const route of routeRecords) {
-    const normalizedRoutes = parseTanStackStartNormalizedRoutes(route).filter(
+    const routeNormalizedRoutes = parseTanStackStartNormalizedRoutes(route).filter(
       (normalizedRoute) =>
         !excludeRoutePatterns.some((pattern) =>
           routeMatchesPattern(pattern, normalizedRoute.source.compatibilityKey)
         )
     );
 
-    for (const normalizedRoute of normalizedRoutes) {
-      if (!normalizedRoutesByCompatibilityKey.has(normalizedRoute.source.compatibilityKey)) {
-        normalizedRoutesByCompatibilityKey.set(
-          normalizedRoute.source.compatibilityKey,
-          normalizedRoute
-        );
-      }
-    }
+    normalizedRoutes.push(...routeNormalizedRoutes);
   }
 
-  return [...normalizedRoutesByCompatibilityKey.values()];
+  return deduplicateNormalizedRoutesByCompatibilityKey(normalizedRoutes);
 }
 
 function getTanStackStartRouteRecordsFromRoutesByPath(

@@ -1,3 +1,4 @@
+import type { GetSamplePathsOptions as BaseGetSamplePathsOptions } from '../../../core/internal/sample-paths.js';
 import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
 import type { SitemapConfig, LocalesConfig } from '../../../core/internal/types.js';
 
@@ -19,7 +20,4 @@ export type InternalSvelteKitSitemapConfig = SitemapConfig & {
   routeFiles?: string[];
 };
 
-export type GetSamplePathsOptions = {
-  getCanonicalPath?: (path: string) => string;
-  sitemapConfig: SitemapConfig;
-};
+export type GetSamplePathsOptions = BaseGetSamplePathsOptions<SitemapConfig>;
