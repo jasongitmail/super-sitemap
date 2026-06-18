@@ -90,15 +90,31 @@ describe('core sitemap getBody and response', () => {
     staticNormalizedRoute('/pricing'),
   ];
 
-  it('requires origin', () => {
-    expect(() =>
-      // @ts-expect-error - runtime validation covers JavaScript callers.
-      getBody({ normalizedRoutes, origin: undefined })
-    ).toThrow('super-sitemap: `origin` property is required in sitemap config.');
-    expect(() =>
-      // @ts-expect-error - runtime validation covers JavaScript callers.
-      response({ normalizedRoutes, origin: undefined })
-    ).toThrow('super-sitemap: `origin` property is required in sitemap config.');
+  it('requires origin to be an absolute URL origin', () => {
+    const invalidOrigins = [
+      undefined,
+      '',
+      'example.com',
+      '/',
+      'mailto:hello@example.com',
+      'https://example.com/',
+      'https://example.com/path',
+      'https://example.com?x=1',
+      'https://example.com#hash',
+    ];
+    const originError =
+      'super-sitemap: `origin` must be an absolute URL origin, e.g. "https://example.com".';
+
+    for (const origin of invalidOrigins) {
+      expect(() =>
+        // @ts-expect-error - runtime validation covers JavaScript callers.
+        getBody({ normalizedRoutes, origin })
+      ).toThrow(originError);
+      expect(() =>
+        // @ts-expect-error - runtime validation covers JavaScript callers.
+        response({ normalizedRoutes, origin })
+      ).toThrow(originError);
+    }
   });
 
   it('requires maxPerPage to be a supported sitemap page size', () => {

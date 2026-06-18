@@ -5,6 +5,8 @@ import type { NormalizedRoute, PathObj, SitemapConfig } from './types.js';
 import { renderSitemapIndexXml, renderSitemapXml } from './xml.js';
 
 const DEFAULT_MAX_PER_PAGE = 50_000;
+const ORIGIN_ERROR =
+  'super-sitemap: `origin` must be an absolute URL origin, e.g. "https://example.com".';
 
 export type GetHeadersOptions = {
   customHeaders?: Record<string, string>;
@@ -199,9 +201,24 @@ function formatRouteParamErrorMessage(error: SitemapRouteParamError): string {
   return `super-sitemap: paramValues were provided for a route that does not exist: '${error.route}'. Remove this property from paramValues or update your route source.`;
 }
 
-function validateOrigin(origin: string): void {
-  if (!origin) {
-    throw new Error('super-sitemap: `origin` property is required in sitemap config.');
+function validateOrigin(origin: unknown): asserts origin is string {
+  if (typeof origin !== 'string' || !origin.trim()) throw new Error(ORIGIN_ERROR);
+
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    throw new Error(ORIGIN_ERROR);
+  }
+
+  if (
+    (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+    url.pathname !== '/' ||
+    url.search ||
+    url.hash ||
+    origin.endsWith('/')
+  ) {
+    throw new Error(ORIGIN_ERROR);
   }
 }
 
