@@ -313,7 +313,7 @@ paramValues: {
   '/blog/$slug': ['hello-world', 'another-post'],
 
   // Optional params use TanStack's `{-$param}` syntax.
-  '/blog/{-$category}': ['tech', 'design'],
+  '/products/{-$category}': ['shoes', 'shirts'],
 
   // Multiple params use a 2D array, matched positionally.
   '/campsites/$country/$state': [
@@ -333,12 +333,12 @@ paramValues: {
   // For example, `/_layout/(dashboard)/users/$id` is keyed as:
   '/users/$id': ['42'],
 
-  // Optional params expand into route variants. The base route (`/something`)
+  // Optional params expand into route variants. The base route (`/foo`)
   // needs no values, but dynamic variants need values unless excluded. For
   // multiple optional params, provide values for each emitted dynamic variant
   // that you keep.
-  '/something/{-$paramA}': ['foo', 'bar'],
-  '/something/{-$paramA}/{-$paramB}': [
+  '/foo/{-$paramA}': ['foo', 'bar'],
+  '/foo/{-$paramA}/{-$paramB}': [
     ['foo', 'one'],
     ['bar', 'two'],
   ],
@@ -372,7 +372,7 @@ paramValues: {
   '/blog/[slug]': ['hello-world', 'another-post'],
 
   // Optional params use SvelteKit's `[[param]]` syntax.
-  '/blog/[[category]]': ['tech', 'design'],
+  '/products/[[category]]': ['shoes', 'shirts'],
 
   // Matcher params preserve the matcher name in the key.
   '/blog/[page=integer]': ['2', '3'],
@@ -396,10 +396,10 @@ paramValues: {
   // For example, `/(dashboard)/users/[id]` is keyed as:
   '/users/[id]': ['42'],
 
-  // Optional params expand into route variants. The base route (`/something`)
+  // Optional params expand into route variants. The base route (`/foo`)
   // needs no values, but dynamic variants need values unless excluded.
-  '/something/[[paramA]]': ['foo', 'bar'],
-  '/something/[[paramA]]/[[paramB]]': [
+  '/foo/[[paramA]]': ['foo', 'bar'],
+  '/foo/[[paramA]]/[[paramB]]': [
     ['foo', 'one'],
     ['bar', 'two'],
   ],
@@ -431,20 +431,19 @@ Keys in the `paramValues` object must match Super Sitemap's expected syntax.
 <details>
 <summary>View allowed keys</summary>
 
-| Route feature                         | TanStack Start key                                       | SvelteKit key                                              |
-| ------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
-| Required param                        | `'/blog/$slug'`                                          | `'/blog/[slug]'`                                           |
-| Optional param                        | `'/blog/{-$category}'`                                   | `'/blog/[[category]]'`                                     |
-| Required params (2+)                  | `'/campsites/$country/$state'`                           | `'/campsites/[country]/[state]'`                           |
-| Optional params (2+), longest variant | `'/something/{-$paramA}/{-$paramB}'`                     | `'/something/[[paramA]]/[[paramB]]'`                       |
-| Optional params (2+), shorter variant | `'/something/{-$paramA}'`                                | `'/something/[[paramA]]'`                                  |
-| Splat / rest param                    | `'/docs/$'`                                              | `'/docs/[...rest]'`                                        |
-| Param matcher                         | (No equivalent)                                          | `'/blog/[page=integer]'`                                   |
-| Optional matcher                      | (No equivalent)                                          | `'/archive/[[year=integer]]'`                              |
-| Route groups are omitted              | On disk: `/(dashboard)/users/$id`<br>Use: `'/users/$id'` | On disk: `/(dashboard)/users/[id]`<br>Use: `'/users/[id]'` |
-| Pathless layout segments are omitted  | On disk: `/_layout/users/$id`<br>Use: `'/users/$id'`     | (No equivalent)                                            |
-| Optional locale param                 | `'/{-$locale}/blog/$slug'`                               | `'/[[locale]]/blog/[slug]'`                                |
-| Required locale param                 | `'/$locale/docs/$slug'`                                  | `'/[locale]/docs/[slug]'`                                  |
+| Route feature                        | TanStack Start key                                                                                  | SvelteKit key                                                                                       |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Required param                       | `'/blog/$slug'`                                                                                     | `'/blog/[slug]'`                                                                                    |
+| Optional param                       | `'/products/{-$category}'`                                                                          | `'/products/[[category]]'`                                                                          |
+| Required params (2+)                 | `'/campsites/$country/$state'`                                                                      | `'/campsites/[country]/[state]'`                                                                    |
+| Optional params (2+)                 | On disk: `/foo/{-$paramA}/{-$paramB}`<br>Use: `'/foo/{-$paramA}'`<br>`'/foo/{-$paramA}/{-$paramB}'` | On disk: `/foo/[[paramA]]/[[paramB]]`<br>Use: `'/foo/[[paramA]]'`<br>`'/foo/[[paramA]]/[[paramB]]'` |
+| Splat / rest param                   | `'/docs/$'`                                                                                         | `'/docs/[...rest]'`                                                                                 |
+| Param matcher                        | (No equivalent)                                                                                     | `'/blog/[page=integer]'`                                                                            |
+| Optional matcher                     | (No equivalent)                                                                                     | `'/archive/[[year=integer]]'`                                                                       |
+| Route groups are omitted             | On disk: `/(dashboard)/users/$id`<br>Use: `'/users/$id'`                                            | On disk: `/(dashboard)/users/[id]`<br>Use: `'/users/[id]'`                                          |
+| Pathless layout segments are omitted | On disk: `/_layout/users/$id`<br>Use: `'/users/$id'`                                                | (No equivalent)                                                                                     |
+| Optional locale param                | `'/{-$locale}/blog/$slug'`                                                                          | `'/[[locale]]/blog/[slug]'`                                                                         |
+| Required locale param                | `'/$locale/docs/$slug'`                                                                             | `'/[locale]/docs/[slug]'`                                                                           |
 
 </details>
 
@@ -574,15 +573,15 @@ Using `DISTINCT` prevents duplicates in your result set. Use this when your
 table could contain multiple rows with the same params, like in the 2nd and 3rd
 examples.
 
-Then if your result is an array of objects, convert into a 2D array of string
-values:
+Convert the result into a [supported param value type](#param-values), we'll use 2D array here:
 
 ```js
 const arrayOfArrays = resultFromDB.map((row) => Object.values(row));
 // [['usa','new-york'],['usa', 'california']]
 ```
 
-That's it.
+Then provide these values within your sitemap config's `paramValues` object for
+the appropriate route.
 
 ## Example sitemap output
 

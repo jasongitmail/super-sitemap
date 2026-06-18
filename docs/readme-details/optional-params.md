@@ -10,7 +10,7 @@ within your sitemap config object.
 <details>
 <summary>TanStack Start example</summary>
 
-TanStack Start optional params like `/posts/{-$category}` expand the same
+TanStack Start optional params like `/products/{-$category}` expand the same
 way — use TanStack syntax in your `paramValues` keys and JavaScript `RegExp`
 objects in `excludeRoutePatterns`.
 
@@ -20,9 +20,9 @@ keys, not generated URLs:
 ```ts
 excludeRoutePatterns: [
   /^\/blog\/\$slug$/, // dynamic route such as `/blog/$slug`
-  /^\/posts$/, // only `/posts`, not `/posts/{-$category}`
-  /^\/posts\/\{-\$category\}$/, // only `/posts/{-$category}`
-  /^\/posts(?:$|\/)/, // `/posts` and `/posts/{-$category}`
+  /^\/products$/, // only `/products`, not `/products/{-$category}`
+  /^\/products\/\{-\$category\}$/, // only `/products/{-$category}`
+  /^\/products(?:$|\/)/, // `/products` and `/products/{-$category}`
   /^\/docs\/\$$/, // splat route such as `/docs/$`
   /^\/dashboard(?:$|\/)/, // `/dashboard` and nested dashboard routes
 ];
@@ -42,7 +42,7 @@ SvelteKit allows you to create a route with one or more optional parameters like
 ```text
 src/
   routes/
-    something/
+    foo/
       [[paramA]]/
         [[paramB]]/
           +page.svelte
@@ -51,9 +51,9 @@ src/
 
 Your app would then respond to HTTP requests for all of the following:
 
-- `/something`
-- `/something/foo`
-- `/something/foo/bar`
+- `/foo`
+- `/foo/a`
+- `/foo/a/b`
 
 Consequently, Super Sitemap will include all such path variations in your
 sitemap and will require you to either exclude these using
@@ -62,19 +62,19 @@ within your sitemap config object.
 
 For example:
 
-- `/something` will exist in your sitemap unless excluded with a `RegExp` like
-  `/\/something$/`.
-- `/something/[[paramA]]` must be either excluded using an `excludeRoutePatterns`
-  entry like `/\/something\/\[\[paramA\]\]$/` _or_ appear within your config's
-  `paramValues` like this: `'/something/[[paramA]]': ['foo', 'foo2', 'foo3']`.
-- And `/something/[[paramA]]/[[paramB]]` must be either excluded using an
-  `excludeRoutePatterns` entry like `/\/something\/\[\[paramA\]\]\/\[\[paramB\]\]$/`
+- `/foo` will exist in your sitemap unless excluded with a `RegExp` like
+  `/\/foo$/`.
+- `/foo/[[paramA]]` must be either excluded using an `excludeRoutePatterns`
+  entry like `/\/foo\/\[\[paramA\]\]$/` _or_ appear within your config's
+  `paramValues` like this: `'/foo/[[paramA]]': ['a', 'a2', 'a3']`.
+- And `/foo/[[paramA]]/[[paramB]]` must be either excluded using an
+  `excludeRoutePatterns` entry like `/\/foo\/\[\[paramA\]\]\/\[\[paramB\]\]$/`
   _or_ appear within your config's `paramValues` like this:
-  `'/something/[[paramA]]/[[paramB]]': [['foo','bar'], ['foo2','bar2'], ['foo3','bar3']]`.
+  `'/foo/[[paramA]]/[[paramB]]': [['a','b'], ['a2','b2'], ['a3','b3']]`.
 
 Alternatively, you can exclude ALL versions of this route by providing a single
 `RegExp` object within `excludeRoutePatterns` that matches all of them, such as
-`/\/something/`; notice this does NOT end with a `$`, thereby allowing this
+`/\/foo/`; notice this does NOT end with a `$`, thereby allowing this
 pattern to match all 3 versions of this route.
 
 If you plan to mix and match use of `excludeRoutePatterns` and `paramValues` for
