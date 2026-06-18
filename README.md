@@ -24,6 +24,7 @@
   - [Sitemap Index](#sitemap-index)
   - [Param Values](#param-values)
   - [Keys for Param Values](#keys-for-param-values)
+  - [Route Exclusions](#route-exclusions)
   - [Optional Params](#optional-params)
   - [`processPaths()` callback](#processpaths-callback)
   - [i18n](#i18n)
@@ -456,6 +457,26 @@ defines its routes.
 If in doubt, call your sitemap route in a test. For prerendered sitemaps, also
 build your app. You'll see errors for any keys that are missing or don't match
 what Super Sitemap expects, so you can correct them.
+
+## Route Exclusions
+
+`excludeRoutePatterns` matches route keys, not final generated URLs.
+
+For SvelteKit, exclusions run before route groups are removed, so you can
+exclude a group by name:
+
+```ts
+excludeRoutePatterns: [/\(authenticated\)/],
+```
+
+For TanStack Start, routes come from the generated router after pathless and
+group segments have already been normalized away, so names like `_layout` or
+`(authenticated)` are not available for exclusion. Exclude by public route key
+instead:
+
+```ts
+excludeRoutePatterns: [/^\/dashboard(?:$|\/)/],
+```
 
 ## Optional Params
 
