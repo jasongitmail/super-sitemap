@@ -1,8 +1,5 @@
 import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
-import type {
-  SitemapConfig as BaseSitemapConfig,
-  LocalesConfig,
-} from '../../../core/internal/types.js';
+import type { SitemapConfig, LocalesConfig } from '../../../core/internal/types.js';
 
 export type { GetHeadersOptions };
 
@@ -15,7 +12,10 @@ export type CreateSvelteKitNormalizedRoutesOptions = {
   routeFiles?: string[];
 };
 
-export type SitemapConfig = BaseSitemapConfig & {
+/**
+ * Internal config used by adapter helpers and tests that inject route files.
+ */
+export type InternalSvelteKitSitemapConfig = SitemapConfig & {
   routeFiles?: string[];
 };
 

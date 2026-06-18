@@ -28,18 +28,17 @@ describe('SvelteKit adapter response wrapper', () => {
   const locsFromXml = (xml: string) =>
     Array.from(xml.matchAll(/<loc>https:\/\/example\.com([^<]+)<\/loc>/g)).map(([, path]) => path);
 
-  it('requires origin and generates static route XML through the core renderer', async () => {
+  it('requires origin and generates XML through the core renderer', async () => {
     await expect(
       response({
         // @ts-expect-error - runtime validation covers JavaScript callers.
         origin: undefined,
-        routeFiles: ['/src/routes/about/+page.svelte'],
       })
     ).rejects.toThrow('super-sitemap: `origin` property is required in sitemap config.');
 
     const res = await response({
+      additionalPaths: ['/', '/about'],
       origin: 'https://example.com',
-      routeFiles: ['/src/routes/+page.svelte', '/src/routes/about/+page.svelte'],
     });
     const xml = await res.text();
 
@@ -51,8 +50,8 @@ describe('SvelteKit adapter response wrapper', () => {
 
   it('exports body and header helpers for framework-specific response wrappers', () => {
     const xml = getBody({
+      additionalPaths: ['/', '/about'],
       origin: 'https://example.com',
-      routeFiles: ['/src/routes/+page.svelte', '/src/routes/about/+page.svelte'],
     });
     const headers = getHeaders({
       customHeaders: {
@@ -71,11 +70,10 @@ describe('SvelteKit adapter response wrapper', () => {
     });
   });
 
-  it('interpolates dynamic, metadata, and defaults without SvelteKit syntax', async () => {
-    const res = await response({
+  it('interpolates dynamic, metadata, and defaults without SvelteKit syntax', () => {
+    const paths = prepareSitemapPaths({
       defaultChangefreq: 'daily',
       defaultPriority: 0.7,
-      origin: 'https://example.com',
       paramValues: {
         '/blog/[slug]': ['hello-world', 'another-post'],
         '/rankings/[country]/[state]': [
@@ -98,9 +96,8 @@ describe('SvelteKit adapter response wrapper', () => {
       ],
       sort: 'alpha',
     });
-    const xml = await res.text();
 
-    expect(locsFromXml(xml)).toEqual([
+    expect(paths.map(({ path }) => path)).toEqual([
       '/about',
       '/blog',
       '/blog/another-post',
@@ -108,29 +105,34 @@ describe('SvelteKit adapter response wrapper', () => {
       '/rankings/canada/ontario',
       '/rankings/usa/new-york',
     ]);
-    expect(xml).toContain('<lastmod>2026-01-01</lastmod>');
-    expect(xml).toContain('<changefreq>weekly</changefreq>');
-    expect(xml).toContain('<priority>0.8</priority>');
-    expect(xml).toContain('<loc>https://example.com/rankings/canada/ontario</loc>');
-    expect(xml).toContain('<changefreq>daily</changefreq>');
-    expect(xml).toContain('<priority>0.7</priority>');
-    expect(xml).not.toMatch(/<loc>[^<]*(\[|\])/);
+    expect(paths).toContainEqual({
+      changefreq: 'weekly',
+      lastmod: '2026-01-01',
+      path: '/rankings/usa/new-york',
+      priority: 0.8,
+    });
+    expect(paths).toContainEqual({
+      changefreq: 'daily',
+      path: '/rankings/canada/ontario',
+      priority: 0.7,
+    });
+    for (const { path } of paths) {
+      expect(path).not.toMatch(/\[|\]/);
+    }
   });
 
-  it('requires paramValues for parameterized routes and reports SvelteKit-specific unknown keys', async () => {
-    await expect(
-      response({
-        origin: 'https://example.com',
+  it('requires paramValues for parameterized routes and reports SvelteKit-specific unknown keys', () => {
+    expect(() =>
+      prepareSitemapPaths({
         routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
       })
-    ).rejects.toThrow("super-sitemap: paramValues not provided for route: '/blog/[slug]'.");
-    await expect(
-      response({
-        origin: 'https://example.com',
+    ).toThrow("super-sitemap: paramValues not provided for route: '/blog/[slug]'.");
+    expect(() =>
+      prepareSitemapPaths({
         paramValues: { '/missing/[slug]': ['hello-world'] },
         routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
       })
-    ).rejects.toThrow(
+    ).toThrow(
       "super-sitemap: paramValues were provided for a route that does not exist: '/missing/[slug]'."
     );
   });
@@ -148,7 +150,6 @@ describe('SvelteKit adapter response wrapper', () => {
         { changefreq: 'weekly', path: '/about' },
         { path: '/zzzz-process-paths-sort-marker' },
       ],
-      routeFiles: ['/src/routes/about/+page.svelte'],
       sort: 'alpha',
     });
     const xml = await res.text();
@@ -164,16 +165,14 @@ describe('SvelteKit adapter response wrapper', () => {
       maxPerPage: 2,
       origin: 'https://example.com',
       page: 'invalid',
-      routeFiles: ['/src/routes/+page.svelte'],
     });
     expect(invalidRes.status).toBe(400);
     expect(await invalidRes.text()).toBe('Invalid page param');
 
-    const localeRes = await response({
+    const localePaths = prepareSitemapPaths({
       locales: { alternates: ['de'], default: 'en' },
-      origin: 'https://example.com',
       routeFiles: ['/src/routes/[[locale]]/about/+page.svelte'],
     });
-    expect(locsFromXml(await localeRes.text())).toEqual(['/about', '/de/about']);
+    expect(localePaths.map(({ path }) => path)).toEqual(['/about', '/de/about']);
   });
 });

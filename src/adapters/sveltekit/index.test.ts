@@ -26,11 +26,16 @@ describe('SvelteKit package API', () => {
     expect(sveltekit.getSamplePaths).toBeTypeOf('function');
 
     const config: SvelteKitSitemapConfig = {
+      additionalPaths: ['/blog/hello-world'],
       origin: 'https://example.com',
-      paramValues: { '/blog/[slug]': ['hello-world'] },
+    };
+    const configWithRouteFiles: SvelteKitSitemapConfig = {
+      origin: 'https://example.com',
+      // @ts-expect-error - route file injection is an internal adapter test hook.
       routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
     };
 
+    expect(configWithRouteFiles.origin).toBe('https://example.com');
     expect(sveltekit.getBody(config)).toContain('<loc>https://example.com/blog/hello-world</loc>');
     expect(
       sveltekit.getHeaders({
@@ -40,7 +45,7 @@ describe('SvelteKit package API', () => {
       'cache-control': 'max-age=0, s-maxage=86400',
       'content-type': 'application/xml',
     });
-    expect(sveltekit.getSamplePaths({ sitemapConfig: config })).toEqual(['/blog/hello-world']);
+    expect(sveltekit.getSamplePaths({ sitemapConfig: config })).toEqual([]);
   });
 
   it('exports SvelteKit config types from the adapter entrypoint', () => {
@@ -53,7 +58,6 @@ describe('SvelteKit package API', () => {
       origin: 'https://example.com',
       paramValues: { '/blog/[slug]': [paramValue] },
       processPaths: (paths: SvelteKitPathObj[]) => [...paths, pathObj],
-      routeFiles: ['/src/routes/blog/[slug]/+page.svelte'],
     };
 
     expect(config.processPaths?.([])).toEqual([pathObj]);

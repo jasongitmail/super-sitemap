@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathObj } from '../../../core/internal/types.js';
-import { getSamplePaths } from './sample-paths.js';
+import { getSamplePathsFromRouteFiles } from './sample-paths.js';
 
 describe('SvelteKit adapter sample paths', () => {
   const routeFiles = [
@@ -14,7 +14,7 @@ describe('SvelteKit adapter sample paths', () => {
   ];
 
   it('returns one sample path per sitemap-published route shape', () => {
-    const paths = getSamplePaths({
+    const paths = getSamplePathsFromRouteFiles({
       sitemapConfig: {
         additionalPaths: ['/manual.pdf'],
         origin: 'https://example.com',
@@ -41,7 +41,7 @@ describe('SvelteKit adapter sample paths', () => {
   });
 
   it('ignores routes and additional paths that are not present in the final sitemap paths', () => {
-    const paths = getSamplePaths({
+    const paths = getSamplePathsFromRouteFiles({
       sitemapConfig: {
         additionalPaths: ['/manual.pdf'],
         excludeRoutePatterns: [/^\/dashboard$/],
@@ -60,17 +60,16 @@ describe('SvelteKit adapter sample paths', () => {
       routeFiles: ['/src/routes/zeta/+page.svelte', '/src/routes/alpha/+page.svelte'],
     };
 
-    expect(getSamplePaths({ sitemapConfig })).toEqual(['/zeta', '/alpha']);
-    expect(getSamplePaths({ sitemapConfig: { ...sitemapConfig, sort: 'alpha' } })).toEqual([
-      '/alpha',
-      '/zeta',
-    ]);
+    expect(getSamplePathsFromRouteFiles({ sitemapConfig })).toEqual(['/zeta', '/alpha']);
+    expect(
+      getSamplePathsFromRouteFiles({ sitemapConfig: { ...sitemapConfig, sort: 'alpha' } })
+    ).toEqual(['/alpha', '/zeta']);
   });
 
   it('canonicalizes paths before deduping and sampling localized variants', () => {
     const stripLocalePrefix = (path: string) => path.replace(/^\/(?:de|es)(?=\/|$)/, '') || '/';
 
-    const paths = getSamplePaths({
+    const paths = getSamplePathsFromRouteFiles({
       getCanonicalPath: stripLocalePrefix,
       sitemapConfig: {
         origin: 'https://example.com',
@@ -92,7 +91,7 @@ describe('SvelteKit adapter sample paths', () => {
   });
 
   it('matches static routes before dynamic sibling routes', () => {
-    const paths = getSamplePaths({
+    const paths = getSamplePathsFromRouteFiles({
       sitemapConfig: {
         origin: 'https://example.com',
         paramValues: {
@@ -107,7 +106,7 @@ describe('SvelteKit adapter sample paths', () => {
   });
 
   it('supports optional param route variants', () => {
-    const paths = getSamplePaths({
+    const paths = getSamplePathsFromRouteFiles({
       sitemapConfig: {
         origin: 'https://example.com',
         paramValues: {
@@ -121,14 +120,14 @@ describe('SvelteKit adapter sample paths', () => {
   });
 
   it('supports optional and required locale route mappings while sampling once per route', () => {
-    const optionalLocalePaths = getSamplePaths({
+    const optionalLocalePaths = getSamplePathsFromRouteFiles({
       sitemapConfig: {
         locales: { alternates: ['de'], default: 'en' },
         origin: 'https://example.com',
         routeFiles: ['/src/routes/[[locale]]/about/+page.svelte'],
       },
     });
-    const requiredLocalePaths = getSamplePaths({
+    const requiredLocalePaths = getSamplePathsFromRouteFiles({
       getCanonicalPath: (path) => path.replace(/^\/(?:de|en)(?=\/|$)/, '') || '/',
       sitemapConfig: {
         locales: { alternates: ['de'], default: 'en' },

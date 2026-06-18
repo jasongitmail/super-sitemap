@@ -1,10 +1,10 @@
 import * as core from '../../../core/internal/sitemap.js';
-import type { NormalizedRoute, PathObj } from '../../../core/internal/types.js';
+import type { NormalizedRoute, PathObj, SitemapConfig } from '../../../core/internal/types.js';
 import {
   createSvelteKitNormalizedRoutes,
   orderSvelteKitNormalizedRoutesForCompatibility,
 } from './routes.js';
-import type { SitemapConfig } from './types.js';
+import type { InternalSvelteKitSitemapConfig } from './types.js';
 
 export { getHeaders } from '../../../core/internal/sitemap.js';
 
@@ -26,7 +26,7 @@ export async function response(config: SitemapConfig): Promise<Response> {
  * Prepares final public sitemap path objects before rendering or sampling.
  */
 export function prepareSitemapPaths(
-  config: Omit<SitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>
+  config: Omit<InternalSvelteKitSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>
 ): PathObj[] {
   return core.preparePaths({ normalizedRoutes: createNormalizedRoutes(config), ...config });
 }
@@ -41,7 +41,7 @@ function createNormalizedRoutes({
   paramValues,
   routeFiles,
 }: Pick<
-  SitemapConfig,
+  InternalSvelteKitSitemapConfig,
   'excludeRoutePatterns' | 'locales' | 'paramValues' | 'routeFiles'
 >): NormalizedRoute[] {
   return orderSvelteKitNormalizedRoutesForCompatibility({

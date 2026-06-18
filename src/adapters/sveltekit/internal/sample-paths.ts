@@ -1,7 +1,7 @@
 import { selectSamplePaths } from '../../../core/internal/sample-paths.js';
 import { createSvelteKitNormalizedRoutes } from './routes.js';
 import { prepareSitemapPaths } from './sitemap.js';
-import type { GetSamplePathsOptions } from './types.js';
+import type { GetSamplePathsOptions, InternalSvelteKitSitemapConfig } from './types.js';
 
 /**
  * Returns one canonical sample path for each sitemap-published SvelteKit route shape.
@@ -39,6 +39,19 @@ export function getSamplePaths({
   getCanonicalPath,
   sitemapConfig,
 }: GetSamplePathsOptions): string[] {
+  return getSamplePathsFromRouteFiles({ getCanonicalPath, sitemapConfig });
+}
+
+/**
+ * Internal/test helper for sampling paths from explicit SvelteKit route files.
+ */
+export function getSamplePathsFromRouteFiles({
+  getCanonicalPath,
+  sitemapConfig,
+}: {
+  getCanonicalPath?: GetSamplePathsOptions['getCanonicalPath'];
+  sitemapConfig: InternalSvelteKitSitemapConfig;
+}): string[] {
   return selectSamplePaths({
     getCanonicalPath,
     normalizedRoutes: createSvelteKitNormalizedRoutes({
