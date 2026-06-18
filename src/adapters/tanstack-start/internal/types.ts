@@ -3,11 +3,9 @@ import type { GetHeadersOptions } from '../../../core/internal/sitemap.js';
 import type {
   Changefreq,
   LocalesConfig,
-  NormalizedRoute,
   ParamValues,
   PathObj,
   Priority,
-  RouteSource,
 } from '../../../core/internal/types.js';
 
 export type { GetHeadersOptions };
@@ -33,17 +31,6 @@ export type TanStackStartRouter = {
 };
 
 export type TanStackStartRouterFactory = () => TanStackStartRouter;
-
-export type TanStackStartRouteSource = RouteSource & {
-  fullPath?: string;
-  id?: string;
-  path?: string;
-  to?: string;
-};
-
-export type TanStackStartNormalizedRoute = Omit<NormalizedRoute, 'source'> & {
-  source: TanStackStartRouteSource;
-};
 
 export type TanStackStartRouteInput = {
   router: TanStackStartRouterFactory;

@@ -9,12 +9,11 @@ import {
   listFilePathsRecursively,
 } from '../../../test-utils/sveltekit-route-files.js';
 import {
+  convertToNormalizedRoute,
   createSvelteKitNormalizedRoutes,
-  expandSvelteKitOptionalRoute,
-  expandSvelteKitOptionalRoutes,
+  expandOptionalParamRouteVariants,
   findSvelteKitLocaleToken,
   normalizeSvelteKitRouteFile,
-  parseSvelteKitNormalizedRoute,
   removeSvelteKitRouteGroups,
 } from './routes.js';
 
@@ -138,12 +137,10 @@ describe('SvelteKit routes', () => {
   });
 
   it('expands optional params while preserving matcher syntax for route keys', () => {
-    expect(
-      expandSvelteKitOptionalRoutes([
-        '/[[locale]]/blog/[page=integer]',
-        '/[[locale]]/optionals/[[optional]]',
-      ])
-    ).toEqual([
+    expect([
+      '/[[locale]]/blog/[page=integer]',
+      ...expandOptionalParamRouteVariants('/[[locale]]/optionals/[[optional]]'),
+    ]).toEqual([
       '/[[locale]]/blog/[page=integer]',
       '/[[locale]]/optionals',
       '/[[locale]]/optionals/[[optional]]',
@@ -151,7 +148,7 @@ describe('SvelteKit routes', () => {
   });
 
   it('expands a single optional route and preserves optional locale position', () => {
-    expect(expandSvelteKitOptionalRoute('/[[locale]]/docs/[[section]]/[[slug]]')).toEqual([
+    expect(expandOptionalParamRouteVariants('/[[locale]]/docs/[[section]]/[[slug]]')).toEqual([
       '/[[locale]]/docs',
       '/[[locale]]/docs/[[section]]',
       '/[[locale]]/docs/[[section]]/[[slug]]',
@@ -167,17 +164,17 @@ describe('SvelteKit routes', () => {
   });
 
   it('maps locale, matcher, rest, source, and compatibility metadata into normalized normalizedRoutes', () => {
-    const optionalLocale = parseSvelteKitNormalizedRoute({
+    const optionalLocale = convertToNormalizedRoute({
       filePath: '/src/routes/(public)/[[locale=locale]]/blog/[slug]/+page.svelte',
       route: '/[[locale=locale]]/blog/[slug]',
     });
-    const requiredLocale = parseSvelteKitNormalizedRoute({
+    const requiredLocale = convertToNormalizedRoute({
       route: '/[locale]/campsites/[country]/[state]',
     });
-    const matcherParam = parseSvelteKitNormalizedRoute({
+    const matcherParam = convertToNormalizedRoute({
       route: '/blog/[page=integer]',
     });
-    const restParam = parseSvelteKitNormalizedRoute({
+    const restParam = convertToNormalizedRoute({
       route: '/docs/[...rest]',
     });
 

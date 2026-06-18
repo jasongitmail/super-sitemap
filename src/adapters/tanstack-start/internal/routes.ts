@@ -1,18 +1,21 @@
 import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
 import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 import { routeMatchesPattern } from '../../../core/internal/route-exclusion.js';
-import type { RouteLocaleSlot, RouteParam, RouteSegment } from '../../../core/internal/types.js';
+import type {
+  NormalizedRoute,
+  RouteLocaleSlot,
+  RouteParam,
+  RouteSegment,
+} from '../../../core/internal/types.js';
 import type {
   CreateTanStackStartNormalizedRoutesOptions,
-  TanStackStartNormalizedRoute,
   TanStackStartResolvedRoute,
   TanStackStartRouteInput,
-  TanStackStartRouteSource,
 } from './types.js';
 
 const OPTIONAL_PARAM_SEGMENT_REGEX = /^\{-\$([^}]+)\}$/;
 
-type TanStackStartRouteRecord = {
+type DiscoveredRouteRecord = {
   filePath?: string;
   fullPath?: string;
   id?: string;
@@ -22,7 +25,7 @@ type TanStackStartRouteRecord = {
   to?: string;
 };
 
-type ParsedSegment =
+type ParsedRouteSegment =
   | {
       kind: 'omit';
     }
@@ -49,12 +52,12 @@ type RouteSegmentVariant = {
 export function createTanStackStartNormalizedRoutes({
   excludeRoutePatterns = [],
   ...routeInput
-}: CreateTanStackStartNormalizedRoutesOptions): TanStackStartNormalizedRoute[] {
+}: CreateTanStackStartNormalizedRoutesOptions): NormalizedRoute[] {
   const routeRecords = getTanStackStartRouteRecordsFromRoutesByPath(routeInput);
-  const normalizedRoutes: TanStackStartNormalizedRoute[] = [];
+  const normalizedRoutes: NormalizedRoute[] = [];
 
   for (const route of routeRecords) {
-    const routeNormalizedRoutes = parseTanStackStartNormalizedRoutes(route).filter(
+    const routeNormalizedRoutes = convertToNormalizedRoutes(route).filter(
       (normalizedRoute) =>
         !excludeRoutePatterns.some((pattern) =>
           routeMatchesPattern(pattern, normalizedRoute.source.compatibilityKey)
@@ -69,7 +72,7 @@ export function createTanStackStartNormalizedRoutes({
 
 function getTanStackStartRouteRecordsFromRoutesByPath(
   routeInput: TanStackStartRouteInput
-): TanStackStartRouteRecord[] {
+): DiscoveredRouteRecord[] {
   if (typeof routeInput.router !== 'function') {
     throw new Error("super-sitemap: `router` must be your app's `getRouter` function.");
   }
@@ -82,7 +85,7 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
 
   return Object.entries(routesByPath)
     .map(([routesByPathKey, route]) => createTanStackStartRouteRecord(routesByPathKey, route))
-    .filter(isEmittableRouteRecord);
+    .filter(shouldIncludeInSitemap);
 }
 
 /**
@@ -91,7 +94,7 @@ function getTanStackStartRouteRecordsFromRoutesByPath(
 function createTanStackStartRouteRecord(
   routesByPathKey: string,
   route: unknown
-): TanStackStartRouteRecord {
+): DiscoveredRouteRecord {
   const routeRecord = isRouteRecordObject(route) ? route : {};
 
   return {
@@ -141,13 +144,11 @@ function getOptionalStringRouteField(
   return typeof value === 'string' ? value : undefined;
 }
 
-function parseTanStackStartNormalizedRoutes(
-  route: TanStackStartRouteRecord | string
-): TanStackStartNormalizedRoute[] {
+function convertToNormalizedRoutes(route: DiscoveredRouteRecord | string): NormalizedRoute[] {
   const routeRecord = typeof route === 'string' ? { fullPath: route } : route;
-  const sourcePath = getCompatibilityPath(routeRecord);
-  const parsedSegments = splitPath(sourcePath).map(parseTanStackStartSegment);
-  const variants = expandSegmentVariants(parsedSegments);
+  const sourcePath = getCompatibilityKey(routeRecord);
+  const parsedSegments = splitPath(sourcePath).map(parseRouteSegment);
+  const variants = expandOptionalParamRouteVariants(parsedSegments);
 
   return variants.map((segments) =>
     createNormalizedRoute({
@@ -164,9 +165,9 @@ function createNormalizedRoute({
   routeSegmentVariants,
 }: {
   compatibilityKey: string;
-  routeRecord: TanStackStartRouteRecord;
+  routeRecord: DiscoveredRouteRecord;
   routeSegmentVariants: RouteSegmentVariant[];
-}): TanStackStartNormalizedRoute {
+}): NormalizedRoute {
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
   const routeSegmentEntries = routeSegmentVariants.filter(hasRouteSegment);
@@ -198,7 +199,7 @@ function createNormalizedRoute({
     locale,
     params,
     segments: routeSegments,
-    source: stripUndefinedRouteSource({
+    source: stripUndefinedFields({
       adapter: 'tanstack-start',
       compatibilityKey,
       filePath: routeRecord.filePath,
@@ -210,24 +211,22 @@ function createNormalizedRoute({
   };
 }
 
-function stripUndefinedRouteSource(source: TanStackStartRouteSource): TanStackStartRouteSource {
-  return Object.fromEntries(
-    Object.entries(source).filter(([, value]) => value !== undefined)
-  ) as TanStackStartRouteSource;
+function stripUndefinedFields<T extends object>(source: T): T {
+  return Object.fromEntries(Object.entries(source).filter(([, value]) => value !== undefined)) as T;
 }
 
-function isEmittableRouteRecord(route: TanStackStartRouteRecord): boolean {
+function shouldIncludeInSitemap(route: DiscoveredRouteRecord): boolean {
   if (route.id === '__root__') return false;
   if (route.serverOnly) return false;
-  if (!hasRoutePathField(route)) return false;
+  if (!hasSourceForCompatibilityKey(route)) return false;
 
-  const sourcePath = getCompatibilityPath(route);
+  const sourcePath = getCompatibilityKey(route);
   if (sourcePath === '/') return true;
 
   return splitPath(sourcePath).some((segment) => !isPathlessSegment(segment));
 }
 
-function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
+function hasSourceForCompatibilityKey(route: DiscoveredRouteRecord): boolean {
   return (
     typeof route.fullPath === 'string' ||
     typeof route.to === 'string' ||
@@ -237,7 +236,7 @@ function hasRoutePathField(route: TanStackStartRouteRecord): boolean {
   );
 }
 
-function expandSegmentVariants(segments: ParsedSegment[]): RouteSegmentVariant[][] {
+function expandOptionalParamRouteVariants(segments: ParsedRouteSegment[]): RouteSegmentVariant[][] {
   let routeVariants: RouteSegmentVariant[][] = [[]];
   let pendingOptionalPathParams: RouteSegmentVariant[] = [];
 
@@ -251,19 +250,19 @@ function expandSegmentVariants(segments: ParsedSegment[]): RouteSegmentVariant[]
       continue;
     }
 
-    routeVariants = addOptionalPathParamVariants(routeVariants, pendingOptionalPathParams);
+    routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalPathParams);
     pendingOptionalPathParams = [];
 
     routeVariants = routeVariants.map((variant) => [...variant, toRouteSegmentVariant(segment)]);
   }
 
-  return addOptionalPathParamVariants(routeVariants, pendingOptionalPathParams);
+  return addOptionalParamRouteVariants(routeVariants, pendingOptionalPathParams);
 }
 
 /**
  * Adds TanStack's valid route variants for consecutive optional path params.
  */
-function addOptionalPathParamVariants(
+function addOptionalParamRouteVariants(
   routeVariants: RouteSegmentVariant[][],
   optionalPathParams: RouteSegmentVariant[]
 ): RouteSegmentVariant[][] {
@@ -283,8 +282,8 @@ function addOptionalPathParamVariants(
  * Detects optional route params that consume ordered URL path segments.
  */
 function isOptionalPathParam(
-  segment: ParsedSegment
-): segment is Extract<ParsedSegment, { kind: 'optional-param' }> {
+  segment: ParsedRouteSegment
+): segment is Extract<ParsedRouteSegment, { kind: 'optional-param' }> {
   return segment.kind === 'optional-param' && segment.name !== 'locale';
 }
 
@@ -292,7 +291,7 @@ function isOptionalPathParam(
  * Converts an emitted TanStack segment into a normalized route segment variant.
  */
 function toRouteSegmentVariant(
-  segment: Exclude<ParsedSegment, { kind: 'omit' }>
+  segment: Exclude<ParsedRouteSegment, { kind: 'omit' }>
 ): RouteSegmentVariant {
   if (segment.kind === 'static') {
     return {
@@ -333,13 +332,13 @@ function hasRouteSegment(
   return variant.segment !== undefined;
 }
 
-function getCompatibilityPath(route: TanStackStartRouteRecord): string {
+function getCompatibilityKey(route: DiscoveredRouteRecord): string {
   return normalizePath(
     route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? '/'
   );
 }
 
-function parseTanStackStartSegment(segment: string): ParsedSegment {
+function parseRouteSegment(segment: string): ParsedRouteSegment {
   if (isPathlessSegment(segment)) {
     return { kind: 'omit' };
   }

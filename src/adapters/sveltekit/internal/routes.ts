@@ -16,17 +16,29 @@ const PARAM_SEGMENT_REGEX = /^\[(\[?)(\.\.\.)?([^\]=]+)(?:=([^\]]+))?\]?\]$/;
 const ROUTE_GROUP_REGEX = /\/\([^)]+\)/g;
 const SRC_ROUTES_PREFIX = '/src/routes';
 
-type ParseSvelteKitNormalizedRouteOptions = {
+type ConvertToNormalizedRouteOptions = {
   filePath?: string;
   route: string;
 };
 
-type ParsedSvelteKitParamSegment = {
-  matcher?: string;
-  name: string;
-  optional: boolean;
-  rest?: boolean;
-};
+type ParsedRouteSegment =
+  | {
+      kind: 'locale';
+      matcher?: string;
+      name: string;
+      optional: boolean;
+    }
+  | {
+      kind: 'param';
+      matcher?: string;
+      name: string;
+      optional: boolean;
+      rest?: boolean;
+    }
+  | {
+      kind: 'static';
+      value: string;
+    };
 
 /**
  * Creates normalized routes from SvelteKit page route files.
@@ -52,14 +64,14 @@ export function createSvelteKitNormalizedRoutes({
     }))
     .sort((a, b) => a.route.localeCompare(b.route))
     .flatMap(({ filePath, route }) =>
-      expandSvelteKitOptionalRoutes([route]).map((expandedRoute) => ({
+      expandOptionalParamRouteVariants(route).map((expandedRoute) => ({
         filePath,
         route: expandedRoute,
       }))
     );
 
   return deduplicateNormalizedRoutesByCompatibilityKey(
-    routeEntries.map(({ filePath, route }) => parseSvelteKitNormalizedRoute({ filePath, route }))
+    routeEntries.map(({ filePath, route }) => convertToNormalizedRoute({ filePath, route }))
   );
 }
 
@@ -97,26 +109,16 @@ export function removeSvelteKitRouteGroups(route: string): string {
 }
 
 /**
- * Given an array of SvelteKit route keys, return a new array that includes all
- * valid SvelteKit variants for routes that contain optional params other than
- * the locale param.
- */
-export function expandSvelteKitOptionalRoutes(routes: string[]): string[] {
-  const processedRoutes = routes.flatMap((route) => {
-    const routeWithoutLocaleIfAny = route.replace(findSvelteKitLocaleToken(), '');
-    return /\[\[.*\]\]/.test(routeWithoutLocaleIfAny) ? expandSvelteKitOptionalRoute(route) : route;
-  });
-
-  return Array.from(new Set(processedRoutes));
-}
-
-/**
  * Expands one SvelteKit route containing optional parameters into the route
  * variants SvelteKit considers valid.
  */
-export function expandSvelteKitOptionalRoute(originalRoute: string): string[] {
+export function expandOptionalParamRouteVariants(originalRoute: string): string[] {
   const hasLocale = findSvelteKitLocaleToken().exec(originalRoute);
   const route = hasLocale ? originalRoute.replace(findSvelteKitLocaleToken(), '') : originalRoute;
+
+  if (!/\[\[.*\]\]/.test(route)) {
+    return [originalRoute];
+  }
 
   let results: string[] = [];
 
@@ -158,10 +160,10 @@ export function findSvelteKitLocaleToken(): RegExp {
 /**
  * Converts a SvelteKit route key into Super Sitemap's normalized route IR.
  */
-export function parseSvelteKitNormalizedRoute({
+export function convertToNormalizedRoute({
   filePath,
   route,
-}: ParseSvelteKitNormalizedRouteOptions): NormalizedRoute {
+}: ConvertToNormalizedRouteOptions): NormalizedRoute {
   const segments: RouteSegment[] = [];
   const params: RouteParam[] = [];
   let locale: RouteLocaleSlot | undefined;
@@ -169,23 +171,23 @@ export function parseSvelteKitNormalizedRoute({
   const routeSegments = route === '/' ? [] : route.split('/').filter(Boolean);
 
   routeSegments.forEach((segment, segmentIndex) => {
-    const parsedParam = parseSvelteKitParamSegment(segment);
+    const parsedSegment = parseRouteSegment(segment);
 
-    if (!parsedParam) {
-      segments.push({ kind: 'static', value: segment });
+    if (parsedSegment.kind === 'static') {
+      segments.push({ kind: 'static', value: parsedSegment.value });
       return;
     }
 
-    if (parsedParam.name === 'locale') {
+    if (parsedSegment.kind === 'locale') {
       segments.push({
         kind: 'locale',
-        matcher: parsedParam.matcher,
-        name: parsedParam.name,
+        matcher: parsedSegment.matcher,
+        name: parsedSegment.name,
       });
       locale = {
-        matcher: parsedParam.matcher,
-        mode: parsedParam.optional ? 'optional' : 'required',
-        paramName: parsedParam.name,
+        matcher: parsedSegment.matcher,
+        mode: parsedSegment.optional ? 'optional' : 'required',
+        paramName: parsedSegment.name,
         segmentIndex,
       };
       return;
@@ -193,14 +195,14 @@ export function parseSvelteKitNormalizedRoute({
 
     segments.push({
       kind: 'param',
-      matcher: parsedParam.matcher,
-      name: parsedParam.name,
-      rest: parsedParam.rest,
+      matcher: parsedSegment.matcher,
+      name: parsedSegment.name,
+      rest: parsedSegment.rest,
     });
     params.push({
-      matcher: parsedParam.matcher,
-      name: parsedParam.name,
-      rest: parsedParam.rest,
+      matcher: parsedSegment.matcher,
+      name: parsedSegment.name,
+      rest: parsedSegment.rest,
       segmentIndex,
     });
   });
@@ -248,16 +250,29 @@ function findSvelteKitLegacyLangToken(): RegExp {
 }
 
 /**
- * Parses a SvelteKit parameter segment into normalized metadata.
+ * Parses a SvelteKit route segment into normalized metadata.
  */
-function parseSvelteKitParamSegment(segment: string): ParsedSvelteKitParamSegment | undefined {
+function parseRouteSegment(segment: string): ParsedRouteSegment {
   const match = PARAM_SEGMENT_REGEX.exec(segment);
-  if (!match) return undefined;
+  if (!match) return { kind: 'static', value: segment };
+
+  const name = match[3] ?? '';
+  const optional = match[1] === '[';
+
+  if (name === 'locale') {
+    return {
+      kind: 'locale',
+      matcher: match[4],
+      name,
+      optional,
+    };
+  }
 
   return {
+    kind: 'param',
     matcher: match[4],
-    name: match[3] ?? '',
-    optional: match[1] === '[',
+    name,
+    optional,
     rest: match[2] === '...',
   };
 }

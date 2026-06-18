@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathObj } from '../../../core/internal/types.js';
-import { getSamplePathsFromRouteFiles } from './sample-paths.js';
+import { getSamplePathsFromRouteFiles } from '../../../test-utils/sveltekit-sample-paths.js';
 
 describe('SvelteKit adapter sample paths', () => {
   const routeFiles = [
