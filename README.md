@@ -460,23 +460,19 @@ what Super Sitemap expects, so you can correct them.
 
 ## Route Exclusions
 
-`excludeRoutePatterns` matches route keys, not final generated URLs.
+Use `excludeRoutePatterns` to remove routes before paths are generated.
 
-For SvelteKit, exclusions run before route groups are removed, so you can
-exclude a group by name:
-
-```ts
-excludeRoutePatterns: [/\(authenticated\)/],
-```
-
-For TanStack Start, routes come from the generated router after pathless and
-group segments have already been normalized away, so names like `_layout` or
-`(authenticated)` are not available for exclusion. Exclude by public route key
-instead:
+`excludeRoutePatterns` matches route keys, which are the same keys used by
+`paramValues`; see [Keys for Param Values](#keys-for-param-values).
 
 ```ts
 excludeRoutePatterns: [/^\/dashboard(?:$|\/)/],
 ```
+
+This excludes `/dashboard` and any route below it, like `/dashboard/settings`.
+
+Routing organization segments, like pathless layout segments and route groups,
+are not present in route keys and cannot be matched against.
 
 ## Optional Params
 
