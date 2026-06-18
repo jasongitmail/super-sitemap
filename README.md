@@ -694,7 +694,6 @@ the appropriate route.
 - **Use the new, framework-specific import:**
   - `import * as sitemap from 'super-sitemap/sveltekit'`, or
   - `import * as sitemap from 'super-sitemap/tanstack-start'`
-
 - **`lang` was renamed to `locales`.**
   - Use `locales: { default: 'en', alternates: ['de'] }`.
 - **Locale route params must be named `locale`.**
@@ -707,7 +706,7 @@ the appropriate route.
 
 ## Changelog
 
-- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`; TanStack Start now infers `{-$locale}` vs `$locale` directly from route syntax. `GetSvelteKitHeadersOptions`/`GetTanStackStartHeadersOptions` unified as `GetHeadersOptions`; error messages are now prefixed `super-sitemap:` instead of framework-specific prefixes. The TanStack Start adapter now automatically excludes server-only routes (server handlers without a component, e.g. the sitemap route itself, robots.txt, API routes) from sitemap output. Removed the `svelte` peer dependency—Super Sitemap now has zero peer dependencies. Removed Node built-ins from shipped code for edge-runtime compatibility (e.g. Cloudflare Workers). Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
+- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`. Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValue[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
