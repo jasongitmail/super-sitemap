@@ -36,7 +36,7 @@ export function renderSitemapXml(origin: string, pathObjs: PathObj[]): string {
       url += `    <loc>${origin}${path}</loc>\n`;
       url += lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : '';
       url += changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '';
-      url += priority ? `    <priority>${priority}</priority>\n` : '';
+      url += priority !== undefined ? `    <priority>${priority}</priority>\n` : '';
 
       if (alternates) {
         url += alternates

@@ -42,6 +42,14 @@ describe('core XML helpers', () => {
 </urlset>`);
   });
 
+  it('renders zero priority because it is valid sitemap metadata', () => {
+    const xml = renderSitemapXml('https://example.com', [
+      { path: '/lowest-priority', priority: 0.0 },
+    ]);
+
+    expect(xml).toContain('<priority>0</priority>');
+  });
+
   it('renders sitemap index XML with compatible page URLs', () => {
     expect(renderSitemapIndexXml('https://example.com', 2))
       .toBe(`<?xml version="1.0" encoding="UTF-8"?>
