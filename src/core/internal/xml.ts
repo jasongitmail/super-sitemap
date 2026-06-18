@@ -31,10 +31,11 @@ export function renderSitemapXml(origin: string, pathObjs: PathObj[]): string {
   const urlElements = pathObjs
     .map((pathObj) => {
       const { alternates, changefreq, lastmod, path, priority } = pathObj;
+      const loc = `${origin}${path}`;
 
       let url = '\n  <url>\n';
-      url += `    <loc>${origin}${path}</loc>\n`;
-      url += lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : '';
+      url += `    <loc>${escapeXmlText(loc)}</loc>\n`;
+      url += lastmod ? `    <lastmod>${escapeXmlText(lastmod)}</lastmod>\n` : '';
       url += changefreq ? `    <changefreq>${changefreq}</changefreq>\n` : '';
       url += priority !== undefined ? `    <priority>${priority}</priority>\n` : '';
 
@@ -42,7 +43,9 @@ export function renderSitemapXml(origin: string, pathObjs: PathObj[]): string {
         url += alternates
           .map(
             ({ hreflang, path }) =>
-              `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${origin}${path}" />\n`
+              `    <xhtml:link rel="alternate" hreflang="${escapeXmlAttribute(
+                hreflang
+              )}" href="${escapeXmlAttribute(`${origin}${path}`)}" />\n`
           )
           .join('');
       }
@@ -73,15 +76,44 @@ export function renderSitemapIndexXml(origin: string, pages: number): string {
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
   for (let i = 1; i <= pages; i++) {
+    const loc = `${origin}/sitemap${i}.xml`;
+
     str += `
   <sitemap>
-    <loc>${origin}/sitemap${i}.xml</loc>
+    <loc>${escapeXmlText(loc)}</loc>
   </sitemap>`;
   }
   str += `
 </sitemapindex>`;
 
   return str;
+}
+
+/**
+ * Escapes values interpolated into XML text nodes.
+ */
+function escapeXmlText(value: string): string {
+  return value.replaceAll(/[&<>]/g, (character) => {
+    switch (character) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      default:
+        return character;
+    }
+  });
+}
+
+/**
+ * Escapes values interpolated into XML double-quoted attributes.
+ */
+function escapeXmlAttribute(value: string): string {
+  return escapeXmlText(value).replaceAll(/["']/g, (character) =>
+    character === '"' ? '&quot;' : '&apos;'
+  );
 }
 
 /**

@@ -50,6 +50,30 @@ describe('core XML helpers', () => {
     expect(xml).toContain('<priority>0</priority>');
   });
 
+  it('escapes sitemap XML text and alternate link attributes', () => {
+    const xml = renderSitemapXml('https://example.com', [
+      {
+        alternates: [
+          {
+            hreflang: 'en-US"primary\'',
+            path: '/search?tag=<news>&quote="fresh"&apostrophe=\'today\'',
+          },
+        ],
+        lastmod: '2026-01-02T00:00:00Z & pending <review>',
+        path: '/search?tag=<news>&quote="fresh"&apostrophe=\'today\'',
+      },
+    ]);
+
+    expect(xml).toContain(
+      '<loc>https://example.com/search?tag=&lt;news&gt;&amp;quote="fresh"&amp;apostrophe=\'today\'</loc>'
+    );
+    expect(xml).toContain('<lastmod>2026-01-02T00:00:00Z &amp; pending &lt;review&gt;</lastmod>');
+    expect(xml).toContain('hreflang="en-US&quot;primary&apos;"');
+    expect(xml).toContain(
+      'href="https://example.com/search?tag=&lt;news&gt;&amp;quote=&quot;fresh&quot;&amp;apostrophe=&apos;today&apos;"'
+    );
+  });
+
   it('renders sitemap index XML with compatible page URLs', () => {
     expect(renderSitemapIndexXml('https://example.com', 2))
       .toBe(`<?xml version="1.0" encoding="UTF-8"?>
@@ -61,6 +85,12 @@ describe('core XML helpers', () => {
     <loc>https://example.com/sitemap2.xml</loc>
   </sitemap>
 </sitemapindex>`);
+  });
+
+  it('escapes sitemap index loc text', () => {
+    expect(renderSitemapIndexXml('https://example.com/root?section=<maps>&draft=yes', 1)).toContain(
+      '<loc>https://example.com/root?section=&lt;maps&gt;&amp;draft=yes/sitemap1.xml</loc>'
+    );
   });
 
   it('parses sitemap loc values and decodes entities', () => {
