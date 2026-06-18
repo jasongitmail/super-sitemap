@@ -14,5 +14,4 @@ export type {
   GetSamplePathsOptions,
   SitemapConfig,
   TanStackStartRouter,
-  TanStackStartRouterFactory,
 } from './internal/types.js';
