@@ -23,11 +23,11 @@ export type CreateSvelteKitNormalizedRoutesOptions = {
  * Public sitemap configuration for the SvelteKit adapter.
  *
  * @remarks
- * This type is intentionally explicit instead of re-exporting the core config
- * type. Editor hovers are part of the package DX: consumers should see every
- * config property directly from the adapter entrypoint. Keep this in sync with
- * the TanStack Start config; `sitemap-config-parity.test.ts` enforces the
- * shared shape at typecheck time.
+ * This type is intentionally explicit instead of aliasing the core config type.
+ * Editor hovers are part of the package DX: consumers should see every config
+ * property directly from the adapter entrypoint. Keep this in sync with the
+ * TanStack Start config; `sitemap-config-parity.d.ts` enforces the shared shape
+ * at typecheck time.
  */
 export type SitemapConfig = {
   additionalPaths?: string[];

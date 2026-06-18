@@ -47,8 +47,8 @@ export type CreateTanStackStartNormalizedRoutesOptions = TanStackStartRouteInput
  * This type is intentionally explicit instead of composing the core config
  * type. Editor hovers are part of the package DX: consumers should see every
  * config property directly from the adapter entrypoint. Keep this in sync with
- * the SvelteKit config; `sitemap-config-parity.test.ts` enforces the shared
- * shape at typecheck time.
+ * the SvelteKit config; `sitemap-config-parity.d.ts` enforces the shared shape
+ * at typecheck time.
  */
 export type SitemapConfig = {
   additionalPaths?: string[];
