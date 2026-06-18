@@ -462,7 +462,7 @@ what Super Sitemap expects, so you can correct them.
 
 Use `excludeRoutePatterns` to remove routes before paths are generated.
 
-`excludeRoutePatterns` matches route keys, which are the same keys used by
+`excludeRoutePatterns` matches against route keys, which are the same keys used by
 `paramValues`; see [Keys for Param Values](#keys-for-param-values).
 
 ```ts
@@ -718,7 +718,7 @@ the appropriate route.
   - TanStack Start: use `{-$locale}`.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
   - E.g. Use `/^\/dashboard/`, not `"^/dashboard"`.
-- **`excludeRoutePatterns` now matches route keys, not route groups.**
+- **`excludeRoutePatterns` now matches against route keys, not route groups.**
   - Match valid `paramValues` keys, such as `/dashboard`; route groups like
     `(authenticated)` cannot be matched against.
 - **`sampledUrls()` and `sampledPaths()` were removed.**
