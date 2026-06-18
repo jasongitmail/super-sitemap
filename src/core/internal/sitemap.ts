@@ -242,9 +242,9 @@ function validateMaxPerPage(maxPerPage: number): void {
 /**
  * Validates optional path post-processing before calling user code.
  */
-function validateProcessPaths(processPaths: unknown): asserts processPaths is NonNullable<
-  PreparePathsOptions['processPaths']
-> {
+function validateProcessPaths(
+  processPaths: unknown
+): asserts processPaths is NonNullable<PreparePathsOptions['processPaths']> {
   if (typeof processPaths !== 'function') {
     throw new Error('super-sitemap: `processPaths` must be a function.');
   }

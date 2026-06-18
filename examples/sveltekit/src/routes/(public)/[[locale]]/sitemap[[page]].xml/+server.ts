@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ params }) => {
     excludeRoutePatterns: [
       /dashboard/,
       /to-exclude/,
-      /\(secret-group\)/,
+      /^\/secret-page$/,
 
       // Exclude routes containing `[page=integer]`–e.g. `/blog/2`
       /\[page=integer\]/,
