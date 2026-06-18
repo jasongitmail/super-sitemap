@@ -424,22 +424,12 @@ paramValues: {
 
 </details>
 
-### Keys for Param Values
+## Keys for Param Values
 
-Keys in the `paramValues` object must match Super Sitemap's expected syntax; see
-table below.
-
-**Syntax differs between framework adapters (TanStack Start, SvelteKit), a.) to
-support framework-specific features (like SvelteKit's param matchers or TanStack
-Start's pathless layout segments), and b.) to remain close to how each framework
-defines its routes.**
-
-If in doubt, enable prerendering for your sitemap route and build your app;
-you'll see build errors for any keys that are missing or don't match what Super
-Sitemap expects, so you can correct them.
+Keys in the `paramValues` object must match Super Sitemap's expected syntax.
 
 <details>
-<summary>View keys allowed in paramValues</summary>
+<summary>View allowed keys</summary>
 
 | Route feature                         | TanStack Start key                                       | SvelteKit key                                              |
 | ------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
@@ -457,6 +447,15 @@ Sitemap expects, so you can correct them.
 | Required locale param                 | `'/$locale/docs/$slug'`                                  | `'/[locale]/docs/[slug]'`                                  |
 
 </details>
+
+**Syntax differs between framework adapters (TanStack Start, SvelteKit)**, a.) to
+support framework-specific features (like SvelteKit's param matchers or TanStack
+Start's pathless layout segments), and b.) to remain close to how each framework
+defines its routes.
+
+If in doubt, enable prerendering for your sitemap route and build your app;
+you'll see build errors for any keys that are missing or don't match what Super
+Sitemap expects, so you can correct them.
 
 ## Optional Params
 
