@@ -326,8 +326,8 @@ paramValues: {
   // Splat/rest params use TanStack's bare `$` segment.
   '/docs/$': ['intro/getting-started'],
 
-  // Locale params can appear in keys, but locale values come from `locales`;
-  // only non-locale params are provided here.
+  // Keep locale segments in the key, but omit locale values from the value
+  // array because locale values are specified once at the config level.
   '/$locale/blog/$slug': ['hello-world'],
   '/{-$locale}/docs/$slug': ['intro'],
 
@@ -389,8 +389,8 @@ paramValues: {
   // Rest params use SvelteKit's `[...rest]` syntax.
   '/docs/[...rest]': ['intro/getting-started'],
 
-  // Locale params can appear in keys, but locale values come from `locales`;
-  // only non-locale params are provided here.
+  // Keep locale segments in the key, but omit locale values from the value
+  // array because locale values are specified once at the config level.
   '/[[locale]]/blog/[slug]': ['hello-world'],
   '/[locale]/docs/[slug]': ['intro'],
 
