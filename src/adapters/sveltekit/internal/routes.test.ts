@@ -92,14 +92,16 @@ describe('SvelteKit routes', () => {
     );
   });
 
-  it('removes route groups after filtering', () => {
+  it('removes route groups from route keys', () => {
     expect(removeSvelteKitRouteGroups('/(public)/(nested-group)/visible')).toBe('/visible');
     expect(removeSvelteKitRouteGroups('/(public)')).toBe('/');
   });
 
-  it('filters before removing route groups and normalizes SvelteKit page file variants', () => {
+  // Exclusions match the same normalized route keys as paramValues so all
+  // framework adapters share consistent route-key matching and exclusion behavior.
+  it('filters after route groups are removed', () => {
     const normalizedRoutes = createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns: [/\(secret-group\)/, /\[page=integer\]/],
+      excludeRoutePatterns: [/\(secret-group\)/, /^\/hidden$/],
       routeFiles: [
         '/src/routes/(public)/+page.svelte',
         '/src/routes/(public)/terms/+page@.svelte',
@@ -107,15 +109,35 @@ describe('SvelteKit routes', () => {
         '/src/routes/(public)/break-dynamic/+page@[id].svelte',
         '/src/routes/(public)/break-group/+page@(id).svelte',
         '/src/routes/(secret-group)/hidden/+page.svelte',
+        '/src/routes/(secret-group)/kept/+page.svelte',
         '/src/routes/(public)/(nested-group)/visible/+page.md',
         '/src/routes/(public)/content/+page.svx',
-        '/src/routes/(public)/blog/[page=integer]/+page.svelte',
       ],
     });
 
     expect(
       normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
-    ).toEqual(['/', '/break', '/break-dynamic', '/break-group', '/content', '/terms', '/visible']);
+    ).toEqual([
+      '/',
+      '/break',
+      '/break-dynamic',
+      '/break-group',
+      '/content',
+      '/kept',
+      '/terms',
+      '/visible',
+    ]);
+  });
+
+  it('filters optional route variants after expansion', () => {
+    const normalizedRoutes = createSvelteKitNormalizedRoutes({
+      excludeRoutePatterns: [/^\/blog$/],
+      routeFiles: ['/src/routes/blog/[[page=integer]]/+page.svelte'],
+    });
+
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual(['/blog/[[page=integer]]']);
   });
 
   it('throws a helpful error when route exclusions use strings', () => {
@@ -245,7 +267,7 @@ describe('SvelteKit routes', () => {
 
   it('returns normalized syntax-free normalizedRoutes from SvelteKit route files', () => {
     const normalizedRoutes = createSvelteKitNormalizedRoutes({
-      excludeRoutePatterns: [/\(authenticated\)/],
+      excludeRoutePatterns: [/^\/dashboard$/],
       locales: { alternates: ['zh'], default: 'en' },
       routeFiles: [
         '/src/routes/(public)/[[locale]]/about/+page.svelte',

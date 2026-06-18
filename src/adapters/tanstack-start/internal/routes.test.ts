@@ -238,18 +238,15 @@ describe('TanStack Start adapter route parser', () => {
     ).toEqual(['/about', '/lazy-page', '/page-with-server']);
   });
 
-  it('allows optional route variants to be excluded explicitly', () => {
+  it('filters optional route variants after expansion', () => {
     const normalizedRoutes = createTanStackStartNormalizedRoutes({
-      excludeRoutePatterns: [/\/blog\/\{-\$category\}/],
+      excludeRoutePatterns: [/^\/blog$/],
       router: routerFromRoutes([{ fullPath: '/blog/{-$category}' }]),
     });
 
     expect(
       normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
-    ).toEqual(['/blog']);
-    expect(generatePathsFromNormalizedRoutes({ normalizedRoutes }).map(({ path }) => path)).toEqual(
-      ['/blog']
-    );
+    ).toEqual(['/blog/{-$category}']);
   });
 
   it('infers locale mapping from TanStack route syntax without leaking syntax into normalized IR', () => {

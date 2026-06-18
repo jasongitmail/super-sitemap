@@ -718,11 +718,15 @@ the appropriate route.
   - TanStack Start: use `{-$locale}`.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
   - E.g. Use `/^\/dashboard/`, not `"^/dashboard"`.
+- **`excludeRoutePatterns` now matches route keys, not route groups.**
+  - Match valid `paramValues` keys, such as `/dashboard`; route groups like
+    `(authenticated)` cannot be matched against.
 - **`sampledUrls()` and `sampledPaths()` were removed.**
   - Use [`getSamplePaths()`](#get-sample-paths) instead.
 
 ## Changelog
 
+- `1.0.13-tanstack.4` (unreleased) - BREAKING: SvelteKit `excludeRoutePatterns` now match normalized route keys after route groups are omitted and optional params are expanded, matching `paramValues` keys and TanStack Start behavior.
 - `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`. Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
 - `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
 - `1.0.11` - Remove all runtime dependencies!

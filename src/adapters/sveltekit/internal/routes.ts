@@ -59,9 +59,6 @@ export function createSvelteKitNormalizedRoutes({
       filePath,
       route: normalizeSvelteKitRouteFile(filePath),
     }))
-    .filter(
-      ({ route }) => !excludeRoutePatterns.some((pattern) => routeMatchesPattern(pattern, route))
-    )
     .map(({ filePath, route }) => ({
       filePath,
       route: removeSvelteKitRouteGroups(route),
@@ -72,6 +69,9 @@ export function createSvelteKitNormalizedRoutes({
         filePath,
         route: expandedRoute,
       }))
+    )
+    .filter(
+      ({ route }) => !excludeRoutePatterns.some((pattern) => routeMatchesPattern(pattern, route))
     );
 
   return deduplicateNormalizedRoutesByCompatibilityKey(
@@ -105,7 +105,7 @@ export function normalizeSvelteKitRouteFile(filePath: string): string {
 }
 
 /**
- * Removes decorative route groups after exclusions have run.
+ * Removes decorative route groups from route keys.
  */
 export function removeSvelteKitRouteGroups(route: string): string {
   const normalized = route.replaceAll(ROUTE_GROUP_REGEX, '');
