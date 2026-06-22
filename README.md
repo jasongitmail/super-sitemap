@@ -713,7 +713,7 @@ the appropriate route.
   - `import * as sitemap from 'super-sitemap/tanstack-start'`
 - **`lang` was renamed to `locales`.**
   - Use `locales: { default: 'en', alternates: ['de'] }`.
-- **Locale route params must be named `locale`.**
+- **Dynamic locale route params must be named `locale`.**
   - SvelteKit: use `[[locale]]`, not `[[lang]]`.
   - TanStack Start: use `{-$locale}`.
 - **`excludeRoutePatterns` now uses JavaScript regex literals, not strings.**
@@ -725,9 +725,11 @@ the appropriate route.
 
 ## Changelog
 
-- `1.0.13-tanstack.4` (unreleased) - BREAKING: SvelteKit `excludeRoutePatterns` now match normalized route keys after route groups are omitted and optional params are expanded, matching `paramValues` keys and TanStack Start behavior.
-- `1.0.13-tanstack.3` (unreleased) - BREAKING: `excludeRoutePatterns` now accepts JavaScript `RegExp` objects instead of regex source strings. BREAKING: `lang` config was renamed to `locales`; locale route params must be named `locale`. Added runnable example apps (`examples/sveltekit`, `examples/tanstack-start`) that integration-test the documented usage.
-- `1.0.13-tanstack.1` - BREAKING: public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`. Adds `getSamplePaths()` to both adapters.
+- `2.0.0` - BREAKING: Added framework-specific adapters for SvelteKit and TanStack Start. See [Migrating from v1 to v2](#migrating-from-v1-to-v2).
+  - Public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`.
+  - The `lang` config option was renamed to `locales`; dynamic locale route params must be named `locale`.
+  - `excludeRoutePatterns` now accepts `RegExp` objects and matches normalized route keys.
+  - `sampledUrls()` and `sampledPaths()` were removed; use [`getSamplePaths()`](#get-sample-paths).
 - `1.0.11` - Remove all runtime dependencies!
 - `1.0.0` - BREAKING: `priority` renamed to `defaultPriority`, and `changefreq` renamed to `defaultChangefreq`. NON-BREAKING: Support for `paramValues` to contain either `string[]`, `string[][]`, or `ParamValue[]` values to allow per-path specification of `lastmod`, `changefreq`, and `priority`.
 - `0.15.0` - BREAKING: Rename `excludePatterns` to `excludeRoutePatterns`.
@@ -773,14 +775,6 @@ Main release:
 
 A new version of this npm package is automatically published when the semver
 version within `package.json` is incremented.
-
-TanStack prerelease:
-
-```sh
-git switch tanstack
-npm run npm:version:tanstack
-npm run npm:publish:tanstack
-```
 
 ## Credits
 
