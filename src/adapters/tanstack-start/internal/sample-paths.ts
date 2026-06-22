@@ -11,7 +11,7 @@ import type { GetSamplePathsOptions } from './types.js';
  * - reuses the exact sitemap config
  * - samples from final public sitemap paths after `processPaths`
  * - exposes no paths beyond what the sitemap exposes by default
- * - keeps auth/private-route exclusion DRY in sitemap config
+ * - respects any route exclusions already defined in sitemap config
  * - keeps the mental model simple: `/sample-paths` is a sampled view of `/sitemap.xml`
  *
  * `getCanonicalPath` exists because canonicalization must run before dedupe and
@@ -19,10 +19,8 @@ import type { GetSamplePathsOptions } from './types.js';
  * need to collapse into one route sample before they are matched against route
  * normalizedRoutes. The default canonicalizer returns each path unchanged.
  *
- * If `getCanonicalPath` maps paths into new values, that is explicit caller
- * behavior, but inventing paths that are not canonical forms of
- * sitemap-published paths is not recommended and would be considered an
- * anti-pattern. There should be no reason to do this.
+ * `getCanonicalPath` should return canonical forms of sitemap-published paths,
+ * not unrelated paths that the sitemap would not publish.
  *
  * Private or authenticated routes must be excluded from the sitemap config. This
  * helper intentionally reuses the sitemap as the source of truth instead of

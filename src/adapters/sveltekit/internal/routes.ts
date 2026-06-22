@@ -249,6 +249,9 @@ export function validateSvelteKitLocaleConfig(routeFiles: string[], locales: Loc
   }
 }
 
+/**
+ * Creates a regex matching legacy v1 SvelteKit `lang` route tokens.
+ */
 function findSvelteKitLegacyLangToken(): RegExp {
   return new RegExp(LEGACY_LANG_TOKEN_REGEX);
 }

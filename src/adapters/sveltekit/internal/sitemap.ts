@@ -30,7 +30,13 @@ export async function response(config: SitemapConfig): Promise<Response> {
 }
 
 /**
- * Prepares final public sitemap path objects before rendering or sampling.
+ * Test-only helper that returns finalized public sitemap path objects without
+ * XML rendering.
+ *
+ * @remarks
+ * Public consumers should use `getBody`, `getHeaders`, or `response`. Tests use
+ * this helper to assert adapter path generation directly before pagination and
+ * XML rendering.
  */
 export function prepareSitemapPaths(
   config: Omit<InternalSvelteKitSitemapConfig, 'headers' | 'maxPerPage' | 'origin' | 'page'>

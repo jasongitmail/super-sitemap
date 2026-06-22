@@ -16,25 +16,25 @@ describe('demo app sitemap endpoint (end to end)', () => {
 
     // Valid sitemap document.
     expect(xml).toContain('<urlset');
+    const locs = [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
+    expect(locs.length).toBeGreaterThan(0);
 
-    // Static route with the trailing slash added by the demo's processPaths.
-    expect(xml).toContain('https://example.com/about/');
+    // Static route.
+    expect(locs).toContain('https://example.com/about');
     // Localized alternate from the [[locale]] route and locales config.
-    expect(xml).toContain('https://example.com/zh/about/');
+    expect(locs).toContain('https://example.com/zh/about');
     // Parameterized route interpolated from paramValues.
-    expect(xml).toContain('https://example.com/campsites/usa/new-york/');
+    expect(locs).toContain('https://example.com/campsites/usa/new-york');
 
     // Real import.meta.glob discovery of .md and .svx pages.
-    expect(xml).toContain('https://example.com/markdown-md/');
-    expect(xml).toContain('https://example.com/markdown-svx/');
+    expect(locs).toContain('https://example.com/markdown-md');
+    expect(locs).toContain('https://example.com/markdown-svx');
 
     // excludeRoutePatterns: no dashboard, secret group, or paginated routes.
     expect(xml).not.toContain('/dashboard');
     expect(xml).not.toContain('secret');
 
     // No SvelteKit route syntax may leak into any <loc> in the published sitemap.
-    const locs = [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBeGreaterThan(0);
     for (const loc of locs) {
       expect(loc).not.toMatch(/[[\]()]/);
     }

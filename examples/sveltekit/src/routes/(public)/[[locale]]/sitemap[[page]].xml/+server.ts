@@ -5,10 +5,9 @@ import { error } from '@sveltejs/kit';
 
 import * as sitemap from 'super-sitemap/sveltekit';
 
-// - Use prerender if you only have static routes or the data for your
-//   parameterized routes does not change between your builds builds. Otherwise,
-//   disabling prerendering will allow your database that generate param values
-//   to be executed when a user request to the sitemap does not hit cache.
+// - Use prerender if you only have static routes or your parameterized route
+//   data does not change between builds. Otherwise, leave prerendering disabled
+//   so param values can be loaded when an uncached sitemap request runs.
 // export const prerender = true;
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -61,9 +60,6 @@ export const GET: RequestHandler = async ({ params }) => {
           changefreq: 'daily',
           priority: 0.4,
         },
-        // {
-        //   values: ['canada', 'toronto']
-        // },
       ],
     },
 
@@ -73,24 +69,6 @@ export const GET: RequestHandler = async ({ params }) => {
     locales: {
       default: 'en',
       alternates: ['zh'],
-    },
-    processPaths: (paths: sitemap.PathObj[]) => {
-      // Add trailing slashes. (In reality, using no trailing slash is
-      // preferable b/c it provides consistency among all possible paths, even
-      // items like `/foo.pdf`; this is merely intended to test the
-      // `processPaths()` callback.)
-      return paths.map(({ path, alternates, ...rest }) => {
-        const rtrn: sitemap.PathObj = { path: path === '/' ? path : `${path}/`, ...rest };
-
-        if (alternates) {
-          rtrn.alternates = alternates.map((alternate: sitemap.Alternate) => ({
-            ...alternate,
-            path: alternate.path === '/' ? alternate.path : `${alternate.path}/`,
-          }));
-        }
-
-        return rtrn;
-      });
     },
   });
 };

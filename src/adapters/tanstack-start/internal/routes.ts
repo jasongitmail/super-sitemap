@@ -52,6 +52,9 @@ type RouteSegmentVariant = {
   segment?: RouteSegment;
 };
 
+/**
+ * Creates normalized sitemap routes from TanStack Start's generated router.
+ */
 export function createTanStackStartNormalizedRoutes({
   excludeRoutePatterns = [],
   ...routeInput
@@ -74,6 +77,9 @@ export function createTanStackStartNormalizedRoutes({
   return deduplicateNormalizedRoutesByCompatibilityKey(normalizedRoutes);
 }
 
+/**
+ * Reads TanStack Start's `routesByPath` map and converts it into sitemap route records.
+ */
 function getTanStackStartRouteRecordsFromRoutesByPath(
   routeInput: TanStackStartRouteInput
 ): DiscoveredRouteRecord[] {
@@ -148,6 +154,9 @@ function getOptionalStringRouteField(
   return typeof value === 'string' ? value : undefined;
 }
 
+/**
+ * Converts a discovered TanStack route into one or more normalized sitemap routes.
+ */
 function convertToNormalizedRoutes(route: DiscoveredRouteRecord | string): NormalizedRoute[] {
   const routeRecord = typeof route === 'string' ? { fullPath: route } : route;
   const sourcePath = getCompatibilityKey(routeRecord);
@@ -163,6 +172,9 @@ function convertToNormalizedRoutes(route: DiscoveredRouteRecord | string): Norma
   );
 }
 
+/**
+ * Builds the normalized route object and extracts route params from segment variants.
+ */
 function createNormalizedRoute({
   compatibilityKey,
   routeRecord,
@@ -215,10 +227,16 @@ function createNormalizedRoute({
   };
 }
 
+/**
+ * Removes undefined fields so normalized route source metadata stays compact.
+ */
 function stripUndefinedFields<T extends object>(source: T): T {
   return Object.fromEntries(Object.entries(source).filter(([, value]) => value !== undefined)) as T;
 }
 
+/**
+ * Determines whether a discovered TanStack route should appear in a sitemap.
+ */
 function shouldIncludeInSitemap(route: DiscoveredRouteRecord): boolean {
   if (route.id === '__root__') return false;
   if (route.serverOnly) return false;
@@ -230,6 +248,9 @@ function shouldIncludeInSitemap(route: DiscoveredRouteRecord): boolean {
   return splitPath(sourcePath).some((segment) => !isPathlessSegment(segment));
 }
 
+/**
+ * Checks whether TanStack exposed enough route metadata to create a route key.
+ */
 function hasSourceForCompatibilityKey(route: DiscoveredRouteRecord): boolean {
   return (
     typeof route.fullPath === 'string' ||
@@ -240,6 +261,9 @@ function hasSourceForCompatibilityKey(route: DiscoveredRouteRecord): boolean {
   );
 }
 
+/**
+ * Expands TanStack optional path params into the route key variants they can emit.
+ */
 function expandOptionalParamRouteVariants(segments: ParsedRouteSegment[]): RouteSegmentVariant[][] {
   let routeVariants: RouteSegmentVariant[][] = [[]];
   let pendingOptionalPathParams: RouteSegmentVariant[] = [];
@@ -330,18 +354,27 @@ function toRouteSegmentVariant(
   } satisfies RouteSegmentVariant;
 }
 
+/**
+ * Narrows a route segment variant to one that contributes a sitemap path segment.
+ */
 function hasRouteSegment(
   variant: RouteSegmentVariant
 ): variant is RouteSegmentVariant & { segment: RouteSegment } {
   return variant.segment !== undefined;
 }
 
+/**
+ * Chooses the best available TanStack route field for the public compatibility key.
+ */
 function getCompatibilityKey(route: DiscoveredRouteRecord): string {
   return normalizePath(
     route.fullPath ?? route.to ?? route.path ?? route.routesByPathKey ?? route.id ?? '/'
   );
 }
 
+/**
+ * Parses a TanStack route segment into the normalized intermediate segment model.
+ */
 function parseRouteSegment(segment: string): ParsedRouteSegment {
   if (isPathlessSegment(segment)) {
     return { kind: 'omit' };
@@ -363,6 +396,9 @@ function parseRouteSegment(segment: string): ParsedRouteSegment {
   return { kind: 'static', value: segment };
 }
 
+/**
+ * Detects TanStack route segments that organize route files but do not emit URL path segments.
+ */
 function isPathlessSegment(segment: string): boolean {
   return (
     segment === 'index' ||
