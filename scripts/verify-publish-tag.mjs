@@ -1,35 +1,21 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 const publishTag = process.env.npm_config_tag ?? 'latest';
-const isTanstackPrerelease = /-tanstack\.\d+$/.test(packageJson.version);
+const isPrerelease = packageJson.version.includes('-');
 
-/**
- * Returns the current Git branch name.
- */
-function getCurrentBranch() {
-  return execFileSync('git', ['branch', '--show-current'], { encoding: 'utf8' }).trim();
-}
-
-if (isTanstackPrerelease && publishTag !== 'tanstack') {
+if (publishTag === 'tanstack') {
   console.error(
-    `Refusing to publish ${packageJson.name}@${packageJson.version} with npm tag "${publishTag}".`
+    `Refusing to publish ${packageJson.name}@${packageJson.version} with retired npm tag "tanstack".`
   );
-  console.error('TanStack prereleases must be published with: npm publish --tag tanstack');
+  console.error('TanStack Start support ships in the main package as of v2.0.');
   process.exit(1);
 }
 
-if (isTanstackPrerelease && getCurrentBranch() !== 'tanstack') {
+if (isPrerelease && publishTag === 'latest') {
   console.error(
-    `Refusing to publish ${packageJson.name}@${packageJson.version} from a non-tanstack branch.`
+    `Refusing to publish prerelease ${packageJson.name}@${packageJson.version} with npm tag "latest".`
   );
-  process.exit(1);
-}
-
-if (!isTanstackPrerelease && publishTag === 'tanstack') {
-  console.error(
-    `Refusing to publish non-TanStack version ${packageJson.name}@${packageJson.version} with npm tag "tanstack".`
-  );
+  console.error('Use an explicit prerelease tag, e.g. npm publish --tag next.');
   process.exit(1);
 }
