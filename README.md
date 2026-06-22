@@ -1,7 +1,7 @@
 <div align="center">
   <img src="/docs/assets/readme-header.webp" alt="Super Sitemap">
 
-  <p>Sitemap focused on ease of use <br>and making it impossible to forget to add your paths.<br>For TanStack Start and SvelteKit.</p>
+  <p>Sitemap focused on ease of use <br>and making it impossible to forget to add your paths.<br>🎉<a href="#migrating-from-v1-to-v2">NEW v2.0</a>: For TanStack Start and SvelteKit.</p>
 
   <a href="https://github.com/jasongitmail/super-sitemap/blob/main/LICENSE">
     <img alt="license badge" src="https://img.shields.io/npm/l/super-sitemap?color=limegreen">
