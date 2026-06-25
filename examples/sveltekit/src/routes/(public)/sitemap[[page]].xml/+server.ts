@@ -30,10 +30,7 @@ export const GET: RequestHandler = async ({ params }) => {
       '/[[locale]]/[foo]': ['foo-path-1'],
       '/[[locale]]/optionals/[[optional]]': ['optional-1', 'optional-2'],
       '/[[locale]]/optionals/many/[[paramA]]': ['data-a1', 'data-a2'],
-      '/[[locale]]/optionals/many/[[paramA]]/[[paramB]]': [
-        ['data-a1', 'data-b1'],
-        ['data-a2', 'data-b2'],
-      ],
+      '/[[locale]]/optionals/many/[[paramA]]/foo': ['data-a1', 'data-a2'],
       '/[[locale]]/optionals/many/[[paramA]]/[[paramB]]/foo': [
         ['data-a1', 'data-b1'],
         ['data-a2', 'data-b2'],

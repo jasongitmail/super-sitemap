@@ -186,6 +186,16 @@ describe('SvelteKit routes', () => {
     ]);
   });
 
+  it('expands consecutive optional params before a static suffix with SvelteKit prefix-only semantics', () => {
+    expect(
+      expandOptionalParamRouteVariants('/[[locale]]/optionals/many/[[paramA]]/[[paramB]]/foo')
+    ).toEqual([
+      '/[[locale]]/optionals/many/foo',
+      '/[[locale]]/optionals/many/[[paramA]]/foo',
+      '/[[locale]]/optionals/many/[[paramA]]/[[paramB]]/foo',
+    ]);
+  });
+
   it('matches optional and required SvelteKit locale route tokens', () => {
     const regex = findSvelteKitLocaleToken();
 

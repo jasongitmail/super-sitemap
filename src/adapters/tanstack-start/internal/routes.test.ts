@@ -140,6 +140,39 @@ describe('TanStack Start adapter route parser', () => {
     ).toEqual(['/something', '/something/a', '/something/a/b']);
   });
 
+  it('expands consecutive optional params before a static suffix with TanStack prefix-only semantics', () => {
+    const normalizedRoutes = createTanStackStartNormalizedRoutes({
+      router: routerFromRoutes([
+        { fullPath: '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo' },
+      ]),
+    });
+
+    expect(
+      normalizedRoutes.map((normalizedRoute) => normalizedRoute.source.compatibilityKey)
+    ).toEqual([
+      '/{-$locale}/optionals/many/foo',
+      '/{-$locale}/optionals/many/{-$paramA}/foo',
+      '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo',
+    ]);
+    expect(
+      generatePathsFromNormalizedRoutes({
+        locales: { alternates: ['zh'], default: 'en' },
+        normalizedRoutes,
+        paramValues: {
+          '/{-$locale}/optionals/many/{-$paramA}/foo': ['data-a1'],
+          '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': [['data-a1', 'data-b1']],
+        },
+      }).map(({ path }) => path)
+    ).toEqual([
+      '/optionals/many/foo',
+      '/zh/optionals/many/foo',
+      '/optionals/many/data-a1/foo',
+      '/zh/optionals/many/data-a1/foo',
+      '/optionals/many/data-a1/data-b1/foo',
+      '/zh/optionals/many/data-a1/data-b1/foo',
+    ]);
+  });
+
   it('omits pathless and group-like segments and respects canonical fullPath over path', () => {
     const [normalizedRoute] = createTanStackStartNormalizedRoutes({
       router: routerFromRoutes([

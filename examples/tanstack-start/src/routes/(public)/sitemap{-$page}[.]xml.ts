@@ -19,9 +19,6 @@ export const Route = createFileRoute('/(public)/sitemap{-$page}.xml')({
             /\/to-exclude(?:$|\/)/, // `to-exclude` segment
             /\/landing-page-draft$/, // a draft route
             /\/page\/\$page$/, // page routes
-
-            // TS-only variants
-            /^\/\{-\$locale\}\/optionals\/many\/(?:\{-\$paramA\}\/)?foo$/,
           ],
           origin: 'https://example.com',
           page: params.page,
@@ -29,10 +26,7 @@ export const Route = createFileRoute('/(public)/sitemap{-$page}.xml')({
             '/{-$locale}/$foo': ['foo-path-1'],
             '/{-$locale}/optionals/{-$optional}': ['optional-1', 'optional-2'],
             '/{-$locale}/optionals/many/{-$paramA}': ['data-a1', 'data-a2'],
-            '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}': [
-              ['data-a1', 'data-b1'],
-              ['data-a2', 'data-b2'],
-            ],
+            '/{-$locale}/optionals/many/{-$paramA}/foo': ['data-a1', 'data-a2'],
             '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': [
               ['data-a1', 'data-b1'],
               ['data-a2', 'data-b2'],

@@ -26,7 +26,6 @@ import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Rou
 import { Route as publicChar123LocaleChar125CampsitesCountryStateRouteImport } from './routes/(public)/{-$locale}/campsites/$country/$state'
 import { Route as publicChar123LocaleChar125BlogTagTagRouteImport } from './routes/(public)/{-$locale}/blog/tag/$tag'
 import { Route as publicChar123LocaleChar125BlogPagePageRouteImport } from './routes/(public)/{-$locale}/blog/page/$page'
-import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport } from './routes/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/index'
 import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRouteImport } from './routes/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
 import { Route as publicChar123LocaleChar125BlogTagTagPagePageRouteImport } from './routes/(public)/{-$locale}/blog/tag/$tag/page/$page'
 
@@ -135,15 +134,6 @@ const publicChar123LocaleChar125BlogPagePageRoute =
     path: '/{-$locale}/blog/page/$page',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute =
-  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport.update(
-    {
-      id: '/{-$paramB}/',
-      path: '/{-$paramB}/',
-      getParentRoute: () =>
-        publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route,
-    } as any,
-  )
 const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute =
   publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRouteImport.update(
     {
@@ -180,7 +170,6 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
   '/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
   '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
-  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRoutesByTo {
   '/sitemap{-$page}.xml': typeof publicSitemapChar123PageChar125DotxmlRoute
@@ -202,7 +191,6 @@ export interface FileRoutesByTo {
   '/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
   '/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
   '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
-  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -225,7 +213,6 @@ export interface FileRoutesById {
   '/(public)/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
   '/(public)/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
   '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
-  '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -249,7 +236,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/optionals/to-exclude/{-$optional}'
     | '/{-$locale}/blog/tag/$tag/page/$page'
     | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
-    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sitemap{-$page}.xml'
@@ -271,7 +257,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/optionals/to-exclude/{-$optional}'
     | '/{-$locale}/blog/tag/$tag/page/$page'
     | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
-    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}'
   id:
     | '__root__'
     | '/(public)/sitemap{-$page}.xml'
@@ -293,7 +278,6 @@ export interface FileRouteTypes {
     | '/(public)/{-$locale}/optionals/to-exclude/{-$optional}'
     | '/(public)/{-$locale}/blog/tag/$tag/page/$page'
     | '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
-    | '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -437,13 +421,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicChar123LocaleChar125BlogPagePageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': {
-      id: '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
-      path: '/{-$paramB}'
-      fullPath: '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
-      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport
-      parentRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route
-    }
     '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': {
       id: '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
       path: '/{-$paramB}/foo'
@@ -478,15 +455,12 @@ const publicChar123LocaleChar125BlogTagTagRouteWithChildren =
 
 interface publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren {
   publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
-  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 
 const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren: publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren =
   {
     publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute:
       publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute,
-    publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute:
-      publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute,
   }
 
 const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren =

@@ -25,6 +25,10 @@ describe('demo app sitemap endpoint (end to end)', () => {
     expect(locs).toContain('https://example.com/zh/about');
     // Parameterized route interpolated from paramValues.
     expect(locs).toContain('https://example.com/campsites/usa/new-york');
+    // Consecutive optional params before a static suffix keep the suffix.
+    expect(locs).toContain('https://example.com/optionals/many/foo');
+    expect(locs).toContain('https://example.com/optionals/many/data-a1/foo');
+    expect(locs).toContain('https://example.com/optionals/many/data-a1/data-b1/foo');
 
     // Real import.meta.glob discovery of .md and .svx pages.
     expect(locs).toContain('https://example.com/markdown-md');

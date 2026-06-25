@@ -124,23 +124,29 @@ export function expandOptionalParamRouteVariants(originalRoute: string): string[
     return [originalRoute];
   }
 
-  let results: string[] = [];
+  const routeSegments = route.split('/').filter(Boolean);
+  let routeVariants: string[][] = [[]];
+  let pendingOptionalSegments: string[] = [];
 
-  results.push(route.slice(0, route.indexOf('[[') - 1));
+  for (const segment of routeSegments) {
+    const parsedSegment = parseRouteSegment(segment);
 
-  const remaining = route.slice(route.indexOf('[['));
-  const segments = remaining.split('/').filter(Boolean);
-
-  let j = 1;
-  for (const segment of segments) {
-    if (!results[j]) results[j] = results[j - 1];
-
-    results[j] = `${results[j]}/${segment}`;
-
-    if (segment.startsWith('[[')) {
-      j++;
+    if (parsedSegment.kind !== 'static' && parsedSegment.optional) {
+      pendingOptionalSegments.push(segment);
+      continue;
     }
+
+    if (pendingOptionalSegments.length) {
+      routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalSegments);
+      pendingOptionalSegments = [];
+    }
+
+    routeVariants = routeVariants.map((variant) => [...variant, segment]);
   }
+
+  routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalSegments);
+
+  let results = routeVariants.map((variant) => (variant.length ? `/${variant.join('/')}` : '/'));
 
   if (hasLocale) {
     const locale = hasLocale[0];
@@ -149,9 +155,28 @@ export function expandOptionalParamRouteVariants(originalRoute: string): string[
     );
   }
 
-  if (!results[0].length) results[0] = '/';
-
   return results;
+}
+
+/**
+ * Adds valid SvelteKit route variants for consecutive optional path params.
+ * For example, `/[[paramA]]/[[paramB]]/foo` expands to `/foo`,
+ * `/[[paramA]]/foo`, and `/[[paramA]]/[[paramB]]/foo`.
+ */
+function addOptionalParamRouteVariants(
+  routeVariants: string[][],
+  optionalSegments: string[]
+): string[][] {
+  if (!optionalSegments.length) {
+    return routeVariants;
+  }
+
+  return routeVariants.flatMap((variant) =>
+    Array.from({ length: optionalSegments.length + 1 }, (_, prefixLength) => [
+      ...variant,
+      ...optionalSegments.slice(0, prefixLength),
+    ])
+  );
 }
 
 /**

@@ -18,6 +18,9 @@ const expectedLocs = [
   'https://example.com/campsites/usa/new-york',
   'https://example.com/foo-path-1',
   'https://example.com/foo.pdf',
+  'https://example.com/optionals/many/foo',
+  'https://example.com/optionals/many/data-a1/foo',
+  'https://example.com/optionals/many/data-a1/data-b1/foo',
   'https://example.com/optionals/optional-1',
   'https://example.com/zh/about',
   'https://example.com/zh/blog/hello-world',
@@ -73,8 +76,6 @@ describe('super-sitemap TanStack Start integration', () => {
     expect(body).not.toContain('/to-exclude');
     expect(body).not.toContain('/api/');
     expect(body).not.toContain('/blog/page/');
-    expect(body).not.toContain('/optionals/many/foo');
-    expect(body).not.toContain('/optionals/many/data-a1/foo');
     for (const loc of locs) {
       expect(loc).not.toContain('/sitemap');
     }
