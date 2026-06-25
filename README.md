@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/docs/assets/readme-header.webp" alt="Super Sitemap">
+  <img src="https://raw.githubusercontent.com/jasongitmail/super-sitemap/main/docs/assets/readme-header.webp" alt="Super Sitemap">
 
   <p>Sitemap focused on ease of use <br>and making it impossible to forget to add your paths.<br>🎉<a href="#migrating-from-v1-to-v2">NEW v2.0</a>: For TanStack Start and SvelteKit.</p>
 
