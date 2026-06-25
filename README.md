@@ -60,11 +60,11 @@
 
 ## Installation
 
-`npm i -D super-sitemap`
+`npm i super-sitemap`
 
 or
 
-`bun add -d super-sitemap`
+`bun add super-sitemap`
 
 Then see the [Usage](#usage), [Robots.txt](#robotstxt), & [Playwright Test](#playwright-test) sections.
 
