@@ -47,6 +47,9 @@ jobs:
       - name: Run integration tests
         run: bun run test
         working-directory: examples/sveltekit
+      - name: Run framework routing contract tests
+        run: bun run test:framework-routing
+        working-directory: examples/sveltekit
       - name: Build example app
         run: bun run build
         working-directory: examples/sveltekit
@@ -65,6 +68,9 @@ jobs:
         working-directory: examples/tanstack-start
       - name: Run integration tests
         run: bun run test
+        working-directory: examples/tanstack-start
+      - name: Run framework routing contract tests
+        run: bun run test:framework-routing
         working-directory: examples/tanstack-start
       - name: Build example app
         run: bun run build

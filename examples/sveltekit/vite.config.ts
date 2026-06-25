@@ -12,6 +12,9 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    include:
+      process.env.FRAMEWORK_ROUTING === '1'
+        ? ['tests/framework-routing.test.ts']
+        : ['src/**/*.test.ts', 'tests/sitemap.test.ts'],
   },
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { optionalStaticSuffixSuccessPaths } from '../../test-utils/framework-routing-contract.js';
 // Evaluate the app router (and generated route tree) before the sitemap route
 // module, mirroring TanStack Start's own evaluation order. The route file and
 // router.tsx import each other (route -> router -> routeTree.gen -> route), so
@@ -18,9 +19,7 @@ const expectedLocs = [
   'https://example.com/campsites/usa/new-york',
   'https://example.com/foo-path-1',
   'https://example.com/foo.pdf',
-  'https://example.com/optionals/many/foo',
-  'https://example.com/optionals/many/data-a1/foo',
-  'https://example.com/optionals/many/data-a1/data-b1/foo',
+  ...optionalStaticSuffixSuccessPaths.map((path) => `https://example.com${path}`),
   'https://example.com/optionals/optional-1',
   'https://example.com/zh/about',
   'https://example.com/zh/blog/hello-world',

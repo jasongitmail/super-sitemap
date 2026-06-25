@@ -1,4 +1,5 @@
 import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
+import { expandOptionalSegmentPrefixVariants } from '../../../core/internal/optional-route-variants.js';
 import {
   routeMatchesPattern,
   validateExcludeRoutePatterns,
@@ -137,14 +138,14 @@ export function expandOptionalParamRouteVariants(originalRoute: string): string[
     }
 
     if (pendingOptionalSegments.length) {
-      routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalSegments);
+      routeVariants = expandOptionalSegmentPrefixVariants(routeVariants, pendingOptionalSegments);
       pendingOptionalSegments = [];
     }
 
     routeVariants = routeVariants.map((variant) => [...variant, segment]);
   }
 
-  routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalSegments);
+  routeVariants = expandOptionalSegmentPrefixVariants(routeVariants, pendingOptionalSegments);
 
   let results = routeVariants.map((variant) => (variant.length ? `/${variant.join('/')}` : '/'));
 
@@ -156,27 +157,6 @@ export function expandOptionalParamRouteVariants(originalRoute: string): string[
   }
 
   return results;
-}
-
-/**
- * Adds valid SvelteKit route variants for consecutive optional path params.
- * For example, `/[[paramA]]/[[paramB]]/foo` expands to `/foo`,
- * `/[[paramA]]/foo`, and `/[[paramA]]/[[paramB]]/foo`.
- */
-function addOptionalParamRouteVariants(
-  routeVariants: string[][],
-  optionalSegments: string[]
-): string[][] {
-  if (!optionalSegments.length) {
-    return routeVariants;
-  }
-
-  return routeVariants.flatMap((variant) =>
-    Array.from({ length: optionalSegments.length + 1 }, (_, prefixLength) => [
-      ...variant,
-      ...optionalSegments.slice(0, prefixLength),
-    ])
-  );
 }
 
 /**

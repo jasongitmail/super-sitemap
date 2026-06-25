@@ -14,13 +14,21 @@ type RunningDevServer = {
   process: ChildProcessWithoutNullStreams;
 };
 
+export const optionalStaticSuffixSuccessPaths = [
+  '/optionals/many/foo',
+  '/optionals/many/data-a1/foo',
+  '/optionals/many/data-a1/data-b1/foo',
+] as const;
+
+export const localizedOptionalStaticSuffixSuccessPaths = [
+  '/zh/optionals/many/foo',
+  '/zh/optionals/many/data-a1/foo',
+  '/zh/optionals/many/data-a1/data-b1/foo',
+] as const;
+
 export const optionalStaticSuffixRoutingCases: FrameworkRoutingCase[] = [
-  { expectedStatus: 200, path: '/optionals/many/foo' },
-  { expectedStatus: 200, path: '/optionals/many/data-a1/foo' },
-  { expectedStatus: 200, path: '/optionals/many/data-a1/data-b1/foo' },
-  { expectedStatus: 200, path: '/zh/optionals/many/foo' },
-  { expectedStatus: 200, path: '/zh/optionals/many/data-a1/foo' },
-  { expectedStatus: 200, path: '/zh/optionals/many/data-a1/data-b1/foo' },
+  ...optionalStaticSuffixSuccessPaths.map((path) => ({ expectedStatus: 200, path })),
+  ...localizedOptionalStaticSuffixSuccessPaths.map((path) => ({ expectedStatus: 200, path })),
   { expectedStatus: 404, path: '/optionals/many/data-a1/data-b1' },
   { expectedStatus: 404, path: '/zh/optionals/many/data-a1/data-b1' },
 ];

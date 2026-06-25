@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { optionalStaticSuffixSuccessPaths } from '../../test-utils/framework-routing-contract.js';
 import { GET } from '../src/routes/(public)/sitemap[[page]].xml/+server.js';
 
 type RequestEvent = Parameters<typeof GET>[0];
@@ -26,9 +27,9 @@ describe('demo app sitemap endpoint (end to end)', () => {
     // Parameterized route interpolated from paramValues.
     expect(locs).toContain('https://example.com/campsites/usa/new-york');
     // Consecutive optional params before a static suffix keep the suffix.
-    expect(locs).toContain('https://example.com/optionals/many/foo');
-    expect(locs).toContain('https://example.com/optionals/many/data-a1/foo');
-    expect(locs).toContain('https://example.com/optionals/many/data-a1/data-b1/foo');
+    for (const path of optionalStaticSuffixSuccessPaths) {
+      expect(locs).toContain(`https://example.com${path}`);
+    }
 
     // Real import.meta.glob discovery of .md and .svx pages.
     expect(locs).toContain('https://example.com/markdown-md');
@@ -40,7 +41,7 @@ describe('demo app sitemap endpoint (end to end)', () => {
 
     // No SvelteKit route syntax may leak into any <loc> in the published sitemap.
     for (const loc of locs) {
-      expect(loc).not.toMatch(/[[\]()]/);
+      expect(loc).not.toMatch(/[\[\]()]|%5B|%5D/i);
     }
 
     // Only page routes appear: +server.ts endpoints (this sitemap route itself

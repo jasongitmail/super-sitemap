@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "test:framework-routing": "FRAMEWORK_ROUTING=1 vitest --run"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.168.0",

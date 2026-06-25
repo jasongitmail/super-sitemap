@@ -1,4 +1,5 @@
 import { deduplicateNormalizedRoutesByCompatibilityKey } from '../../../core/internal/normalized-routes.js';
+import { expandOptionalSegmentPrefixVariants } from '../../../core/internal/optional-route-variants.js';
 import { normalizePath, splitPath, toPath } from '../../../core/internal/paths.js';
 import {
   routeMatchesPattern,
@@ -278,32 +279,13 @@ function expandOptionalParamRouteVariants(segments: ParsedRouteSegment[]): Route
       continue;
     }
 
-    routeVariants = addOptionalParamRouteVariants(routeVariants, pendingOptionalPathParams);
+    routeVariants = expandOptionalSegmentPrefixVariants(routeVariants, pendingOptionalPathParams);
     pendingOptionalPathParams = [];
 
     routeVariants = routeVariants.map((variant) => [...variant, toRouteSegmentVariant(segment)]);
   }
 
-  return addOptionalParamRouteVariants(routeVariants, pendingOptionalPathParams);
-}
-
-/**
- * Adds TanStack's valid route variants for consecutive optional path params.
- */
-function addOptionalParamRouteVariants(
-  routeVariants: RouteSegmentVariant[][],
-  optionalPathParams: RouteSegmentVariant[]
-): RouteSegmentVariant[][] {
-  if (!optionalPathParams.length) {
-    return routeVariants;
-  }
-
-  return routeVariants.flatMap((variant) =>
-    Array.from({ length: optionalPathParams.length + 1 }, (_, prefixLength) => [
-      ...variant,
-      ...optionalPathParams.slice(0, prefixLength),
-    ])
-  );
+  return expandOptionalSegmentPrefixVariants(routeVariants, pendingOptionalPathParams);
 }
 
 /**

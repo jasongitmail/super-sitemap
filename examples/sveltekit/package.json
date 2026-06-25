@@ -6,7 +6,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "test:framework-routing": "FRAMEWORK_ROUTING=1 vitest --run"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^2",
