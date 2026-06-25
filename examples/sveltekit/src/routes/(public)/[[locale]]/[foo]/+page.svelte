@@ -1,10 +1,8 @@
 <script lang="ts">
-  //
+  import { page } from '$app/stores';
+  const { params } = $page;
 </script>
 
-<h1>Foo parameterized route</h1>
+<h1>Example dynamic route</h1>
 
-<p>
-  Appears as a general fallback. Exists to test route specificity handling by
-  `sampled.findFirstMatches()` (an internal function)
-</p>
+<p>Example page for {params.foo}.</p>

@@ -5,4 +5,4 @@
 
 <h1>Blog - Page {params.page}</h1>
 
-<p>Show a blog post for {params.slug} or 404.</p>
+<p>Example blog listing page {params.page}.</p>

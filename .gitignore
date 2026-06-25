@@ -13,3 +13,5 @@ misc
 CLAUDE.md
 .serena
 .claude/
+.tmp
+codebook.toml

@@ -49,12 +49,15 @@
     "prepublishOnly": "node scripts/verify-publish-tag.mjs && npm run package && npm test",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run",
+    "test:examples": "bun run test:examples:sveltekit && bun run test:examples:tanstack-start",
+    "test:examples:sveltekit": "(cd examples/sveltekit && bun run test)",
+    "test:examples:tanstack-start": "(cd examples/tanstack-start && bun run test)",
     "test:watch": "vitest",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt --write .",
-    "ready": "bun run lint && bun run format && bun run typecheck && bun run test"
+    "ready": "bun run lint && bun run format && bun run typecheck && bun run test && bun run test:examples"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

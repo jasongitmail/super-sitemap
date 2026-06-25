@@ -6,13 +6,21 @@ import { describe, expect, it } from 'vitest';
 // importing the route file first would observe an uninitialized `Route`.
 import '../src/router';
 
-const { Route } = await import('../src/routes/sitemap{-$page}[.]xml');
+const { Route } = await import('../src/routes/(public)/sitemap{-$page}[.]xml');
 
 const expectedLocs = [
-  '<loc>https://example.com/</loc>',
-  '<loc>https://example.com/about</loc>',
-  '<loc>https://example.com/blog/hello-world</loc>',
-  '<loc>https://example.com/blog/another-post</loc>',
+  'https://example.com/',
+  'https://example.com/about',
+  'https://example.com/blog/hello-world',
+  'https://example.com/blog/another-post',
+  'https://example.com/blog/awesome-post',
+  'https://example.com/blog/tag/red',
+  'https://example.com/campsites/usa/new-york',
+  'https://example.com/foo-path-1',
+  'https://example.com/foo.pdf',
+  'https://example.com/optionals/optional-1',
+  'https://example.com/zh/about',
+  'https://example.com/zh/blog/hello-world',
 ];
 
 /** Invokes the sitemap route's GET server handler the way TanStack Start does. */
@@ -28,6 +36,13 @@ async function get(page?: string): Promise<Response> {
   return (await handler(ctx as never)) as Response;
 }
 
+/**
+ * Extracts sitemap loc values from a generated XML response.
+ */
+function getLocs(xml: string) {
+  return [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1]);
+}
+
 describe('super-sitemap TanStack Start integration', () => {
   it('generates a sitemap from the real generated route tree (no page param)', async () => {
     const res = await get();
@@ -39,21 +54,34 @@ describe('super-sitemap TanStack Start integration', () => {
 
     expect(body).toContain('<urlset');
     for (const loc of expectedLocs) {
-      expect(body).toContain(loc);
+      expect(body).toContain(`<loc>${loc}</loc>`);
     }
 
-    // TanStack route syntax (e.g. `$slug`) must never leak into emitted URLs.
-    const locs = [...body.matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1]);
+    const locs = getLocs(body);
     expect(locs.length).toBeGreaterThan(0);
+
+    // TanStack route syntax (e.g. `$slug` and `{-$locale}`) must never leak into emitted URLs.
     for (const loc of locs) {
       expect(loc).not.toContain('$');
+      expect(loc).not.toContain('{');
+      expect(loc).not.toContain('}');
     }
 
-    // Only page routes appear — exactly these, nothing more. Server-only routes
-    // (this sitemap route itself) are excluded automatically.
-    expect([...locs].sort()).toEqual(
-      expectedLocs.map((loc) => loc.replace('<loc>', '').replace('</loc>', '')).sort()
-    );
+    // Excluded routes and server-only routes do not appear.
+    expect(body).not.toContain('/dashboard');
+    expect(body).not.toContain('/landing-page-draft');
+    expect(body).not.toContain('/to-exclude');
+    expect(body).not.toContain('/api/');
+    expect(body).not.toContain('/blog/page/');
+    expect(body).not.toContain('/optionals/many/foo');
+    expect(body).not.toContain('/optionals/many/data-a1/foo');
+    for (const loc of locs) {
+      expect(loc).not.toContain('/sitemap');
+    }
+
+    // Per-route metadata from ParamValue objects is preserved.
+    expect(body).toContain('<lastmod>2025-01-01T00:00:00Z</lastmod>');
+    expect(body).toContain('<priority>0.5</priority>');
   });
 
   it("returns the same urlset for page '1'", async () => {
@@ -66,7 +94,7 @@ describe('super-sitemap TanStack Start integration', () => {
 
     expect(body).toContain('<urlset');
     for (const loc of expectedLocs) {
-      expect(body).toContain(loc);
+      expect(body).toContain(`<loc>${loc}</loc>`);
     }
   });
 

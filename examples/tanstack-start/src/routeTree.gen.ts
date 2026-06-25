@@ -9,105 +9,521 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapChar123PageChar125DotxmlRouteImport } from './routes/sitemap{-$page}[.]xml'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as publicSitemapChar123PageChar125DotxmlRouteImport } from './routes/(public)/sitemap{-$page}[.]xml'
+import { Route as publicChar123LocaleChar125IndexRouteImport } from './routes/(public)/{-$locale}/index'
+import { Route as authenticatedDashboardIndexRouteImport } from './routes/(authenticated)/dashboard/index'
+import { Route as publicChar123LocaleChar125PricingRouteImport } from './routes/(public)/{-$locale}/pricing'
+import { Route as publicChar123LocaleChar125AboutRouteImport } from './routes/(public)/{-$locale}/about'
+import { Route as publicChar123LocaleChar125FooRouteImport } from './routes/(public)/{-$locale}/$foo'
+import { Route as publicApiHealthRouteImport } from './routes/(public)/api/health'
+import { Route as publicChar123LocaleChar125LandingPageDraftIndexRouteImport } from './routes/(public)/{-$locale}/landing-page-draft/index'
+import { Route as publicChar123LocaleChar125BlogIndexRouteImport } from './routes/(public)/{-$locale}/blog/index'
+import { Route as authenticatedDashboardSettingsIndexRouteImport } from './routes/(authenticated)/dashboard/settings/index'
+import { Route as publicChar123LocaleChar125OptionalsChar123OptionalChar125RouteImport } from './routes/(public)/{-$locale}/optionals/{-$optional}'
+import { Route as publicChar123LocaleChar125BlogSlugRouteImport } from './routes/(public)/{-$locale}/blog/$slug'
+import { Route as publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125RouteImport } from './routes/(public)/{-$locale}/optionals/to-exclude/{-$optional}'
+import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteImport } from './routes/(public)/{-$locale}/optionals/many/{-$paramA}'
+import { Route as publicChar123LocaleChar125CampsitesCountryStateRouteImport } from './routes/(public)/{-$locale}/campsites/$country/$state'
+import { Route as publicChar123LocaleChar125BlogTagTagRouteImport } from './routes/(public)/{-$locale}/blog/tag/$tag'
+import { Route as publicChar123LocaleChar125BlogPagePageRouteImport } from './routes/(public)/{-$locale}/blog/page/$page'
+import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport } from './routes/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/index'
+import { Route as publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRouteImport } from './routes/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+import { Route as publicChar123LocaleChar125BlogTagTagPagePageRouteImport } from './routes/(public)/{-$locale}/blog/tag/$tag/page/$page'
 
-const SitemapChar123PageChar125DotxmlRoute =
-  SitemapChar123PageChar125DotxmlRouteImport.update({
-    id: '/sitemap{-$page}.xml',
+const publicSitemapChar123PageChar125DotxmlRoute =
+  publicSitemapChar123PageChar125DotxmlRouteImport.update({
+    id: '/(public)/sitemap{-$page}.xml',
     path: '/sitemap{-$page}.xml',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const publicChar123LocaleChar125IndexRoute =
+  publicChar123LocaleChar125IndexRouteImport.update({
+    id: '/(public)/{-$locale}/',
+    path: '/{-$locale}/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const authenticatedDashboardIndexRoute =
+  authenticatedDashboardIndexRouteImport.update({
+    id: '/(authenticated)/dashboard/',
+    path: '/dashboard/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125PricingRoute =
+  publicChar123LocaleChar125PricingRouteImport.update({
+    id: '/(public)/{-$locale}/pricing',
+    path: '/{-$locale}/pricing',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125AboutRoute =
+  publicChar123LocaleChar125AboutRouteImport.update({
+    id: '/(public)/{-$locale}/about',
+    path: '/{-$locale}/about',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125FooRoute =
+  publicChar123LocaleChar125FooRouteImport.update({
+    id: '/(public)/{-$locale}/$foo',
+    path: '/{-$locale}/$foo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicApiHealthRoute = publicApiHealthRouteImport.update({
+  id: '/(public)/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/blog/$slug',
-  path: '/blog/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const publicChar123LocaleChar125LandingPageDraftIndexRoute =
+  publicChar123LocaleChar125LandingPageDraftIndexRouteImport.update({
+    id: '/(public)/{-$locale}/landing-page-draft/',
+    path: '/{-$locale}/landing-page-draft/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125BlogIndexRoute =
+  publicChar123LocaleChar125BlogIndexRouteImport.update({
+    id: '/(public)/{-$locale}/blog/',
+    path: '/{-$locale}/blog/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const authenticatedDashboardSettingsIndexRoute =
+  authenticatedDashboardSettingsIndexRouteImport.update({
+    id: '/(authenticated)/dashboard/settings/',
+    path: '/dashboard/settings/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125OptionalsChar123OptionalChar125Route =
+  publicChar123LocaleChar125OptionalsChar123OptionalChar125RouteImport.update({
+    id: '/(public)/{-$locale}/optionals/{-$optional}',
+    path: '/{-$locale}/optionals/{-$optional}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125BlogSlugRoute =
+  publicChar123LocaleChar125BlogSlugRouteImport.update({
+    id: '/(public)/{-$locale}/blog/$slug',
+    path: '/{-$locale}/blog/$slug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route =
+  publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125RouteImport.update(
+    {
+      id: '/(public)/{-$locale}/optionals/to-exclude/{-$optional}',
+      path: '/{-$locale}/optionals/to-exclude/{-$optional}',
+      getParentRoute: () => rootRouteImport,
+    } as any,
+  )
+const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route =
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteImport.update(
+    {
+      id: '/(public)/{-$locale}/optionals/many/{-$paramA}',
+      path: '/{-$locale}/optionals/many/{-$paramA}',
+      getParentRoute: () => rootRouteImport,
+    } as any,
+  )
+const publicChar123LocaleChar125CampsitesCountryStateRoute =
+  publicChar123LocaleChar125CampsitesCountryStateRouteImport.update({
+    id: '/(public)/{-$locale}/campsites/$country/$state',
+    path: '/{-$locale}/campsites/$country/$state',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125BlogTagTagRoute =
+  publicChar123LocaleChar125BlogTagTagRouteImport.update({
+    id: '/(public)/{-$locale}/blog/tag/$tag',
+    path: '/{-$locale}/blog/tag/$tag',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125BlogPagePageRoute =
+  publicChar123LocaleChar125BlogPagePageRouteImport.update({
+    id: '/(public)/{-$locale}/blog/page/$page',
+    path: '/{-$locale}/blog/page/$page',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute =
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport.update(
+    {
+      id: '/{-$paramB}/',
+      path: '/{-$paramB}/',
+      getParentRoute: () =>
+        publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route,
+    } as any,
+  )
+const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute =
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRouteImport.update(
+    {
+      id: '/{-$paramB}/foo',
+      path: '/{-$paramB}/foo',
+      getParentRoute: () =>
+        publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route,
+    } as any,
+  )
+const publicChar123LocaleChar125BlogTagTagPagePageRoute =
+  publicChar123LocaleChar125BlogTagTagPagePageRouteImport.update({
+    id: '/page/$page',
+    path: '/page/$page',
+    getParentRoute: () => publicChar123LocaleChar125BlogTagTagRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/sitemap{-$page}.xml': typeof SitemapChar123PageChar125DotxmlRoute
-  '/blog/$slug': typeof BlogSlugRoute
+  '/sitemap{-$page}.xml': typeof publicSitemapChar123PageChar125DotxmlRoute
+  '/api/health': typeof publicApiHealthRoute
+  '/{-$locale}/$foo': typeof publicChar123LocaleChar125FooRoute
+  '/{-$locale}/about': typeof publicChar123LocaleChar125AboutRoute
+  '/{-$locale}/pricing': typeof publicChar123LocaleChar125PricingRoute
+  '/dashboard/': typeof authenticatedDashboardIndexRoute
+  '/{-$locale}/': typeof publicChar123LocaleChar125IndexRoute
+  '/{-$locale}/blog/$slug': typeof publicChar123LocaleChar125BlogSlugRoute
+  '/{-$locale}/optionals/{-$optional}': typeof publicChar123LocaleChar125OptionalsChar123OptionalChar125Route
+  '/dashboard/settings/': typeof authenticatedDashboardSettingsIndexRoute
+  '/{-$locale}/blog/': typeof publicChar123LocaleChar125BlogIndexRoute
+  '/{-$locale}/landing-page-draft/': typeof publicChar123LocaleChar125LandingPageDraftIndexRoute
+  '/{-$locale}/blog/page/$page': typeof publicChar123LocaleChar125BlogPagePageRoute
+  '/{-$locale}/blog/tag/$tag': typeof publicChar123LocaleChar125BlogTagTagRouteWithChildren
+  '/{-$locale}/campsites/$country/$state': typeof publicChar123LocaleChar125CampsitesCountryStateRoute
+  '/{-$locale}/optionals/many/{-$paramA}': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren
+  '/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
+  '/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
+  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
+  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/sitemap{-$page}.xml': typeof SitemapChar123PageChar125DotxmlRoute
-  '/blog/$slug': typeof BlogSlugRoute
+  '/sitemap{-$page}.xml': typeof publicSitemapChar123PageChar125DotxmlRoute
+  '/api/health': typeof publicApiHealthRoute
+  '/{-$locale}/$foo': typeof publicChar123LocaleChar125FooRoute
+  '/{-$locale}/about': typeof publicChar123LocaleChar125AboutRoute
+  '/{-$locale}/pricing': typeof publicChar123LocaleChar125PricingRoute
+  '/dashboard': typeof authenticatedDashboardIndexRoute
+  '/{-$locale}': typeof publicChar123LocaleChar125IndexRoute
+  '/{-$locale}/blog/$slug': typeof publicChar123LocaleChar125BlogSlugRoute
+  '/{-$locale}/optionals/{-$optional}': typeof publicChar123LocaleChar125OptionalsChar123OptionalChar125Route
+  '/dashboard/settings': typeof authenticatedDashboardSettingsIndexRoute
+  '/{-$locale}/blog': typeof publicChar123LocaleChar125BlogIndexRoute
+  '/{-$locale}/landing-page-draft': typeof publicChar123LocaleChar125LandingPageDraftIndexRoute
+  '/{-$locale}/blog/page/$page': typeof publicChar123LocaleChar125BlogPagePageRoute
+  '/{-$locale}/blog/tag/$tag': typeof publicChar123LocaleChar125BlogTagTagRouteWithChildren
+  '/{-$locale}/campsites/$country/$state': typeof publicChar123LocaleChar125CampsitesCountryStateRoute
+  '/{-$locale}/optionals/many/{-$paramA}': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren
+  '/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
+  '/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
+  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
+  '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/sitemap{-$page}.xml': typeof SitemapChar123PageChar125DotxmlRoute
-  '/blog/$slug': typeof BlogSlugRoute
+  '/(public)/sitemap{-$page}.xml': typeof publicSitemapChar123PageChar125DotxmlRoute
+  '/(public)/api/health': typeof publicApiHealthRoute
+  '/(public)/{-$locale}/$foo': typeof publicChar123LocaleChar125FooRoute
+  '/(public)/{-$locale}/about': typeof publicChar123LocaleChar125AboutRoute
+  '/(public)/{-$locale}/pricing': typeof publicChar123LocaleChar125PricingRoute
+  '/(authenticated)/dashboard/': typeof authenticatedDashboardIndexRoute
+  '/(public)/{-$locale}/': typeof publicChar123LocaleChar125IndexRoute
+  '/(public)/{-$locale}/blog/$slug': typeof publicChar123LocaleChar125BlogSlugRoute
+  '/(public)/{-$locale}/optionals/{-$optional}': typeof publicChar123LocaleChar125OptionalsChar123OptionalChar125Route
+  '/(authenticated)/dashboard/settings/': typeof authenticatedDashboardSettingsIndexRoute
+  '/(public)/{-$locale}/blog/': typeof publicChar123LocaleChar125BlogIndexRoute
+  '/(public)/{-$locale}/landing-page-draft/': typeof publicChar123LocaleChar125LandingPageDraftIndexRoute
+  '/(public)/{-$locale}/blog/page/$page': typeof publicChar123LocaleChar125BlogPagePageRoute
+  '/(public)/{-$locale}/blog/tag/$tag': typeof publicChar123LocaleChar125BlogTagTagRouteWithChildren
+  '/(public)/{-$locale}/campsites/$country/$state': typeof publicChar123LocaleChar125CampsitesCountryStateRoute
+  '/(public)/{-$locale}/optionals/many/{-$paramA}': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren
+  '/(public)/{-$locale}/optionals/to-exclude/{-$optional}': typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
+  '/(public)/{-$locale}/blog/tag/$tag/page/$page': typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
+  '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
+  '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/sitemap{-$page}.xml' | '/blog/$slug'
+  fullPaths:
+    | '/sitemap{-$page}.xml'
+    | '/api/health'
+    | '/{-$locale}/$foo'
+    | '/{-$locale}/about'
+    | '/{-$locale}/pricing'
+    | '/dashboard/'
+    | '/{-$locale}/'
+    | '/{-$locale}/blog/$slug'
+    | '/{-$locale}/optionals/{-$optional}'
+    | '/dashboard/settings/'
+    | '/{-$locale}/blog/'
+    | '/{-$locale}/landing-page-draft/'
+    | '/{-$locale}/blog/page/$page'
+    | '/{-$locale}/blog/tag/$tag'
+    | '/{-$locale}/campsites/$country/$state'
+    | '/{-$locale}/optionals/many/{-$paramA}'
+    | '/{-$locale}/optionals/to-exclude/{-$optional}'
+    | '/{-$locale}/blog/tag/$tag/page/$page'
+    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/sitemap{-$page}.xml' | '/blog/$slug'
-  id: '__root__' | '/' | '/about' | '/sitemap{-$page}.xml' | '/blog/$slug'
+  to:
+    | '/sitemap{-$page}.xml'
+    | '/api/health'
+    | '/{-$locale}/$foo'
+    | '/{-$locale}/about'
+    | '/{-$locale}/pricing'
+    | '/dashboard'
+    | '/{-$locale}'
+    | '/{-$locale}/blog/$slug'
+    | '/{-$locale}/optionals/{-$optional}'
+    | '/dashboard/settings'
+    | '/{-$locale}/blog'
+    | '/{-$locale}/landing-page-draft'
+    | '/{-$locale}/blog/page/$page'
+    | '/{-$locale}/blog/tag/$tag'
+    | '/{-$locale}/campsites/$country/$state'
+    | '/{-$locale}/optionals/many/{-$paramA}'
+    | '/{-$locale}/optionals/to-exclude/{-$optional}'
+    | '/{-$locale}/blog/tag/$tag/page/$page'
+    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+    | '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}'
+  id:
+    | '__root__'
+    | '/(public)/sitemap{-$page}.xml'
+    | '/(public)/api/health'
+    | '/(public)/{-$locale}/$foo'
+    | '/(public)/{-$locale}/about'
+    | '/(public)/{-$locale}/pricing'
+    | '/(authenticated)/dashboard/'
+    | '/(public)/{-$locale}/'
+    | '/(public)/{-$locale}/blog/$slug'
+    | '/(public)/{-$locale}/optionals/{-$optional}'
+    | '/(authenticated)/dashboard/settings/'
+    | '/(public)/{-$locale}/blog/'
+    | '/(public)/{-$locale}/landing-page-draft/'
+    | '/(public)/{-$locale}/blog/page/$page'
+    | '/(public)/{-$locale}/blog/tag/$tag'
+    | '/(public)/{-$locale}/campsites/$country/$state'
+    | '/(public)/{-$locale}/optionals/many/{-$paramA}'
+    | '/(public)/{-$locale}/optionals/to-exclude/{-$optional}'
+    | '/(public)/{-$locale}/blog/tag/$tag/page/$page'
+    | '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+    | '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  SitemapChar123PageChar125DotxmlRoute: typeof SitemapChar123PageChar125DotxmlRoute
-  BlogSlugRoute: typeof BlogSlugRoute
+  publicSitemapChar123PageChar125DotxmlRoute: typeof publicSitemapChar123PageChar125DotxmlRoute
+  publicApiHealthRoute: typeof publicApiHealthRoute
+  publicChar123LocaleChar125FooRoute: typeof publicChar123LocaleChar125FooRoute
+  publicChar123LocaleChar125AboutRoute: typeof publicChar123LocaleChar125AboutRoute
+  publicChar123LocaleChar125PricingRoute: typeof publicChar123LocaleChar125PricingRoute
+  authenticatedDashboardIndexRoute: typeof authenticatedDashboardIndexRoute
+  publicChar123LocaleChar125IndexRoute: typeof publicChar123LocaleChar125IndexRoute
+  publicChar123LocaleChar125BlogSlugRoute: typeof publicChar123LocaleChar125BlogSlugRoute
+  publicChar123LocaleChar125OptionalsChar123OptionalChar125Route: typeof publicChar123LocaleChar125OptionalsChar123OptionalChar125Route
+  authenticatedDashboardSettingsIndexRoute: typeof authenticatedDashboardSettingsIndexRoute
+  publicChar123LocaleChar125BlogIndexRoute: typeof publicChar123LocaleChar125BlogIndexRoute
+  publicChar123LocaleChar125LandingPageDraftIndexRoute: typeof publicChar123LocaleChar125LandingPageDraftIndexRoute
+  publicChar123LocaleChar125BlogPagePageRoute: typeof publicChar123LocaleChar125BlogPagePageRoute
+  publicChar123LocaleChar125BlogTagTagRoute: typeof publicChar123LocaleChar125BlogTagTagRouteWithChildren
+  publicChar123LocaleChar125CampsitesCountryStateRoute: typeof publicChar123LocaleChar125CampsitesCountryStateRoute
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren
+  publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route: typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap{-$page}.xml': {
-      id: '/sitemap{-$page}.xml'
+    '/(public)/sitemap{-$page}.xml': {
+      id: '/(public)/sitemap{-$page}.xml'
       path: '/sitemap{-$page}.xml'
       fullPath: '/sitemap{-$page}.xml'
-      preLoaderRoute: typeof SitemapChar123PageChar125DotxmlRouteImport
+      preLoaderRoute: typeof publicSitemapChar123PageChar125DotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/(public)/{-$locale}/': {
+      id: '/(public)/{-$locale}/'
+      path: '/{-$locale}'
+      fullPath: '/{-$locale}/'
+      preLoaderRoute: typeof publicChar123LocaleChar125IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/(authenticated)/dashboard/': {
+      id: '/(authenticated)/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof authenticatedDashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/blog/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
+    '/(public)/{-$locale}/pricing': {
+      id: '/(public)/{-$locale}/pricing'
+      path: '/{-$locale}/pricing'
+      fullPath: '/{-$locale}/pricing'
+      preLoaderRoute: typeof publicChar123LocaleChar125PricingRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/about': {
+      id: '/(public)/{-$locale}/about'
+      path: '/{-$locale}/about'
+      fullPath: '/{-$locale}/about'
+      preLoaderRoute: typeof publicChar123LocaleChar125AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/$foo': {
+      id: '/(public)/{-$locale}/$foo'
+      path: '/{-$locale}/$foo'
+      fullPath: '/{-$locale}/$foo'
+      preLoaderRoute: typeof publicChar123LocaleChar125FooRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/api/health': {
+      id: '/(public)/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof publicApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/landing-page-draft/': {
+      id: '/(public)/{-$locale}/landing-page-draft/'
+      path: '/{-$locale}/landing-page-draft'
+      fullPath: '/{-$locale}/landing-page-draft/'
+      preLoaderRoute: typeof publicChar123LocaleChar125LandingPageDraftIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/blog/': {
+      id: '/(public)/{-$locale}/blog/'
+      path: '/{-$locale}/blog'
+      fullPath: '/{-$locale}/blog/'
+      preLoaderRoute: typeof publicChar123LocaleChar125BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(authenticated)/dashboard/settings/': {
+      id: '/(authenticated)/dashboard/settings/'
+      path: '/dashboard/settings'
+      fullPath: '/dashboard/settings/'
+      preLoaderRoute: typeof authenticatedDashboardSettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/optionals/{-$optional}': {
+      id: '/(public)/{-$locale}/optionals/{-$optional}'
+      path: '/{-$locale}/optionals/{-$optional}'
+      fullPath: '/{-$locale}/optionals/{-$optional}'
+      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsChar123OptionalChar125RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/blog/$slug': {
+      id: '/(public)/{-$locale}/blog/$slug'
+      path: '/{-$locale}/blog/$slug'
+      fullPath: '/{-$locale}/blog/$slug'
+      preLoaderRoute: typeof publicChar123LocaleChar125BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/optionals/to-exclude/{-$optional}': {
+      id: '/(public)/{-$locale}/optionals/to-exclude/{-$optional}'
+      path: '/{-$locale}/optionals/to-exclude/{-$optional}'
+      fullPath: '/{-$locale}/optionals/to-exclude/{-$optional}'
+      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/optionals/many/{-$paramA}': {
+      id: '/(public)/{-$locale}/optionals/many/{-$paramA}'
+      path: '/{-$locale}/optionals/many/{-$paramA}'
+      fullPath: '/{-$locale}/optionals/many/{-$paramA}'
+      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/campsites/$country/$state': {
+      id: '/(public)/{-$locale}/campsites/$country/$state'
+      path: '/{-$locale}/campsites/$country/$state'
+      fullPath: '/{-$locale}/campsites/$country/$state'
+      preLoaderRoute: typeof publicChar123LocaleChar125CampsitesCountryStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/blog/tag/$tag': {
+      id: '/(public)/{-$locale}/blog/tag/$tag'
+      path: '/{-$locale}/blog/tag/$tag'
+      fullPath: '/{-$locale}/blog/tag/$tag'
+      preLoaderRoute: typeof publicChar123LocaleChar125BlogTagTagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/blog/page/$page': {
+      id: '/(public)/{-$locale}/blog/page/$page'
+      path: '/{-$locale}/blog/page/$page'
+      fullPath: '/{-$locale}/blog/page/$page'
+      preLoaderRoute: typeof publicChar123LocaleChar125BlogPagePageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/': {
+      id: '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
+      path: '/{-$paramB}'
+      fullPath: '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/'
+      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRouteImport
+      parentRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route
+    }
+    '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo': {
+      id: '/(public)/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+      path: '/{-$paramB}/foo'
+      fullPath: '/{-$locale}/optionals/many/{-$paramA}/{-$paramB}/foo'
+      preLoaderRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRouteImport
+      parentRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route
+    }
+    '/(public)/{-$locale}/blog/tag/$tag/page/$page': {
+      id: '/(public)/{-$locale}/blog/tag/$tag/page/$page'
+      path: '/page/$page'
+      fullPath: '/{-$locale}/blog/tag/$tag/page/$page'
+      preLoaderRoute: typeof publicChar123LocaleChar125BlogTagTagPagePageRouteImport
+      parentRoute: typeof publicChar123LocaleChar125BlogTagTagRoute
     }
   }
 }
 
+interface publicChar123LocaleChar125BlogTagTagRouteChildren {
+  publicChar123LocaleChar125BlogTagTagPagePageRoute: typeof publicChar123LocaleChar125BlogTagTagPagePageRoute
+}
+
+const publicChar123LocaleChar125BlogTagTagRouteChildren: publicChar123LocaleChar125BlogTagTagRouteChildren =
+  {
+    publicChar123LocaleChar125BlogTagTagPagePageRoute:
+      publicChar123LocaleChar125BlogTagTagPagePageRoute,
+  }
+
+const publicChar123LocaleChar125BlogTagTagRouteWithChildren =
+  publicChar123LocaleChar125BlogTagTagRoute._addFileChildren(
+    publicChar123LocaleChar125BlogTagTagRouteChildren,
+  )
+
+interface publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren {
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute: typeof publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute
+}
+
+const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren: publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren =
+  {
+    publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute:
+      publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125FooRoute,
+    publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute:
+      publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Char123ParamBChar125IndexRoute,
+  }
+
+const publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren =
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route._addFileChildren(
+    publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  SitemapChar123PageChar125DotxmlRoute: SitemapChar123PageChar125DotxmlRoute,
-  BlogSlugRoute: BlogSlugRoute,
+  publicSitemapChar123PageChar125DotxmlRoute:
+    publicSitemapChar123PageChar125DotxmlRoute,
+  publicApiHealthRoute: publicApiHealthRoute,
+  publicChar123LocaleChar125FooRoute: publicChar123LocaleChar125FooRoute,
+  publicChar123LocaleChar125AboutRoute: publicChar123LocaleChar125AboutRoute,
+  publicChar123LocaleChar125PricingRoute:
+    publicChar123LocaleChar125PricingRoute,
+  authenticatedDashboardIndexRoute: authenticatedDashboardIndexRoute,
+  publicChar123LocaleChar125IndexRoute: publicChar123LocaleChar125IndexRoute,
+  publicChar123LocaleChar125BlogSlugRoute:
+    publicChar123LocaleChar125BlogSlugRoute,
+  publicChar123LocaleChar125OptionalsChar123OptionalChar125Route:
+    publicChar123LocaleChar125OptionalsChar123OptionalChar125Route,
+  authenticatedDashboardSettingsIndexRoute:
+    authenticatedDashboardSettingsIndexRoute,
+  publicChar123LocaleChar125BlogIndexRoute:
+    publicChar123LocaleChar125BlogIndexRoute,
+  publicChar123LocaleChar125LandingPageDraftIndexRoute:
+    publicChar123LocaleChar125LandingPageDraftIndexRoute,
+  publicChar123LocaleChar125BlogPagePageRoute:
+    publicChar123LocaleChar125BlogPagePageRoute,
+  publicChar123LocaleChar125BlogTagTagRoute:
+    publicChar123LocaleChar125BlogTagTagRouteWithChildren,
+  publicChar123LocaleChar125CampsitesCountryStateRoute:
+    publicChar123LocaleChar125CampsitesCountryStateRoute,
+  publicChar123LocaleChar125OptionalsManyChar123ParamAChar125Route:
+    publicChar123LocaleChar125OptionalsManyChar123ParamAChar125RouteWithChildren,
+  publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route:
+    publicChar123LocaleChar125OptionalsToExcludeChar123OptionalChar125Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

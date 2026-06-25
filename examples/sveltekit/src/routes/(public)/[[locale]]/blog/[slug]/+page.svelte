@@ -3,6 +3,6 @@
   const { params } = $page;
 </script>
 
-<h1>A blog post</h1>
+<h1>Example blog post</h1>
 
-<p>Show a blog post for {params.slug} or 404.</p>
+<p>Example blog post for {params.slug}.</p>
