@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { GET } from './(public)/sitemap[[page]].xml/+server.js';
+import { GET } from '../src/routes/(public)/sitemap[[page]].xml/+server.js';
 
 type RequestEvent = Parameters<typeof GET>[0];
 
