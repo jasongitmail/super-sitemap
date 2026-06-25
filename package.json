@@ -47,6 +47,7 @@
     "prepare": "npm run package",
     "package": "rm -rf dist && tsc -p tsconfig.build.json && publint && node scripts/verify-package-output.mjs",
     "prepublishOnly": "node scripts/verify-publish-tag.mjs && npm run package && npm test",
+    "release": "node scripts/release.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run",
     "test:examples": "bun run test:examples:sveltekit && bun run test:examples:tanstack-start",
