@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # for dependabot updates
+  contents: read
 
 jobs:
   unit-tests:
