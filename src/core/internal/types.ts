@@ -87,7 +87,7 @@ export type SitemapConfig = {
    * Parameter values for dynamic routes, where the values can be:
    * - `string[]`
    * - `string[][]`
-   * - `ParamValueObj[]`
+   * - `ParamValue[]`
    */
   paramValues?: ParamValues;
 
