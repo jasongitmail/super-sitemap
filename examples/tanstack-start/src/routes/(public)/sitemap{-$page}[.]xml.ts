@@ -9,17 +9,19 @@ export const Route = createFileRoute('/(public)/sitemap{-$page}.xml')({
   server: {
     handlers: {
       GET: async ({ params }) => {
+        // Example data load for parameterized routes.
         const [slugs, tags] = await Promise.all([blog.getSlugs(), blog.getTags()]);
 
         return response({
-          additionalPaths: ['/foo.pdf'],
+          additionalPaths: ['/foo.pdf'], // e.g. a file in the `public` dir
           excludeRoutePatterns: [
-            /dashboard/,
-            /to-exclude/,
-            /^\/\{-\$locale\}\/landing-page-draft$/,
-            /^\/\{-\$locale\}\/optionals\/many\/foo$/,
-            /^\/\{-\$locale\}\/optionals\/many\/\{-\$paramA\}\/foo$/,
-            /\/page\/\$page/,
+            /^\/dashboard(?:$|\/)/, // `/dashboard` and children
+            /\/to-exclude(?:$|\/)/, // `to-exclude` segment
+            /\/landing-page-draft$/, // a draft route
+            /\/page\/\$page$/, // page routes
+
+            // TS-only variants
+            /^\/\{-\$locale\}\/optionals\/many\/(?:\{-\$paramA\}\/)?foo$/,
           ],
           origin: 'https://example.com',
           page: params.page,

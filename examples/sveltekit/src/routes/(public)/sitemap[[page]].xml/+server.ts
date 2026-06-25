@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit';
 
 import * as sitemap from 'super-sitemap/sveltekit';
 
-// Example route to serve /sitemap.xml and paginated sitemap files.
+// Example route to serve /sitemap.xml and paginated sitemap files like /sitemap1.xml.
 export const GET: RequestHandler = async ({ params }) => {
   // Example data load for parameterized routes.
   let slugs, tags;
@@ -18,11 +18,10 @@ export const GET: RequestHandler = async ({ params }) => {
   return await sitemap.response({
     additionalPaths: ['/foo.pdf'], // e.g. a file in the `static` dir
     excludeRoutePatterns: [
-      /dashboard/,
-      /to-exclude/,
-      /^\/\[\[locale\]\]\/landing-page-draft$/,
-
-      /\[page=integer\]/,
+      /^\/dashboard(?:$|\/)/, // `/dashboard` and children
+      /\/to-exclude(?:$|\/)/, // `to-exclude` segment
+      /\/landing-page-draft$/, // a draft route
+      /\[page=integer\]/, // page routes
     ],
     origin: 'https://example.com',
     page: params.page,
@@ -56,7 +55,6 @@ export const GET: RequestHandler = async ({ params }) => {
         },
       ],
     },
-
     defaultPriority: 0.7,
     defaultChangefreq: 'daily',
     sort: 'alpha',
