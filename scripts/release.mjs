@@ -29,7 +29,7 @@ async function main() {
 
   const releaseType = await promptReleaseType();
 
-  await run('npm', ['whoami']);
+  await ensureNpmAuth();
   await run('bun', ['run', 'ready']);
   await run('npm', ['version', releaseType, '-m', 'chore(release): v%s']);
   await run('npm', ['publish']);
@@ -41,6 +41,37 @@ async function main() {
       : '\nRelease published. Push the release commit and tag when ready:'
   );
   console.log('git push origin main --follow-tags');
+}
+
+/**
+ * Ensures npm publish auth is available, prompting for login when needed.
+ */
+async function ensureNpmAuth() {
+  if (dryRun) {
+    console.log(formatCommand('npm', ['whoami']));
+    console.log(formatCommand('npm', ['login']));
+    console.log(formatCommand('npm', ['whoami']));
+    return;
+  }
+
+  const auth = await getCommandResult('npm', ['whoami']);
+  if (auth.code === 0) {
+    console.log(`Signed in to npm as ${auth.stdout.trim()}.`);
+    return;
+  }
+
+  console.log('npm login is required before publishing.');
+  await run('npm', ['login']);
+
+  const retry = await getCommandResult('npm', ['whoami']);
+  if (retry.code === 0) {
+    console.log(`Signed in to npm as ${retry.stdout.trim()}.`);
+    return;
+  }
+
+  throw new Error(
+    'npm login completed, but `npm whoami` still failed. Run `npm login` and try again.'
+  );
 }
 
 /**
@@ -78,7 +109,7 @@ async function promptReleaseType() {
       process.stdout.write('\x1b[?25l');
       readline.cursorTo(process.stdout, 0);
       readline.clearScreenDown(process.stdout);
-      process.stdout.write('Release type? Use arrow keys, press Enter.\n');
+      process.stdout.write('Semver type? Use arrow keys, press Enter.\n');
 
       for (let index = 0; index < releaseTypes.length; index += 1) {
         const selected = index === selectedIndex;
@@ -181,6 +212,35 @@ async function collect(command, args) {
       }
 
       reject(new Error(`${formatCommand(command, args)} failed with ${signal ?? `exit ${code}`}`));
+    });
+  });
+}
+
+/**
+ * Runs a command and returns stdout, stderr, and the exit result.
+ *
+ * @param command - Command executable.
+ * @param args - Command arguments.
+ * @returns Captured command result.
+ */
+async function getCommandResult(command, args) {
+  return await new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.on('error', reject);
+    child.on('exit', (code, signal) => {
+      resolve({ code, signal, stdout, stderr });
     });
   });
 }

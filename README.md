@@ -771,10 +771,25 @@ bun run dev             # browse the example, including /sitemap.xml
 
 ## Publishing
 
-Main release:
+Run the interactive release helper:
 
-A new version of this npm package is automatically published when the semver
-version within `package.json` is incremented.
+```bash
+bun run release
+```
+
+Choose the semver type with arrow keys. `patch` is selected by default.
+
+After publish, push the release commit and tag:
+
+```bash
+git push origin main --follow-tags
+```
+
+Confirm the published npm version:
+
+```bash
+npm view super-sitemap version time.modified dist-tags
+```
 
 ## Credits
 

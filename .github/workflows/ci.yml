@@ -75,22 +75,3 @@ jobs:
       - name: Build example app
         run: bun run build
         working-directory: examples/tanstack-start
-
-  publish-to-npm-public:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [unit-tests, example-sveltekit, example-tanstack-start]
-    # Avoid running for non-main branches and non-merge events like new pull requests.
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - run: npm install
-      - name: Publish to NPM, if version was incremented
-        uses: JS-DevTools/npm-publish@v2
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          ignore-scripts: false # Allows the project's `prepublishOnly` script.
-          strategy: upgrade # Publish only if the version was incremented.
