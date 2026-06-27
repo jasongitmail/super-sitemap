@@ -35,6 +35,7 @@
   "exports": {
     "./sveltekit": {
       "types": "./dist/adapters/sveltekit/index.d.ts",
+      "svelte": "./dist/adapters/sveltekit/index.js",
       "default": "./dist/adapters/sveltekit/index.js"
     },
     "./tanstack-start": {

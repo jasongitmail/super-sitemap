@@ -15,6 +15,7 @@ describe('SvelteKit package API', () => {
     expect(packageJson.exports).not.toHaveProperty('./core');
     expect(packageJson.exports['./sveltekit']).toEqual({
       default: './dist/adapters/sveltekit/index.js',
+      svelte: './dist/adapters/sveltekit/index.js',
       types: './dist/adapters/sveltekit/index.d.ts',
     });
   });
