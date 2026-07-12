@@ -355,6 +355,27 @@ describe('core normalized routes', () => {
     });
   });
 
+  it('generates no paths for a dynamic route with empty paramValues', () => {
+    const normalizedRoutes: NormalizedRoute[] = [
+      {
+        id: 'blog',
+        params: [{ name: 'slug', segmentIndex: 1 }],
+        segments: [
+          { kind: 'static', value: 'blog' },
+          { kind: 'param', name: 'slug' },
+        ],
+        source: source('/blog/$slug'),
+      },
+    ];
+
+    expect(
+      generatePathsFromNormalizedRoutes({
+        normalizedRoutes,
+        paramValues: { '/blog/$slug': [] },
+      })
+    ).toEqual([]);
+  });
+
   it('rejects unsupported runtime paramValues shapes', () => {
     const normalizedRoutes: NormalizedRoute[] = [
       {
@@ -369,7 +390,6 @@ describe('core normalized routes', () => {
     ];
     const invalidParamValues = [
       { name: 'object instead of array', value: { values: ['hello-world'] } },
-      { name: 'empty array', value: [] },
       { name: 'wrong primitive', value: [123] },
       { name: 'ParamValue missing values', value: [{ lastmod: '2026-01-01' }] },
       { name: 'ParamValue values not an array', value: [{ values: 'hello-world' }] },

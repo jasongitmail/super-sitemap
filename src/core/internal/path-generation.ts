@@ -267,9 +267,10 @@ function validateParamValueShape(
   route: string,
   paramValue: unknown
 ): asserts paramValue is ParamValues[string] {
-  if (!Array.isArray(paramValue) || !paramValue.length) {
+  if (!Array.isArray(paramValue)) {
     throw new SitemapRouteParamError('invalid-param-values-shape', route);
   }
+  if (paramValue.length === 0) return;
 
   const firstShape = getParamValueEntryShape(paramValue[0]);
   if (!firstShape) {
