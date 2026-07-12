@@ -725,6 +725,7 @@ the appropriate route.
 
 ## Changelog
 
+- `2.0.5` - Fixed `paramValues` validation to allow empty arrays.
 - `2.0.0` - BREAKING: Added framework-specific adapters for SvelteKit and TanStack Start. See [Migrating from v1 to v2](#migrating-from-v1-to-v2).
   - Public APIs now live at `super-sitemap/sveltekit` and `super-sitemap/tanstack-start`.
   - The `lang` config option was renamed to `locales`; dynamic locale route params must be named `locale`.
